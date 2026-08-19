@@ -1,0 +1,919 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "46772209-dfc6-4db5-9df4-28e2d3a23c0b",
+  "prevId": "722a16d9-3b21-4609-9ab5-b26a56950dad",
+  "tables": {
+    "app_metadata": {
+      "name": "app_metadata",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "workspace_settings": {
+      "name": "workspace_settings",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "product_fact_lineages": {
+      "name": "product_fact_lineages",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fact_key": {
+          "name": "fact_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "product_fact_lineages_identity_unique": {
+          "name": "product_fact_lineages_identity_unique",
+          "columns": [
+            "id",
+            "product_id",
+            "fact_key"
+          ],
+          "isUnique": true
+        },
+        "product_fact_lineages_product_key": {
+          "name": "product_fact_lineages_product_key",
+          "columns": [
+            "product_id",
+            "fact_key"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "product_fact_lineages_product_id_products_id_fk": {
+          "name": "product_fact_lineages_product_id_products_id_fk",
+          "tableFrom": "product_fact_lineages",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "product_facts": {
+      "name": "product_facts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_id": {
+          "name": "lineage_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fact_key": {
+          "name": "fact_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value_type": {
+          "name": "value_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_text": {
+          "name": "value_text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_number": {
+          "name": "value_number",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "value_boolean": {
+          "name": "value_boolean",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unit": {
+          "name": "unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_ref": {
+          "name": "source_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "verification": {
+          "name": "verification",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sensitive": {
+          "name": "sensitive",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "policy_eligible": {
+          "name": "policy_eligible",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision_no": {
+          "name": "revision_no",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "supersedes_fact_id": {
+          "name": "supersedes_fact_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "is_current": {
+          "name": "is_current",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "confirmation_actor_type": {
+          "name": "confirmation_actor_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "confirmation_actor_ref": {
+          "name": "confirmation_actor_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "confirmation_evidence_ref": {
+          "name": "confirmation_evidence_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "product_facts_identity_lineage_unique": {
+          "name": "product_facts_identity_lineage_unique",
+          "columns": [
+            "id",
+            "lineage_id"
+          ],
+          "isUnique": true
+        },
+        "product_facts_lineage_revision_unique": {
+          "name": "product_facts_lineage_revision_unique",
+          "columns": [
+            "lineage_id",
+            "revision_no"
+          ],
+          "isUnique": true
+        },
+        "product_facts_current_key_unique": {
+          "name": "product_facts_current_key_unique",
+          "columns": [
+            "product_id",
+            "fact_key"
+          ],
+          "isUnique": true,
+          "where": "\"product_facts\".\"is_current\" = 1 AND \"product_facts\".\"deleted_at\" IS NULL"
+        },
+        "product_facts_active_supersedes_unique": {
+          "name": "product_facts_active_supersedes_unique",
+          "columns": [
+            "supersedes_fact_id"
+          ],
+          "isUnique": true,
+          "where": "\"product_facts\".\"supersedes_fact_id\" IS NOT NULL AND \"product_facts\".\"deleted_at\" IS NULL"
+        },
+        "product_facts_current_list": {
+          "name": "product_facts_current_list",
+          "columns": [
+            "product_id",
+            "is_current",
+            "deleted_at",
+            "fact_key"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "product_facts_product_id_products_id_fk": {
+          "name": "product_facts_product_id_products_id_fk",
+          "tableFrom": "product_facts",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "product_facts_lineage_owner_fk": {
+          "name": "product_facts_lineage_owner_fk",
+          "tableFrom": "product_facts",
+          "tableTo": "product_fact_lineages",
+          "columnsFrom": [
+            "lineage_id",
+            "product_id",
+            "fact_key"
+          ],
+          "columnsTo": [
+            "id",
+            "product_id",
+            "fact_key"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "product_facts_supersedes_lineage_fk": {
+          "name": "product_facts_supersedes_lineage_fk",
+          "tableFrom": "product_facts",
+          "tableTo": "product_facts",
+          "columnsFrom": [
+            "supersedes_fact_id",
+            "lineage_id"
+          ],
+          "columnsTo": [
+            "id",
+            "lineage_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "product_facts_revision_lineage": {
+          "name": "product_facts_revision_lineage",
+          "value": "(\"product_facts\".\"revision_no\" = 1 AND \"product_facts\".\"supersedes_fact_id\" IS NULL) OR (\"product_facts\".\"revision_no\" > 1 AND \"product_facts\".\"supersedes_fact_id\" IS NOT NULL AND \"product_facts\".\"supersedes_fact_id\" <> \"product_facts\".\"id\")"
+        },
+        "product_facts_boolean_flags": {
+          "name": "product_facts_boolean_flags",
+          "value": "\"product_facts\".\"sensitive\" IN (0, 1) AND \"product_facts\".\"policy_eligible\" IN (0, 1) AND \"product_facts\".\"is_current\" IN (0, 1)"
+        },
+        "product_facts_verification_valid": {
+          "name": "product_facts_verification_valid",
+          "value": "\"product_facts\".\"verification\" IN ('confirmed','unverified','inferred','missing')"
+        },
+        "product_facts_source_valid": {
+          "name": "product_facts_source_valid",
+          "value": "\"product_facts\".\"source_type\" IN ('manual','supplier','import','document','ai_inferred','competitor_reference','other')"
+        },
+        "product_facts_value_shape": {
+          "name": "product_facts_value_shape",
+          "value": "(\n      (\"product_facts\".\"verification\" = 'missing' AND \"product_facts\".\"value_type\" IS NULL AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NULL AND \"product_facts\".\"unit\" IS NULL)\n      OR (\"product_facts\".\"verification\" <> 'missing' AND \"product_facts\".\"value_type\" IS NOT NULL AND (\n        (\"product_facts\".\"value_type\" = 'text' AND \"product_facts\".\"value_text\" IS NOT NULL AND length(trim(\"product_facts\".\"value_text\")) > 0 AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NULL AND \"product_facts\".\"unit\" IS NULL)\n        OR (\"product_facts\".\"value_type\" = 'number' AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NOT NULL AND \"product_facts\".\"value_boolean\" IS NULL)\n        OR (\"product_facts\".\"value_type\" = 'boolean' AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NOT NULL AND \"product_facts\".\"value_boolean\" IN (0,1) AND \"product_facts\".\"unit\" IS NULL)\n      ))\n    )"
+        },
+        "product_facts_unit_nonblank": {
+          "name": "product_facts_unit_nonblank",
+          "value": "\"product_facts\".\"unit\" IS NULL OR length(trim(\"product_facts\".\"unit\")) > 0"
+        },
+        "product_facts_confirmation_shape": {
+          "name": "product_facts_confirmation_shape",
+          "value": "(\n      (\"product_facts\".\"verification\" = 'confirmed' AND \"product_facts\".\"confirmed_at\" IS NOT NULL AND \"product_facts\".\"confirmation_actor_type\" IS NOT NULL AND \"product_facts\".\"confirmation_actor_type\" = 'user' AND \"product_facts\".\"confirmation_actor_ref\" IS NOT NULL AND length(trim(\"product_facts\".\"confirmation_actor_ref\")) > 0 AND \"product_facts\".\"confirmation_evidence_ref\" IS NOT NULL AND length(trim(\"product_facts\".\"confirmation_evidence_ref\")) > 0)\n      OR (\"product_facts\".\"verification\" <> 'confirmed' AND \"product_facts\".\"confirmed_at\" IS NULL AND \"product_facts\".\"confirmation_actor_type\" IS NULL AND \"product_facts\".\"confirmation_actor_ref\" IS NULL AND \"product_facts\".\"confirmation_evidence_ref\" IS NULL)\n    )"
+        },
+        "product_facts_timestamp_order": {
+          "name": "product_facts_timestamp_order",
+          "value": "\"product_facts\".\"updated_at\" >= \"product_facts\".\"created_at\" AND (\"product_facts\".\"confirmed_at\" IS NULL OR (\"product_facts\".\"confirmed_at\" >= \"product_facts\".\"created_at\" AND \"product_facts\".\"confirmed_at\" <= \"product_facts\".\"updated_at\")) AND (\"product_facts\".\"deleted_at\" IS NULL OR \"product_facts\".\"deleted_at\" >= \"product_facts\".\"updated_at\")"
+        },
+        "product_facts_deleted_not_current": {
+          "name": "product_facts_deleted_not_current",
+          "value": "\"product_facts\".\"deleted_at\" IS NULL OR \"product_facts\".\"is_current\" = 0"
+        }
+      }
+    },
+    "products": {
+      "name": "products",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active_name": {
+          "name": "active_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(unixepoch() * 1000)"
+        },
+        "archived_at": {
+          "name": "archived_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "products_active_name_unique": {
+          "name": "products_active_name_unique",
+          "columns": [
+            "active_name"
+          ],
+          "isUnique": true,
+          "where": "\"products\".\"archived_at\" IS NULL"
+        },
+        "products_active_list_order": {
+          "name": "products_active_list_order",
+          "columns": [
+            "archived_at",
+            "created_at",
+            "id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sku_values": {
+      "name": "sku_values",
+      "columns": {
+        "sku_id": {
+          "name": "sku_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value_id": {
+          "name": "value_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "sku_values_sku_position": {
+          "name": "sku_values_sku_position",
+          "columns": [
+            "sku_id",
+            "position"
+          ],
+          "isUnique": true
+        },
+        "sku_values_sku_value": {
+          "name": "sku_values_sku_value",
+          "columns": [
+            "sku_id",
+            "value_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "sku_values_sku_id_skus_id_fk": {
+          "name": "sku_values_sku_id_skus_id_fk",
+          "tableFrom": "sku_values",
+          "tableTo": "skus",
+          "columnsFrom": [
+            "sku_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sku_values_sku_product_fk": {
+          "name": "sku_values_sku_product_fk",
+          "tableFrom": "sku_values",
+          "tableTo": "skus",
+          "columnsFrom": [
+            "sku_id",
+            "product_id"
+          ],
+          "columnsTo": [
+            "id",
+            "product_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sku_values_value_product_fk": {
+          "name": "sku_values_value_product_fk",
+          "tableFrom": "sku_values",
+          "tableTo": "specification_values",
+          "columnsFrom": [
+            "value_id",
+            "product_id"
+          ],
+          "columnsTo": [
+            "id",
+            "product_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "sku_values_position": {
+          "name": "sku_values_position",
+          "value": "\"sku_values\".\"position\" >= 0"
+        }
+      }
+    },
+    "skus": {
+      "name": "skus",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "signature": {
+          "name": "signature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "internal_code": {
+          "name": "internal_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "external_code": {
+          "name": "external_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "barcode": {
+          "name": "barcode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "weight_grams": {
+          "name": "weight_grams",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "skus_product_signature": {
+          "name": "skus_product_signature",
+          "columns": [
+            "product_id",
+            "signature"
+          ],
+          "isUnique": true
+        },
+        "skus_identity_product": {
+          "name": "skus_identity_product",
+          "columns": [
+            "id",
+            "product_id"
+          ],
+          "isUnique": true
+        },
+        "skus_product_enabled": {
+          "name": "skus_product_enabled",
+          "columns": [
+            "product_id",
+            "enabled"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "skus_product_id_products_id_fk": {
+          "name": "skus_product_id_products_id_fk",
+          "tableFrom": "skus",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "skus_enabled_boolean": {
+          "name": "skus_enabled_boolean",
+          "value": "\"skus\".\"enabled\" IN (0, 1)"
+        },
+        "skus_weight": {
+          "name": "skus_weight",
+          "value": "\"skus\".\"weight_grams\" IS NULL OR \"skus\".\"weight_grams\" >= 0"
+        }
+      }
+    },
+    "specification_dimensions": {
+      "name": "specification_dimensions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "spec_dimensions_product_name": {
+          "name": "spec_dimensions_product_name",
+          "columns": [
+            "product_id",
+            "name"
+          ],
+          "isUnique": true
+        },
+        "spec_dimensions_identity_product": {
+          "name": "spec_dimensions_identity_product",
+          "columns": [
+            "id",
+            "product_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "specification_dimensions_product_id_products_id_fk": {
+          "name": "specification_dimensions_product_id_products_id_fk",
+          "tableFrom": "specification_dimensions",
+          "tableTo": "products",
+          "columnsFrom": [
+            "product_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "spec_dimensions_position": {
+          "name": "spec_dimensions_position",
+          "value": "\"specification_dimensions\".\"position\" >= 0"
+        }
+      }
+    },
+    "specification_values": {
+      "name": "specification_values",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dimension_id": {
+          "name": "dimension_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "spec_values_dimension_label": {
+          "name": "spec_values_dimension_label",
+          "columns": [
+            "dimension_id",
+            "label"
+          ],
+          "isUnique": true
+        },
+        "spec_values_identity_product": {
+          "name": "spec_values_identity_product",
+          "columns": [
+            "id",
+            "product_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "spec_values_dimension_product_fk": {
+          "name": "spec_values_dimension_product_fk",
+          "tableFrom": "specification_values",
+          "tableTo": "specification_dimensions",
+          "columnsFrom": [
+            "dimension_id",
+            "product_id"
+          ],
+          "columnsTo": [
+            "id",
+            "product_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "spec_values_position": {
+          "name": "spec_values_position",
+          "value": "\"specification_values\".\"position\" >= 0"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

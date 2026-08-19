@@ -4,9 +4,12 @@ import { createBrowserFactsApi } from './features/facts/api.js';
 import { FactStatusTable } from './features/facts/fact-status-table.js';
 import { createBrowserProductsApi } from './features/products/api.js';
 import { ProductLibrary, type ProductItem } from './features/products/product-library.js';
+import { createBrowserSkusApi } from './features/skus/api.js';
+import { SkuMatrix } from './features/skus/sku-matrix.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
+const browserSkusApi = createBrowserSkusApi();
 
 const navigationItems = [
   '工作台',
@@ -63,7 +66,10 @@ export function App(): React.JSX.Element {
 
       <ProductLibrary api={browserProductsApi} onSelect={setSelectedProduct} />
       {selectedProduct ? (
-        <FactStatusTable api={browserFactsApi} productId={selectedProduct.id} />
+        <>
+          <FactStatusTable api={browserFactsApi} productId={selectedProduct.id} />
+          <SkuMatrix api={browserSkusApi} productId={selectedProduct.id} />
+        </>
       ) : null}
     </main>
   );

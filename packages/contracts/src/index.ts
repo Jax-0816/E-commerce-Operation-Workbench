@@ -26,6 +26,14 @@ export {
   ReviseFactInputSchema,
   UpdateFactInputSchema,
 } from './facts.js';
+export {
+  ConfigureSkusInputSchema,
+  SkuMatrixResponseSchema,
+  SkuParamsSchema,
+  SkusParamsSchema,
+  UpdateSkuInputSchema,
+} from './skus.js';
+export type { SkuMatrixResponse } from './skus.js';
 export type {
   ConfirmFactInput,
   CreateFactInput,

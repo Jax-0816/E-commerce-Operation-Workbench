@@ -14,3 +14,5 @@ export type {
   ReviseFactInput,
   UpdateFactInput,
 } from './facts/index.js';
+export { createSkusApplication } from './skus/index.js';
+export type { ConfigureDimensionInput, SkusApplication, UpdateSkuInput } from './skus/index.js';
