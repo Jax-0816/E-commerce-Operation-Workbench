@@ -1,0 +1,26 @@
+{
+  "name": "@eaw/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "prepare:domain": "pnpm --filter @eaw/domain run build",
+    "prebuild": "pnpm run prepare:domain",
+    "build": "tsc -p tsconfig.json",
+    "pretest": "pnpm run prepare:domain",
+    "test": "vitest run src",
+    "pretypecheck": "pnpm run prepare:domain",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@eaw/domain": "workspace:*",
+    "zod": "4.4.3"
+  }
+}

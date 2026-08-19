@@ -79,6 +79,17 @@ importers:
         specifier: 8.2.1
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.27.7)(tsx@4.21.0)
 
+  packages/contracts:
+    dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
+  packages/domain: {}
+
   packages/shared: {}
 
 packages:
@@ -2555,6 +2566,12 @@ packages:
       }
     engines: { node: '>=10' }
 
+  zod@4.4.3:
+    resolution:
+      {
+        integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==,
+      }
+
 snapshots:
   '@asamuzakjp/css-color@4.1.2':
     dependencies:
@@ -3871,3 +3888,5 @@ snapshots:
   xmlchars@2.2.0: {}
 
   yocto-queue@0.1.0: {}
+
+  zod@4.4.3: {}
