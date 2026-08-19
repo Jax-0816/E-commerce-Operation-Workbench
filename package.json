@@ -11,7 +11,7 @@
     "dev": "pnpm --parallel --if-present run dev",
     "build": "pnpm -r --if-present run build",
     "start": "pnpm --parallel --if-present run start",
-    "test": "pnpm -r --if-present run test",
+    "test": "pnpm exec vitest run scripts && pnpm -r --if-present run test",
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "pnpm -r --if-present run lint",
     "format:check": "prettier --check --ignore-unknown package.json pnpm-workspace.yaml tsconfig.base.json eslint.config.js .prettierrc.json .editorconfig .env.example packages",
