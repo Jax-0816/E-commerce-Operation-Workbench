@@ -6,8 +6,14 @@ export interface ProductFactRepository {
   findById(productId: UuidV7, factId: UuidV7): Promise<ProductFact | undefined>;
   findCurrentByKey(productId: UuidV7, key: string): Promise<ProductFact | undefined>;
   listCurrent(productId: UuidV7): Promise<readonly ProductFact[]>;
+  maxRevisionNo(productId: UuidV7, lineageId: UuidV7): Promise<number>;
   updateDraft(fact: ProductFact, expectedUpdatedAt: Date): Promise<ProductFact | undefined>;
   confirm(fact: ProductFact, expectedUpdatedAt: Date): Promise<ProductFact | undefined>;
   replaceCurrent(previous: ProductFact, next: ProductFact): Promise<ProductFact>;
-  deleteDraft(productId: UuidV7, factId: UuidV7, expectedUpdatedAt: Date): Promise<boolean>;
+  deleteDraft(
+    productId: UuidV7,
+    factId: UuidV7,
+    expectedUpdatedAt: Date,
+    deletedAt: Date,
+  ): Promise<boolean>;
 }

@@ -116,6 +116,7 @@ export function createFactsApplication({
         id: existing.id,
         productId: owner,
         key: existing.key,
+        lineageId: existing.lineageId,
         revisionNo: existing.revisionNo,
         supersedesFactId: existing.supersedesFactId,
         now: existing.createdAt,
@@ -154,7 +155,8 @@ export function createFactsApplication({
         id: idFactory(),
         productId: owner,
         key: existing.key,
-        revisionNo: existing.revisionNo + 1,
+        lineageId: existing.lineageId,
+        revisionNo: (await repository.maxRevisionNo(owner, existing.lineageId)) + 1,
         supersedesFactId: existing.id,
         now: nextTimestamp(existing.updatedAt, now()),
       });
@@ -170,7 +172,8 @@ export function createFactsApplication({
           'Confirmed facts are immutable; create a revision instead.',
         );
       }
-      if (!(await repository.deleteDraft(owner, existing.id, input.expectedUpdatedAt)))
+      const deletedAt = nextTimestamp(existing.updatedAt, now());
+      if (!(await repository.deleteDraft(owner, existing.id, input.expectedUpdatedAt, deletedAt)))
         throw staleFact();
     },
   };

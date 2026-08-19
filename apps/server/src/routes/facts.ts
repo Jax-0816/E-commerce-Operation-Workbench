@@ -89,6 +89,7 @@ function parse<T>(result: { success: true; data: T } | { success: false }): T {
 function toFactResponse(fact: ProductFact) {
   return ProductFactResponseSchema.parse({
     id: fact.id,
+    lineageId: fact.lineageId,
     productId: fact.productId,
     key: fact.key,
     label: fact.label,

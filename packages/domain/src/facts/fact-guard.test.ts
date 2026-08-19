@@ -63,6 +63,36 @@ describe('evaluateFacts', () => {
     }
   });
 
+  it('restricts every confirmed fact with missing, blank, or invalid user provenance', () => {
+    const valid = fact('000000000180', 'material', 'confirmed');
+    const malformed = [
+      { ...valid, id: parseUuidV7('0198f0a0-0000-7000-8000-000000000181'), confirmation: null },
+      {
+        ...valid,
+        id: parseUuidV7('0198f0a0-0000-7000-8000-000000000182'),
+        confirmation: { actorType: 'user' as const, actorRef: ' ', evidenceRef: 'evidence' },
+      },
+      {
+        ...valid,
+        id: parseUuidV7('0198f0a0-0000-7000-8000-000000000183'),
+        confirmation: { actorType: 'user' as const, actorRef: 'local-user', evidenceRef: ' ' },
+      },
+      {
+        ...valid,
+        id: parseUuidV7('0198f0a0-0000-7000-8000-000000000184'),
+        confirmation: { actorType: 'ai' as 'user', actorRef: 'model', evidenceRef: 'generation:1' },
+      },
+    ];
+    const result = evaluateFacts(malformed);
+    expect(result.allowed).toEqual([]);
+    expect(result.restricted.map(({ reason }) => reason)).toEqual([
+      'invalid_confirmation_provenance',
+      'invalid_confirmation_provenance',
+      'invalid_confirmation_provenance',
+      'invalid_confirmation_provenance',
+    ]);
+  });
+
   it('maintains a total disjoint partition across status, source, and sensitivity combinations', () => {
     const sources: ProductFact['sourceType'][] = [
       'manual',
@@ -132,6 +162,7 @@ function fact(
   const now = new Date('2026-08-19T08:00:00.000Z');
   return {
     id: parseUuidV7(`0198f0a0-0000-7000-8000-${suffix}`),
+    lineageId: parseUuidV7(`0198f0a0-0000-7000-8000-${suffix}`),
     productId,
     key,
     label: key,
@@ -151,5 +182,6 @@ function fact(
       verification === 'confirmed'
         ? { actorType: 'user', actorRef: 'local-user', evidenceRef: 'manual:fixture' }
         : null,
+    deletedAt: null,
   };
 }

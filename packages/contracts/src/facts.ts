@@ -29,7 +29,7 @@ const FactDraftFields = {
   policyEligible: z.boolean(),
 } as const;
 
-function missingValueMatches<T extends { value: unknown; verification: string }>(
+function factValueMatches<T extends { value: unknown; unit: string | null; verification: string }>(
   input: T,
   context: z.RefinementCtx,
 ): void {
@@ -38,6 +38,19 @@ function missingValueMatches<T extends { value: unknown; verification: string }>
       code: 'custom',
       path: ['value'],
       message: 'Missing facts must have a null value.',
+    });
+  }
+  if (
+    input.unit !== null &&
+    (typeof input.value !== 'object' ||
+      input.value === null ||
+      !('type' in input.value) ||
+      input.value.type !== 'number')
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['unit'],
+      message: 'Only numeric fact values can have a unit.',
     });
   }
 }
@@ -51,7 +64,7 @@ export const CreateFactInputSchema = z
     ...FactDraftFields,
   })
   .strict()
-  .superRefine(missingValueMatches);
+  .superRefine(factValueMatches);
 
 export const UpdateFactInputSchema = z
   .object({
@@ -59,12 +72,12 @@ export const UpdateFactInputSchema = z
     expectedUpdatedAt: TimestampSchema,
   })
   .strict()
-  .superRefine(missingValueMatches);
+  .superRefine(factValueMatches);
 
 export const ReviseFactInputSchema = z
   .object(FactDraftFields)
   .strict()
-  .superRefine(missingValueMatches);
+  .superRefine(factValueMatches);
 
 export const ConfirmFactInputSchema = z
   .object({
@@ -88,6 +101,7 @@ export const ProductFactsParamsSchema = z.object({ productId: UuidV7Schema }).st
 export const ProductFactResponseSchema = z
   .object({
     id: UuidV7Schema,
+    lineageId: UuidV7Schema,
     productId: UuidV7Schema,
     key: z.string(),
     label: z.string(),

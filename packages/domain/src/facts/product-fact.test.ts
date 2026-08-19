@@ -15,6 +15,19 @@ const base = {
 };
 
 describe('ProductFact confirmation', () => {
+  it('only permits units on numeric values', () => {
+    expect(() => createProductFact({ ...base, unit: 'ml' })).toThrow(
+      expect.objectContaining({ code: 'VALIDATION_ERROR', details: { field: 'unit' } }),
+    );
+    expect(
+      createProductFact({
+        ...base,
+        value: { type: 'number', value: 750 },
+        unit: 'ml',
+      }).unit,
+    ).toBe('ml');
+  });
+
   it('requires explicit user provenance even for an AI-inferred fact', () => {
     const inferred = createProductFact(base);
     expect(() =>

@@ -28,6 +28,7 @@ export interface FactConfirmation {
 
 export interface ProductFact {
   readonly id: UuidV7;
+  readonly lineageId: UuidV7;
   readonly productId: UuidV7;
   readonly key: string;
   readonly label: string;
@@ -45,10 +46,12 @@ export interface ProductFact {
   readonly updatedAt: Date;
   readonly confirmedAt: Date | null;
   readonly confirmation: FactConfirmation | null;
+  readonly deletedAt: Date | null;
 }
 
 export interface CreateProductFactProps {
   readonly id: UuidV7;
+  readonly lineageId?: UuidV7;
   readonly productId: UuidV7;
   readonly key: string;
   readonly label: string;
@@ -78,6 +81,12 @@ export function createProductFact(props: CreateProductFactProps): ProductFact {
     throw new DomainError('VALIDATION_ERROR', 'Fact label is invalid.', { field: 'label' });
   }
   validateValue(props.verification, props.value);
+  const unit = normalizeOptional(props.unit);
+  if (unit !== null && props.value?.type !== 'number') {
+    throw new DomainError('VALIDATION_ERROR', 'Only numeric fact values can have a unit.', {
+      field: 'unit',
+    });
+  }
   const revisionNo = props.revisionNo ?? 1;
   if (!Number.isSafeInteger(revisionNo) || revisionNo < 1) {
     throw new DomainError('VALIDATION_ERROR', 'Fact revision is invalid.', { field: 'revisionNo' });
@@ -85,11 +94,12 @@ export function createProductFact(props: CreateProductFactProps): ProductFact {
 
   return {
     id: props.id,
+    lineageId: props.lineageId ?? props.id,
     productId: props.productId,
     key,
     label,
     value: normalizeFactValue(props.value),
-    unit: normalizeOptional(props.unit),
+    unit,
     sourceType: props.sourceType,
     sourceRef: normalizeOptional(props.sourceRef),
     verification: props.verification,
@@ -101,6 +111,7 @@ export function createProductFact(props: CreateProductFactProps): ProductFact {
     updatedAt: props.now,
     confirmedAt: null,
     confirmation: null,
+    deletedAt: null,
   };
 }
 

@@ -94,10 +94,19 @@ describe('fact use cases', () => {
       id: secondFactId,
       revisionNo: 2,
       supersedesFactId: firstFactId,
+      lineageId: firstFactId,
       verification: 'unverified',
     });
     expect(await application.list(productId)).toEqual([revision]);
     expect(repository.rows.find(({ id }) => id === firstFactId)).toEqual(confirmed);
+
+    const updatedRevision = await application.update(productId, revision.id, {
+      ...draftInput(),
+      label: '更新后的修订版',
+      value: { type: 'text', value: '316不锈钢' },
+      expectedUpdatedAt: revision.updatedAt,
+    });
+    expect(updatedRevision.lineageId).toBe(firstFactId);
   });
 
   it('rejects stale confirmation and facts for another or archived product', async () => {
@@ -142,6 +151,33 @@ describe('fact use cases', () => {
         label: '陈旧写入',
         expectedUpdatedAt: original.updatedAt,
       }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
+  it('soft-deletes drafts but never deletes confirmed facts', async () => {
+    const repository = new MemoryFactRepository();
+    let nextId = firstFactId;
+    let hour = 8;
+    const application = createFactsApplication({
+      repository,
+      products: new ExistingProductRepository(),
+      idFactory: () => nextId,
+      now: () => new Date(`2026-08-19T${String(hour++).padStart(2, '0')}:00:00.000Z`),
+    });
+    const draft = await application.create(productId, draftInput());
+    await application.delete(productId, draft.id, { expectedUpdatedAt: draft.updatedAt });
+    expect(await application.list(productId)).toEqual([]);
+    await expect(application.get(productId, draft.id)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+
+    nextId = secondFactId;
+    const next = await application.create(productId, draftInput());
+    const confirmed = await application.confirm(productId, next.id, {
+      expectedUpdatedAt: next.updatedAt,
+      actorRef: 'local-user',
+      evidenceRef: 'supplier:1',
+    });
+    await expect(
+      application.delete(productId, confirmed.id, { expectedUpdatedAt: confirmed.updatedAt }),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
   });
 });
@@ -197,15 +233,30 @@ class MemoryFactRepository implements ProductFactRepository {
     return fact;
   }
   async findById(owner: ProductFact['productId'], id: ProductFact['id']) {
-    return this.rows.find((row) => row.productId === owner && row.id === id);
+    return this.rows.find(
+      (row) => row.productId === owner && row.id === id && row.deletedAt === null,
+    );
   }
   async findCurrentByKey(owner: ProductFact['productId'], key: string) {
     return this.rows.find(
-      (row) => row.productId === owner && row.key === key && this.current.has(row.id),
+      (row) =>
+        row.productId === owner &&
+        row.key === key &&
+        this.current.has(row.id) &&
+        row.deletedAt === null,
     );
   }
   async listCurrent(owner: ProductFact['productId']) {
-    return this.rows.filter((row) => row.productId === owner && this.current.has(row.id));
+    return this.rows.filter(
+      (row) => row.productId === owner && this.current.has(row.id) && row.deletedAt === null,
+    );
+  }
+  async maxRevisionNo(owner: ProductFact['productId'], lineageId: ProductFact['lineageId']) {
+    return Math.max(
+      ...this.rows
+        .filter((row) => row.productId === owner && row.lineageId === lineageId)
+        .map(({ revisionNo }) => revisionNo),
+    );
   }
   async updateDraft(fact: ProductFact, expected: Date) {
     const index = this.rows.findIndex(
@@ -235,7 +286,12 @@ class MemoryFactRepository implements ProductFactRepository {
     this.current.add(next.id);
     return next;
   }
-  async deleteDraft(owner: ProductFact['productId'], id: ProductFact['id'], expected: Date) {
+  async deleteDraft(
+    owner: ProductFact['productId'],
+    id: ProductFact['id'],
+    expected: Date,
+    deletedAt: Date,
+  ) {
     const index = this.rows.findIndex(
       (row) =>
         row.productId === owner &&
@@ -244,8 +300,17 @@ class MemoryFactRepository implements ProductFactRepository {
         row.verification !== 'confirmed',
     );
     if (index < 0) return false;
-    this.rows.splice(index, 1);
+    this.rows[index] = { ...this.rows[index]!, deletedAt };
     this.current.delete(id);
+    const restore = this.rows
+      .filter(
+        (row) =>
+          row.productId === owner &&
+          row.lineageId === this.rows[index]!.lineageId &&
+          row.deletedAt === null,
+      )
+      .sort((a, b) => b.revisionNo - a.revisionNo)[0];
+    if (restore) this.current.add(restore.id);
     return true;
   }
 }

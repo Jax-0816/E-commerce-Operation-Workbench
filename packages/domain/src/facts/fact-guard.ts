@@ -1,7 +1,12 @@
 import type { ProductFact } from './product-fact.js';
 
 export type RestrictedFactReason =
-  'not_confirmed' | 'ai_inferred' | 'sensitive_policy_ineligible' | 'sensitive_evidence_required';
+  | 'not_confirmed'
+  | 'ai_inferred'
+  | 'sensitive_policy_ineligible'
+  | 'sensitive_evidence_required'
+  | 'invalid_confirmation_provenance'
+  | 'deleted';
 
 export interface RestrictedFact {
   readonly fact: ProductFact;
@@ -20,6 +25,10 @@ export function evaluateFacts(facts: readonly ProductFact[]): FactGuardResult {
   const missing: ProductFact[] = [];
 
   for (const fact of facts) {
+    if (fact.deletedAt !== null) {
+      restricted.push({ fact, reason: 'deleted' });
+      continue;
+    }
     if (fact.verification === 'missing') {
       missing.push(fact);
       continue;
@@ -34,8 +43,13 @@ export function evaluateFacts(facts: readonly ProductFact[]): FactGuardResult {
       });
       continue;
     }
-    if (fact.confirmedAt === null || fact.confirmation?.actorType !== 'user') {
-      restricted.push({ fact, reason: 'not_confirmed' });
+    if (
+      fact.confirmedAt === null ||
+      fact.confirmation?.actorType !== 'user' ||
+      fact.confirmation.actorRef.trim().length === 0 ||
+      fact.confirmation.evidenceRef.trim().length === 0
+    ) {
+      restricted.push({ fact, reason: 'invalid_confirmation_provenance' });
       continue;
     }
     if (fact.sensitive && !fact.policyEligible) {

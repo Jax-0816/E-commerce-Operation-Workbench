@@ -9,139 +9,152 @@ const materialId = parseUuidV7('0198f0a0-0000-7000-8000-000000000101');
 const capacityId = parseUuidV7('0198f0a0-0000-7000-8000-000000000102');
 
 describe('checkClaims canonical fixture', () => {
-  it('allows only claims backed by exact eligible current-product fact references', () => {
-    const allowedFacts = evaluateFacts([
-      confirmedFact(materialId, 'material', { type: 'text', value: '304不锈钢' }),
-      confirmedFact(capacityId, 'capacity', { type: 'number', value: 750 }, 'ml'),
-    ]).allowed;
-
-    const claims: DeterministicClaim[] = [
-      claim('材质为304不锈钢', materialId, 'material'),
-      claim('容量750ml', capacityId, 'capacity'),
-      claim('食品级', materialId, 'food_grade'),
-      claim('24小时保温', capacityId, 'insulation_duration'),
+  it('allows canonical 304 steel/750ml claims but blocks spoofed food-grade and 24-hour text', () => {
+    const material = confirmedFact(materialId, 'material', '材质', {
+      type: 'text',
+      value: '304不锈钢',
+    });
+    const capacity = confirmedFact(
+      capacityId,
+      'capacity',
+      '容量',
+      { type: 'number', value: 750 },
+      'ml',
+    );
+    const allowed = evaluateFacts([material, capacity]).allowed;
+    const claims = [
+      claim('材质为304不锈钢', material),
+      claim('容量750ml', capacity),
+      claim('食品级', material),
+      claim('24小时保温', capacity),
     ];
 
-    const result = checkClaims(claims, allowedFacts, productId);
+    const result = checkClaims(claims, allowed, productId);
 
     expect(result.supportedClaims.map(({ text }) => text)).toEqual([
       '材质为304不锈钢',
       '容量750ml',
     ]);
     expect(result.unsupportedClaims.map(({ claim, reason }) => [claim.text, reason])).toEqual([
-      ['食品级', 'fact_key_mismatch'],
-      ['24小时保温', 'fact_key_mismatch'],
+      ['食品级', 'text_not_canonical'],
+      ['24小时保温', 'text_not_canonical'],
     ]);
-    expect(result.autoApprovalAllowed).toBe(false);
-    expect(result.assetStatus).toBe('needs_review');
+    expect(result).toMatchObject({ autoApprovalAllowed: false, assetStatus: 'needs_review' });
   });
 
-  it('blocks missing, cross-product, unconfirmed, inferred, and sensitive-ineligible evidence', () => {
-    const inferred = confirmedFact(materialId, 'material', { type: 'text', value: '304' });
-    const restrictedFacts: ProductFact[] = [
-      { ...inferred, verification: 'inferred', confirmedAt: null, confirmation: null },
-    ];
-    const allowed = evaluateFacts(restrictedFacts).allowed;
-    const cases: Array<
-      [
-        string,
-        DeterministicClaim,
-        ReturnType<typeof checkClaims>['unsupportedClaims'][number]['reason'],
-      ]
-    > = [
-      ['no reference', { id: 'claim-1', text: '无证据', evidenceRefs: [] }, 'evidence_required'],
-      [
-        'foreign product',
-        {
-          ...claim('跨产品', materialId, 'material'),
-          evidenceRefs: [{ productId: otherProductId, factId: materialId, factKey: 'material' }],
-        },
-        'cross_product_evidence',
-      ],
-      ['inferred', claim('推断', materialId, 'material'), 'fact_not_allowed'],
-    ];
-
-    for (const [name, candidate, reason] of cases) {
-      expect(checkClaims([candidate], allowed, productId).unsupportedClaims[0]?.reason, name).toBe(
-        reason,
-      );
-    }
-  });
-
-  it('requires every structured evidence reference to be eligible for the exact claim key', () => {
-    const material = confirmedFact(materialId, 'material', { type: 'text', value: '304不锈钢' });
-    const capacity = confirmedFact(capacityId, 'capacity', { type: 'number', value: 750 }, 'ml');
-    const allowed = evaluateFacts([material, capacity]).allowed;
-    const candidate: DeterministicClaim = {
-      id: 'claim-composite',
-      text: '304不锈钢，容量750ml',
+  it('binds exact typed asserted value and unit to the allowed fact', () => {
+    const capacity = confirmedFact(
+      capacityId,
+      'capacity',
+      '容量',
+      { type: 'number', value: 750 },
+      'ml',
+    );
+    const allowed = evaluateFacts([capacity]).allowed;
+    const baseline = claim('容量750ml', capacity);
+    const wrongValue = {
+      ...baseline,
       evidenceRefs: [
-        { productId, factId: materialId, factKey: 'material' },
-        { productId, factId: capacityId, factKey: 'insulation_duration' },
+        { ...baseline.evidenceRefs[0]!, assertedValue: { type: 'number' as const, value: 24 } },
       ],
     };
-    expect(checkClaims([candidate], allowed, productId)).toMatchObject({
-      autoApprovalAllowed: false,
-      assetStatus: 'needs_review',
-      unsupportedClaims: [{ reason: 'fact_key_mismatch' }],
-    });
+    const wrongUnit = {
+      ...baseline,
+      evidenceRefs: [{ ...baseline.evidenceRefs[0]!, assertedUnit: 'h' }],
+    };
+
+    expect(checkClaims([wrongValue], allowed, productId).unsupportedClaims[0]?.reason).toBe(
+      'assertion_mismatch',
+    );
+    expect(checkClaims([wrongUnit], allowed, productId).unsupportedClaims[0]?.reason).toBe(
+      'assertion_mismatch',
+    );
+    const malformed = {
+      ...baseline,
+      evidenceRefs: [{ ...baseline.evidenceRefs[0]!, assertedValue: undefined }],
+    } as unknown as DeterministicClaim;
+    expect(checkClaims([malformed], allowed, productId).unsupportedClaims[0]?.reason).toBe(
+      'assertion_mismatch',
+    );
   });
 
-  it('requires an explicit policy reference and eligible sensitive evidence for sensitive claims', () => {
-    const plain = confirmedFact(materialId, 'material', { type: 'text', value: '304不锈钢' });
+  it('blocks missing, cross-product, and inferred evidence', () => {
+    const inferred = confirmedFact(materialId, 'material', '材质', { type: 'text', value: '304' });
+    const allowed = evaluateFacts([
+      { ...inferred, verification: 'inferred', confirmedAt: null, confirmation: null },
+    ]).allowed;
+    const noReference: DeterministicClaim = { id: 'claim-1', text: '无证据', evidenceRefs: [] };
+    const baseline = claim('材质为304', inferred);
+    const foreign = {
+      ...baseline,
+      evidenceRefs: [{ ...baseline.evidenceRefs[0]!, productId: otherProductId }],
+    };
+
+    expect(checkClaims([noReference], allowed, productId).unsupportedClaims[0]?.reason).toBe(
+      'evidence_required',
+    );
+    expect(checkClaims([foreign], allowed, productId).unsupportedClaims[0]?.reason).toBe(
+      'cross_product_evidence',
+    );
+    expect(
+      checkClaims([claim('材质为304', inferred)], allowed, productId).unsupportedClaims[0]?.reason,
+    ).toBe('fact_not_allowed');
+  });
+
+  it('derives sensitivity from matched fact and never trusts omitted caller sensitivity', () => {
     const sensitive = {
-      ...confirmedFact(capacityId, 'food_contact_safe', { type: 'boolean', value: true }),
+      ...confirmedFact(capacityId, 'food_contact_safe', '食品接触安全', {
+        type: 'boolean',
+        value: true,
+      }),
       sensitive: true,
       policyEligible: true,
     };
-    const allowed = evaluateFacts([plain, sensitive]).allowed;
-    const noPolicy = {
-      ...claim('食品接触安全', capacityId, 'food_contact_safe'),
-      sensitivity: 'sensitive' as const,
-      policyRef: null,
-    };
-    expect(checkClaims([noPolicy], allowed, productId).unsupportedClaims[0]?.reason).toBe(
+    const allowed = evaluateFacts([sensitive]).allowed;
+    const omitted = claim('食品接触安全为是', sensitive);
+
+    expect(checkClaims([omitted], allowed, productId).unsupportedClaims[0]?.reason).toBe(
       'sensitive_policy_required',
     );
-
-    const plainEvidence = {
-      ...claim('食品接触安全', materialId, 'material'),
-      sensitivity: 'sensitive' as const,
-      policyRef: 'policy:food-contact-v1',
-    };
-    expect(checkClaims([plainEvidence], allowed, productId).unsupportedClaims[0]?.reason).toBe(
-      'sensitive_evidence_required',
-    );
-
-    const supported = { ...noPolicy, policyRef: 'policy:food-contact-v1' };
-    expect(checkClaims([supported], allowed, productId)).toMatchObject({
+    expect(
+      checkClaims([{ ...omitted, policyRef: 'policy:food-contact-v1' }], allowed, productId),
+    ).toMatchObject({
       autoApprovalAllowed: true,
       assetStatus: 'approved',
-      unsupportedClaims: [],
     });
   });
 });
 
-function claim(text: string, factId: ProductFact['id'], factKey: string): DeterministicClaim {
+function claim(text: string, fact: ProductFact): DeterministicClaim {
   return {
     id: `claim-${text}`,
     text,
-    evidenceRefs: [{ productId, factId, factKey }],
+    evidenceRefs: [
+      {
+        productId: fact.productId,
+        factId: fact.id,
+        factKey: fact.key,
+        assertedValue: fact.value!,
+        assertedUnit: fact.unit,
+      },
+    ],
   };
 }
 
 function confirmedFact(
   id: ProductFact['id'],
   key: string,
+  label: string,
   value: NonNullable<ProductFact['value']>,
   unit: string | null = null,
 ): ProductFact {
   const now = new Date('2026-08-19T08:00:00.000Z');
   return {
     id,
+    lineageId: id,
     productId,
     key,
-    label: key,
+    label,
     value,
     unit,
     sourceType: 'supplier',
@@ -159,5 +172,6 @@ function confirmedFact(
       actorRef: 'local-user',
       evidenceRef: 'supplier:catalogue-1',
     },
+    deletedAt: null,
   };
 }

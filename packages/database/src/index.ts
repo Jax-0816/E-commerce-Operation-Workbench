@@ -3,6 +3,6 @@ export { checkIntegrity, type IntegrityCheck } from './health.js';
 export { migrateDatabase } from './migrate.js';
 export { appMetadata, coreSchema, workspaceSettings } from './schema/core.js';
 export { products } from './schema/products.js';
-export { productFacts } from './schema/product-facts.js';
+export { productFactLineages, productFacts } from './schema/product-facts.js';
 export { DrizzleProductRepository } from './repositories/product-repository.js';
 export { DrizzleProductFactRepository } from './repositories/product-fact-repository.js';

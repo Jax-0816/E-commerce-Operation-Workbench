@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cd266286-a50b-43f4-a030-c4ab7d605486",
+  "id": "722a16d9-3b21-4609-9ab5-b26a56950dad",
   "prevId": "3c3c431b-a751-4e96-a9d6-3c85d31714af",
   "tables": {
     "app_metadata": {
@@ -76,6 +76,65 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "product_fact_lineages": {
+      "name": "product_fact_lineages",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fact_key": {
+          "name": "fact_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "product_fact_lineages_identity_unique": {
+          "name": "product_fact_lineages_identity_unique",
+          "columns": ["id", "product_id", "fact_key"],
+          "isUnique": true
+        },
+        "product_fact_lineages_product_key": {
+          "name": "product_fact_lineages_product_key",
+          "columns": ["product_id", "fact_key"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "product_fact_lineages_product_id_products_id_fk": {
+          "name": "product_fact_lineages_product_id_products_id_fk",
+          "tableFrom": "product_fact_lineages",
+          "tableTo": "products",
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "product_facts": {
       "name": "product_facts",
       "columns": {
@@ -83,6 +142,13 @@
           "name": "id",
           "type": "text",
           "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_id": {
+          "name": "lineage_id",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -239,29 +305,41 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {
-        "product_facts_product_key_revision_unique": {
-          "name": "product_facts_product_key_revision_unique",
-          "columns": ["product_id", "fact_key", "revision_no"],
+        "product_facts_identity_lineage_unique": {
+          "name": "product_facts_identity_lineage_unique",
+          "columns": ["id", "lineage_id"],
+          "isUnique": true
+        },
+        "product_facts_lineage_revision_unique": {
+          "name": "product_facts_lineage_revision_unique",
+          "columns": ["lineage_id", "revision_no"],
           "isUnique": true
         },
         "product_facts_current_key_unique": {
           "name": "product_facts_current_key_unique",
           "columns": ["product_id", "fact_key"],
           "isUnique": true,
-          "where": "\"product_facts\".\"is_current\" = 1"
+          "where": "\"product_facts\".\"is_current\" = 1 AND \"product_facts\".\"deleted_at\" IS NULL"
         },
-        "product_facts_supersedes_unique": {
-          "name": "product_facts_supersedes_unique",
+        "product_facts_active_supersedes_unique": {
+          "name": "product_facts_active_supersedes_unique",
           "columns": ["supersedes_fact_id"],
           "isUnique": true,
-          "where": "\"product_facts\".\"supersedes_fact_id\" IS NOT NULL"
+          "where": "\"product_facts\".\"supersedes_fact_id\" IS NOT NULL AND \"product_facts\".\"deleted_at\" IS NULL"
         },
         "product_facts_current_list": {
           "name": "product_facts_current_list",
-          "columns": ["product_id", "is_current", "fact_key"],
+          "columns": ["product_id", "is_current", "deleted_at", "fact_key"],
           "isUnique": false
         }
       },
@@ -275,12 +353,21 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
-        "product_facts_supersedes_fact_id_product_facts_id_fk": {
-          "name": "product_facts_supersedes_fact_id_product_facts_id_fk",
+        "product_facts_lineage_owner_fk": {
+          "name": "product_facts_lineage_owner_fk",
+          "tableFrom": "product_facts",
+          "tableTo": "product_fact_lineages",
+          "columnsFrom": ["lineage_id", "product_id", "fact_key"],
+          "columnsTo": ["id", "product_id", "fact_key"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "product_facts_supersedes_lineage_fk": {
+          "name": "product_facts_supersedes_lineage_fk",
           "tableFrom": "product_facts",
           "tableTo": "product_facts",
-          "columnsFrom": ["supersedes_fact_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": ["supersedes_fact_id", "lineage_id"],
+          "columnsTo": ["id", "lineage_id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -288,17 +375,9 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
-        "product_facts_revision_positive": {
-          "name": "product_facts_revision_positive",
-          "value": "\"product_facts\".\"revision_no\" >= 1"
-        },
         "product_facts_revision_lineage": {
           "name": "product_facts_revision_lineage",
           "value": "(\"product_facts\".\"revision_no\" = 1 AND \"product_facts\".\"supersedes_fact_id\" IS NULL) OR (\"product_facts\".\"revision_no\" > 1 AND \"product_facts\".\"supersedes_fact_id\" IS NOT NULL AND \"product_facts\".\"supersedes_fact_id\" <> \"product_facts\".\"id\")"
-        },
-        "product_facts_timestamp_order": {
-          "name": "product_facts_timestamp_order",
-          "value": "\"product_facts\".\"updated_at\" >= \"product_facts\".\"created_at\" AND (\"product_facts\".\"confirmed_at\" IS NULL OR \"product_facts\".\"confirmed_at\" >= \"product_facts\".\"created_at\")"
         },
         "product_facts_boolean_flags": {
           "name": "product_facts_boolean_flags",
@@ -314,11 +393,23 @@
         },
         "product_facts_value_shape": {
           "name": "product_facts_value_shape",
-          "value": "(\n      (\"product_facts\".\"verification\" = 'missing' AND \"product_facts\".\"value_type\" IS NULL AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NULL)\n      OR (\"product_facts\".\"verification\" <> 'missing' AND (\n        (\"product_facts\".\"value_type\" = 'text' AND \"product_facts\".\"value_text\" IS NOT NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NULL)\n        OR (\"product_facts\".\"value_type\" = 'number' AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NOT NULL AND \"product_facts\".\"value_boolean\" IS NULL)\n        OR (\"product_facts\".\"value_type\" = 'boolean' AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IN (0,1))\n      ))\n    )"
+          "value": "(\n      (\"product_facts\".\"verification\" = 'missing' AND \"product_facts\".\"value_type\" IS NULL AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NULL AND \"product_facts\".\"unit\" IS NULL)\n      OR (\"product_facts\".\"verification\" <> 'missing' AND \"product_facts\".\"value_type\" IS NOT NULL AND (\n        (\"product_facts\".\"value_type\" = 'text' AND \"product_facts\".\"value_text\" IS NOT NULL AND length(trim(\"product_facts\".\"value_text\")) > 0 AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NULL AND \"product_facts\".\"unit\" IS NULL)\n        OR (\"product_facts\".\"value_type\" = 'number' AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NOT NULL AND \"product_facts\".\"value_boolean\" IS NULL)\n        OR (\"product_facts\".\"value_type\" = 'boolean' AND \"product_facts\".\"value_text\" IS NULL AND \"product_facts\".\"value_number\" IS NULL AND \"product_facts\".\"value_boolean\" IS NOT NULL AND \"product_facts\".\"value_boolean\" IN (0,1) AND \"product_facts\".\"unit\" IS NULL)\n      ))\n    )"
+        },
+        "product_facts_unit_nonblank": {
+          "name": "product_facts_unit_nonblank",
+          "value": "\"product_facts\".\"unit\" IS NULL OR length(trim(\"product_facts\".\"unit\")) > 0"
         },
         "product_facts_confirmation_shape": {
           "name": "product_facts_confirmation_shape",
-          "value": "(\n      (\"product_facts\".\"verification\" = 'confirmed' AND \"product_facts\".\"confirmed_at\" IS NOT NULL AND \"product_facts\".\"confirmation_actor_type\" = 'user' AND \"product_facts\".\"confirmation_actor_ref\" IS NOT NULL AND length(\"product_facts\".\"confirmation_actor_ref\") > 0 AND \"product_facts\".\"confirmation_evidence_ref\" IS NOT NULL AND length(\"product_facts\".\"confirmation_evidence_ref\") > 0)\n      OR (\"product_facts\".\"verification\" <> 'confirmed' AND \"product_facts\".\"confirmed_at\" IS NULL AND \"product_facts\".\"confirmation_actor_type\" IS NULL AND \"product_facts\".\"confirmation_actor_ref\" IS NULL AND \"product_facts\".\"confirmation_evidence_ref\" IS NULL)\n    )"
+          "value": "(\n      (\"product_facts\".\"verification\" = 'confirmed' AND \"product_facts\".\"confirmed_at\" IS NOT NULL AND \"product_facts\".\"confirmation_actor_type\" IS NOT NULL AND \"product_facts\".\"confirmation_actor_type\" = 'user' AND \"product_facts\".\"confirmation_actor_ref\" IS NOT NULL AND length(trim(\"product_facts\".\"confirmation_actor_ref\")) > 0 AND \"product_facts\".\"confirmation_evidence_ref\" IS NOT NULL AND length(trim(\"product_facts\".\"confirmation_evidence_ref\")) > 0)\n      OR (\"product_facts\".\"verification\" <> 'confirmed' AND \"product_facts\".\"confirmed_at\" IS NULL AND \"product_facts\".\"confirmation_actor_type\" IS NULL AND \"product_facts\".\"confirmation_actor_ref\" IS NULL AND \"product_facts\".\"confirmation_evidence_ref\" IS NULL)\n    )"
+        },
+        "product_facts_timestamp_order": {
+          "name": "product_facts_timestamp_order",
+          "value": "\"product_facts\".\"updated_at\" >= \"product_facts\".\"created_at\" AND (\"product_facts\".\"confirmed_at\" IS NULL OR (\"product_facts\".\"confirmed_at\" >= \"product_facts\".\"created_at\" AND \"product_facts\".\"confirmed_at\" <= \"product_facts\".\"updated_at\")) AND (\"product_facts\".\"deleted_at\" IS NULL OR \"product_facts\".\"deleted_at\" >= \"product_facts\".\"updated_at\")"
+        },
+        "product_facts_deleted_not_current": {
+          "name": "product_facts_deleted_not_current",
+          "value": "\"product_facts\".\"deleted_at\" IS NULL OR \"product_facts\".\"is_current\" = 0"
         }
       }
     },

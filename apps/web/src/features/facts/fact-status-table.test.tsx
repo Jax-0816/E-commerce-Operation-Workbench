@@ -94,6 +94,7 @@ async function render(items: FactItem[], overrides: Partial<FactsApi> = {}) {
 function fact(suffix: string, label: string, verification: FactItem['verification']): FactItem {
   return {
     id: `0198f0a0-0000-7000-8000-${suffix}`,
+    lineageId: `0198f0a0-0000-7000-8000-${suffix}`,
     productId,
     key: `key_${suffix}`,
     label,

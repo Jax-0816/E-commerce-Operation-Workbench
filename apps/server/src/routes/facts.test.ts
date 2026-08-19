@@ -90,6 +90,7 @@ class RecordingFactsApplication implements FactsApplication {
   lastConfirmation: ConfirmFactInput | undefined;
   private readonly fact: ProductFact = {
     id: parseUuidV7(factId),
+    lineageId: parseUuidV7(factId),
     productId: parseUuidV7(productId),
     key: 'material',
     label: '材质',
@@ -106,6 +107,7 @@ class RecordingFactsApplication implements FactsApplication {
     updatedAt: new Date('2026-08-19T08:00:00.000Z'),
     confirmedAt: null,
     confirmation: null,
+    deletedAt: null,
   };
   async create() {
     this.createCalls += 1;

@@ -7,6 +7,7 @@ export type FactValue =
 
 export interface FactItem {
   readonly id: string;
+  readonly lineageId: string;
   readonly productId: string;
   readonly key: string;
   readonly label: string;

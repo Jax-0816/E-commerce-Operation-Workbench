@@ -48,6 +48,19 @@ describe('product fact contracts', () => {
         databaseOnly: 'must not cross',
       }),
     ).toThrow();
+    expect(() =>
+      CreateFactInputSchema.parse({
+        key: 'material',
+        label: '材质',
+        value: { type: 'text', value: '304不锈钢' },
+        unit: 'ml',
+        sourceType: 'manual',
+        sourceRef: null,
+        verification: 'unverified',
+        sensitive: false,
+        policyEligible: true,
+      }),
+    ).toThrow();
   });
 
   it('requires explicit optimistic timestamp and user provenance for confirmation', () => {
@@ -70,6 +83,7 @@ describe('product fact contracts', () => {
   it('filters persistence-only current flags from public fact DTOs', () => {
     const dto = ProductFactResponseSchema.parse({
       id: '0198f0a0-0000-7000-8000-000000000101',
+      lineageId: '0198f0a0-0000-7000-8000-000000000101',
       productId: '0198f0a0-0000-7000-8000-000000000001',
       key: 'material',
       label: '材质',
