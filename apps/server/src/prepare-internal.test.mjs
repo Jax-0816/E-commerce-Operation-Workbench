@@ -1,7 +1,9 @@
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { execFileSync } from 'node:child_process';
+import { access, mkdtemp, rm } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { execPath } from 'node:process';
+import { env as processEnvironment, execPath } from 'node:process';
+import { fileURLToPath, URL } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -19,33 +21,48 @@ const expectedPackageNames = [
   '@eaw/database',
   '@eaw/workspace',
 ];
+const require = createRequire(import.meta.url);
+const typescriptCli = require.resolve('typescript/bin/tsc');
+const workspaceRoot = fileURLToPath(new URL('../../../', import.meta.url));
 
 describe('internal package preparation', () => {
-  it('unconditionally rebuilds every package in dependency order and restores secondary artifacts', async () => {
-    const fakeWorkspace = await mkdtemp(join(tmpdir(), 'eaw-prepare-internal-'));
-    const databaseDist = join(fakeWorkspace, 'packages', 'database', 'dist');
-    const secondaryArtifact = join(databaseDist, 'repositories', 'product-repository.js');
+  it('unconditionally rebuilds every package in dependency order', async () => {
     const builtPackages = [];
 
+    await prepareInternalPackages(async (internalPackage) => {
+      builtPackages.push(internalPackage.name);
+    });
+
+    expect(internalPackages.map(({ name }) => name)).toEqual(expectedPackageNames);
+    expect(builtPackages).toEqual(expectedPackageNames);
+  });
+
+  it('emits the database entry point and product repository with the real build command', async () => {
+    const databasePackage = internalPackages.find(({ name }) => name === '@eaw/database');
+
+    expect(databasePackage).toBeDefined();
+    expect(databasePackage.command).toEqual(['exec', 'tsc', '-p', 'tsconfig.json']);
+
+    const outputDirectory = await mkdtemp(join(workspaceRoot, '.eaw-database-build-'));
+    const databaseDirectory = join(workspaceRoot, 'packages', 'database');
+
     try {
-      await mkdir(databaseDist, { recursive: true });
-      await writeFile(join(databaseDist, 'index.js'), 'export {}', 'utf8');
+      execFileSync(
+        execPath,
+        [typescriptCli, ...databasePackage.command.slice(2), '--outDir', outputDirectory],
+        {
+          cwd: databaseDirectory,
+          env: processEnvironment,
+          stdio: 'pipe',
+        },
+      );
 
-      await expect(access(secondaryArtifact)).rejects.toMatchObject({ code: 'ENOENT' });
-
-      await prepareInternalPackages(async (internalPackage) => {
-        builtPackages.push(internalPackage.name);
-        if (internalPackage.name === '@eaw/database') {
-          await mkdir(join(databaseDist, 'repositories'), { recursive: true });
-          await writeFile(secondaryArtifact, 'export const restored = true;', 'utf8');
-        }
-      });
-
-      expect(internalPackages.map(({ name }) => name)).toEqual(expectedPackageNames);
-      expect(builtPackages).toEqual(expectedPackageNames);
-      await expect(readFile(secondaryArtifact, 'utf8')).resolves.toContain('restored = true');
+      await expect(access(join(outputDirectory, 'index.js'))).resolves.toBeUndefined();
+      await expect(
+        access(join(outputDirectory, 'repositories', 'product-repository.js')),
+      ).resolves.toBeUndefined();
     } finally {
-      await rm(fakeWorkspace, { recursive: true, force: true });
+      await rm(outputDirectory, { recursive: true, force: true });
     }
   });
 
