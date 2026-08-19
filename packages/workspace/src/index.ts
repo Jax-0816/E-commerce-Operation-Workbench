@@ -1,5 +1,6 @@
 export { initializeWorkspace } from './bootstrap.js';
 export type { InitializedWorkspace } from './bootstrap.js';
+export { isPathContained } from './filesystem.js';
 export { acquireWorkspaceLock } from './lock.js';
 export type { AcquireWorkspaceLockOptions, WorkspaceLock } from './lock.js';
 export {

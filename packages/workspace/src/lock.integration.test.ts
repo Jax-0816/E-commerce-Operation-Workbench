@@ -269,4 +269,20 @@ describe('workspace locking', () => {
       readFile(join(externalLockPath, 'owner-owner-one.json'), 'utf8'),
     ).resolves.toContain('owner-one');
   });
+
+  it('does not destructively release when an injected Windows-style identity is zero', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'zero-identity-owner',
+      pid: 101,
+      isProcessAlive: () => true,
+      getLockDirectoryIdentity: async () => ({ device: 0, inode: 0 }),
+    });
+
+    await lock.release();
+
+    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toContain(
+      'owner-zero-identity-owner.json',
+    );
+  });
 });

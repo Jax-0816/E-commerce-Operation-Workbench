@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
   initializeWorkspace,
+  isPathContained,
   normalizeWorkspaceRelativePath,
   resolveDefaultWorkspace,
   resolveWorkspacePath,
@@ -31,6 +32,15 @@ async function createTemporaryWorkspace(): Promise<string> {
 }
 
 describe('workspace bootstrap', () => {
+  it('rejects Windows paths on a different drive or UNC share without relying on the host platform', () => {
+    expect(isPathContained('C:\\workspace', 'D:\\workspace\\asset.png', 'win32')).toBe(false);
+    expect(
+      isPathContained('\\\\server-a\\share\\workspace', '\\\\server-b\\share\\asset.png', 'win32'),
+    ).toBe(false);
+    expect(isPathContained('C:\\workspace', 'C:\\workspace\\assets\\photo.png', 'win32')).toBe(
+      true,
+    );
+  });
   it('uses LOCALAPPDATA for the Windows default without depending on the host platform', () => {
     expect(
       resolveDefaultWorkspace('win32', { LOCALAPPDATA: 'C:\\Users\\Lin\\AppData\\Local' }),

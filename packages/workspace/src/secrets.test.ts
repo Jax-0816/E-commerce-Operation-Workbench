@@ -184,6 +184,17 @@ describe('file secret store', () => {
     });
   });
 
+  it('creates a new nested workspace before acquiring its secret mutation lock', async () => {
+    const rootPath = await createTemporaryWorkspace();
+    const workspacePath = join(rootPath, 'new', 'nested', 'workspace');
+
+    await new FileSecretStore(workspacePath).set('deepseek-api-key', 'new-secret');
+
+    await expect(readFile(join(workspacePath, '.secrets.json'), 'utf8')).resolves.toContain(
+      'new-secret',
+    );
+  });
+
   it('serializes two child-process mutations with a filesystem lock', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const workerPath = await createMutationWorker(workspacePath);

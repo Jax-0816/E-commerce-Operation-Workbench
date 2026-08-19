@@ -23,6 +23,9 @@ export interface AcquireWorkspaceLockOptions {
   readonly isProcessAlive?: (pid: number) => boolean | Promise<boolean>;
   readonly onStaleOwnerObserved?: (record: Readonly<LockRecord>) => void | Promise<void>;
   readonly onBeforeLockDirectoryRemoval?: (lockPath: string) => void | Promise<void>;
+  readonly getLockDirectoryIdentity?: (
+    lockPath: string,
+  ) => Promise<{ device: number; inode: number }>;
 }
 
 export interface WorkspaceLock {
@@ -43,36 +46,55 @@ export async function acquireWorkspaceLock(
   const isProcessAlive = options.isProcessAlive ?? defaultProcessLiveness;
 
   for (;;) {
-    const createdLock = await createLockDirectory(lockPath, record);
+    const createdLock = await createLockDirectory(
+      lockPath,
+      record,
+      options.getLockDirectoryIdentity,
+    );
     if (createdLock !== undefined) {
       return {
         ownerToken: record.ownerToken,
         release: async () => {
-          if (!(await removeOwnerRecord(lockPath, record.ownerToken, createdLock))) {
+          if (
+            !(await removeOwnerRecord(
+              lockPath,
+              record.ownerToken,
+              createdLock,
+              options.getLockDirectoryIdentity,
+            ))
+          ) {
             return;
           }
           await options.onBeforeLockDirectoryRemoval?.(lockPath);
-          await removeEmptyLockDirectory(lockPath, createdLock);
+          await removeEmptyLockDirectory(lockPath, createdLock, options.getLockDirectoryIdentity);
         },
       };
     }
 
-    const staleOwner = await readOwnerRecord(lockPath);
+    const staleOwner = await readOwnerRecord(lockPath, options.getLockDirectoryIdentity);
     if (staleOwner === undefined || (await isProcessAlive(staleOwner.record.pid))) {
       throw lockedError();
     }
 
     await options.onStaleOwnerObserved?.(staleOwner.record);
-    if (!(await removeOwnerRecord(lockPath, staleOwner.record.ownerToken, staleOwner.identity))) {
+    if (
+      !(await removeOwnerRecord(
+        lockPath,
+        staleOwner.record.ownerToken,
+        staleOwner.identity,
+        options.getLockDirectoryIdentity,
+      ))
+    ) {
       continue;
     }
-    await removeEmptyLockDirectory(lockPath, staleOwner.identity);
+    await removeEmptyLockDirectory(lockPath, staleOwner.identity, options.getLockDirectoryIdentity);
   }
 }
 
 async function createLockDirectory(
   lockPath: string,
   record: LockRecord,
+  getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
 ): Promise<LockDirectoryIdentity | undefined> {
   try {
     await mkdir(lockPath);
@@ -84,7 +106,7 @@ async function createLockDirectory(
   }
 
   try {
-    const identity = await assertLockDirectory(lockPath);
+    const identity = await assertLockDirectory(lockPath, getIdentity);
     const file = await open(ownerRecordPath(lockPath, record.ownerToken), 'wx', 0o600);
     try {
       await file.writeFile(JSON.stringify(record), 'utf8');
@@ -101,9 +123,10 @@ async function createLockDirectory(
 
 async function readOwnerRecord(
   lockPath: string,
+  getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
 ): Promise<{ readonly record: LockRecord; readonly identity: LockDirectoryIdentity } | undefined> {
   let ownerFileName: string;
-  const identity = await assertLockDirectory(lockPath);
+  const identity = await assertLockDirectory(lockPath, getIdentity);
   try {
     const ownerFiles = (await readdir(lockPath)).filter(
       (entry) => entry.startsWith('owner-') && entry.endsWith('.json'),
@@ -131,8 +154,10 @@ async function removeOwnerRecord(
   lockPath: string,
   ownerToken: string,
   expectedIdentity: LockDirectoryIdentity,
+  getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
 ): Promise<boolean> {
-  assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath));
+  if (!isVerifiable(expectedIdentity)) return false;
+  assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath, getIdentity));
   try {
     await unlink(ownerRecordPath(lockPath, ownerToken));
     return true;
@@ -147,9 +172,11 @@ async function removeOwnerRecord(
 async function removeEmptyLockDirectory(
   lockPath: string,
   expectedIdentity?: LockDirectoryIdentity,
+  getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
 ): Promise<void> {
   if (expectedIdentity !== undefined) {
-    assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath));
+    if (!isVerifiable(expectedIdentity)) return;
+    assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath, getIdentity));
   }
   try {
     await rmdir(lockPath);
@@ -161,12 +188,21 @@ async function removeEmptyLockDirectory(
   }
 }
 
-async function assertLockDirectory(lockPath: string): Promise<LockDirectoryIdentity> {
+async function assertLockDirectory(
+  lockPath: string,
+  getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
+): Promise<LockDirectoryIdentity> {
   const entry = await lstat(lockPath);
   if (entry.isSymbolicLink() || !entry.isDirectory()) {
     throw new TypeError('Workspace lock path must be a real directory.');
   }
-  return { device: entry.dev, inode: entry.ino };
+  return getIdentity === undefined
+    ? { device: entry.dev, inode: entry.ino }
+    : getIdentity(lockPath);
+}
+
+function isVerifiable(identity: LockDirectoryIdentity): boolean {
+  return identity.device !== 0 && identity.inode !== 0;
 }
 
 function assertSameIdentity(expected: LockDirectoryIdentity, current: LockDirectoryIdentity): void {

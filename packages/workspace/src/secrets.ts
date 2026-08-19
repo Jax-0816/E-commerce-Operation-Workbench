@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { lstat, mkdir, open, readFile, realpath, rename, rm, rmdir } from 'node:fs/promises';
 import { basename, dirname, join, parse, relative, resolve, sep } from 'node:path';
 
+import { isPathContained } from './filesystem.js';
+
 export interface SecretStore {
   get(key: string): Promise<string | undefined>;
   set(key: string, value: string): Promise<void>;
@@ -17,6 +19,7 @@ export interface SecretConfigurationStatus {
 export interface FileSecretStoreOptions {
   readonly onTemporaryFileSynced?: (temporaryPath: string) => void | Promise<void>;
   readonly onBeforeMutation?: () => void | Promise<void>;
+  readonly isProcessAlive?: (pid: number) => boolean | Promise<boolean>;
 }
 
 const pathLocks = new Map<string, Promise<void>>();
@@ -39,8 +42,8 @@ export class FileSecretStore implements SecretStore {
     validateSecretKey(key);
     await this.#options.onBeforeMutation?.();
     await withPathLock(this.#filePath, async () => {
-      await validateExistingAncestors(dirname(this.#filePath));
-      await withFilesystemMutationLock(this.#filePath, async () => {
+      await ensureSafeDirectoryPath(dirname(this.#filePath));
+      await withFilesystemMutationLock(this.#filePath, this.#options, async () => {
         const secrets = await this.readSecrets();
         secrets[key] = value;
         await this.writeSecrets(secrets);
@@ -52,8 +55,8 @@ export class FileSecretStore implements SecretStore {
     validateSecretKey(key);
     await this.#options.onBeforeMutation?.();
     await withPathLock(this.#filePath, async () => {
-      await validateExistingAncestors(dirname(this.#filePath));
-      await withFilesystemMutationLock(this.#filePath, async () => {
+      await ensureSafeDirectoryPath(dirname(this.#filePath));
+      await withFilesystemMutationLock(this.#filePath, this.#options, async () => {
         const secrets = await this.readSecrets();
         if (key in secrets) {
           delete secrets[key];
@@ -149,26 +152,41 @@ async function withPathLock<T>(path: string, operation: () => Promise<T>): Promi
 
 async function withFilesystemMutationLock<T>(
   path: string,
+  options: FileSecretStoreOptions,
   operation: () => Promise<T>,
 ): Promise<T> {
   const lockPath = join(dirname(path), `.${basename(path)}.mutation.lock`);
-  let acquired = false;
-  for (let attempt = 0; attempt < 10_000; attempt += 1) {
+  const ownerToken = randomUUID();
+  for (let attempt = 0; attempt < 100; attempt += 1) {
     try {
       await mkdir(lockPath, { mode: 0o700 });
-      acquired = true;
-      break;
+      await writeMutationOwner(lockPath, ownerToken);
+      return await runWithOwnedMutationLock(lockPath, ownerToken, operation);
     } catch (error: unknown) {
       if (!isAlreadyPresent(error)) {
         throw error;
       }
-      await new Promise<void>((resolveRetry) => setImmediate(resolveRetry));
+      const owner = await readMutationOwner(lockPath);
+      if (
+        owner !== undefined &&
+        !(await (options.isProcessAlive ?? defaultProcessLiveness)(owner.pid))
+      ) {
+        if (await removeMutationOwner(lockPath, owner.token)) {
+          await removeEmptyMutationLock(lockPath);
+          continue;
+        }
+      }
+      await new Promise<void>((resolveRetry) => setTimeout(resolveRetry, 5));
     }
   }
-  if (!acquired) {
-    throw new Error('Secret mutation lock is unavailable.');
-  }
+  throw new Error('Secret mutation lock is unavailable.');
+}
 
+async function runWithOwnedMutationLock<T>(
+  lockPath: string,
+  token: string,
+  operation: () => Promise<T>,
+): Promise<T> {
   let result: T | undefined;
   let operationError: unknown;
   try {
@@ -179,7 +197,7 @@ async function withFilesystemMutationLock<T>(
 
   let cleanupError: unknown;
   try {
-    await rmdir(lockPath);
+    if (await removeMutationOwner(lockPath, token)) await removeEmptyMutationLock(lockPath);
   } catch (error: unknown) {
     if (!isMissing(error) && !isNotEmpty(error)) {
       cleanupError = error;
@@ -192,6 +210,63 @@ async function withFilesystemMutationLock<T>(
     throw cleanupError;
   }
   return result as T;
+}
+
+async function writeMutationOwner(lockPath: string, token: string): Promise<void> {
+  const file = await open(join(lockPath, `owner-${token}.json`), 'wx', 0o600);
+  try {
+    await file.writeFile(
+      JSON.stringify({ token, pid: process.pid, createdAt: new Date().toISOString() }),
+    );
+    await file.sync();
+  } finally {
+    await file.close();
+  }
+}
+async function readMutationOwner(
+  lockPath: string,
+): Promise<{ token: string; pid: number } | undefined> {
+  try {
+    const names = await import('node:fs/promises').then(({ readdir }) => readdir(lockPath));
+    const name = names.find((value) => value.startsWith('owner-') && value.endsWith('.json'));
+    if (name === undefined) return undefined;
+    const value: unknown = JSON.parse(await readFile(join(lockPath, name), 'utf8'));
+    const owner = value as { token?: unknown; pid?: unknown };
+    return typeof owner.token === 'string' && typeof owner.pid === 'number'
+      ? { token: owner.token, pid: owner.pid }
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+async function removeMutationOwner(lockPath: string, token: string): Promise<boolean> {
+  try {
+    await rm(join(lockPath, `owner-${token}.json`));
+    return true;
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+}
+async function removeEmptyMutationLock(lockPath: string): Promise<void> {
+  try {
+    await rmdir(lockPath);
+  } catch (error: unknown) {
+    if (!isMissing(error) && !isNotEmpty(error)) throw error;
+  }
+}
+function defaultProcessLiveness(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error: unknown) {
+    return !(
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ESRCH'
+    );
+  }
 }
 
 async function assertRegularFileOrMissing(path: string): Promise<void> {
@@ -253,7 +328,7 @@ async function assertSafeDirectory(path: string, trustedRoot: string): Promise<v
   if (entry.isSymbolicLink() || !entry.isDirectory()) {
     throw new TypeError('Secret storage directory must not be a symbolic link.');
   }
-  if (!isWithin(trustedRoot, await realpath(path))) {
+  if (!isPathContained(trustedRoot, await realpath(path))) {
     throw new TypeError('Secret storage directory must remain inside its trusted root.');
   }
 }
@@ -303,9 +378,4 @@ function isUnsupportedDirectorySync(error: unknown): error is NodeJS.ErrnoExcept
     'code' in error &&
     (error.code === 'EINVAL' || error.code === 'EPERM' || error.code === 'EISDIR')
   );
-}
-
-function isWithin(root: string, candidate: string): boolean {
-  const pathFromRoot = relative(root, candidate);
-  return pathFromRoot === '' || (!pathFromRoot.startsWith(`..${sep}`) && pathFromRoot !== '..');
 }

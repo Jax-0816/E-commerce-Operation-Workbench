@@ -1,6 +1,8 @@
 import { lstat, mkdir, open, realpath } from 'node:fs/promises';
 import { dirname, join, parse, relative, resolve, sep } from 'node:path';
 
+import { isPathContained } from './filesystem.js';
+
 const canonicalDirectories = [
   'database',
   'assets/products',
@@ -95,7 +97,7 @@ async function assertSafeDirectory(path: string, trustedRoot: string): Promise<v
   if (entry.isSymbolicLink() || !entry.isDirectory()) {
     throw new TypeError('Workspace-managed directories must not be symbolic links.');
   }
-  if (!isWithin(trustedRoot, await realpath(path))) {
+  if (!isPathContained(trustedRoot, await realpath(path))) {
     throw new TypeError('Workspace-managed directories must remain inside their trusted root.');
   }
 }
@@ -120,9 +122,4 @@ function isFileAlreadyPresent(error: unknown): error is NodeJS.ErrnoException {
 
 function isFileMissing(error: unknown): error is NodeJS.ErrnoException {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT';
-}
-
-function isWithin(root: string, candidate: string): boolean {
-  const pathFromRoot = relative(root, candidate);
-  return pathFromRoot === '' || (!pathFromRoot.startsWith(`..${sep}`) && pathFromRoot !== '..');
 }
