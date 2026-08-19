@@ -1,4 +1,4 @@
-import { access, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, win32 } from 'node:path';
 
@@ -25,8 +25,9 @@ afterEach(async () => {
 
 async function createTemporaryWorkspace(): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'eaw-workspace-'));
-  temporaryDirectories.push(directory);
-  return directory;
+  const physicalDirectory = await realpath(directory);
+  temporaryDirectories.push(physicalDirectory);
+  return physicalDirectory;
 }
 
 describe('workspace bootstrap', () => {
@@ -122,5 +123,21 @@ describe('workspace bootstrap', () => {
     expect(() => resolveWorkspacePath(workspacePath, 'assets/products/photo.png')).toThrow(
       TypeError,
     );
+  });
+
+  it('rejects a new workspace whose existing ancestor is a symbolic link', async () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const rootPath = await createTemporaryWorkspace();
+    const outsidePath = await createTemporaryWorkspace();
+    await mkdir(join(rootPath, 'real'));
+    await symlink(outsidePath, join(rootPath, 'real', 'linked-ancestor'));
+
+    await expect(
+      initializeWorkspace(join(rootPath, 'real', 'linked-ancestor', 'new-workspace')),
+    ).rejects.toThrow(TypeError);
+    await expect(access(join(outsidePath, 'new-workspace'))).rejects.toThrow();
   });
 });

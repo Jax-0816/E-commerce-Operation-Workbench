@@ -13,7 +13,7 @@
     "prepare:domain": "pnpm --filter @eaw/domain run build",
     "prebuild": "pnpm run prepare:domain",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:domain",
+    "pretest": "pnpm run prepare:domain && tsc -p tsconfig.json",
     "test": "vitest run src",
     "pretypecheck": "pnpm run prepare:domain",
     "typecheck": "tsc --noEmit -p tsconfig.json",

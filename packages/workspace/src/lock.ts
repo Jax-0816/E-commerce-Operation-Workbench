@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, open, readFile, readdir, rmdir, unlink } from 'node:fs/promises';
+import { lstat, mkdir, open, readFile, readdir, rmdir, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { DomainError } from '@eaw/domain';
@@ -10,6 +10,11 @@ interface LockRecord {
   readonly ownerToken: string;
   readonly pid: number;
   readonly createdAt: string;
+}
+
+interface LockDirectoryIdentity {
+  readonly device: number;
+  readonly inode: number;
 }
 
 export interface AcquireWorkspaceLockOptions {
@@ -38,43 +43,48 @@ export async function acquireWorkspaceLock(
   const isProcessAlive = options.isProcessAlive ?? defaultProcessLiveness;
 
   for (;;) {
-    if (await createLockDirectory(lockPath, record)) {
+    const createdLock = await createLockDirectory(lockPath, record);
+    if (createdLock !== undefined) {
       return {
         ownerToken: record.ownerToken,
         release: async () => {
-          if (!(await removeOwnerRecord(lockPath, record.ownerToken))) {
+          if (!(await removeOwnerRecord(lockPath, record.ownerToken, createdLock))) {
             return;
           }
           await options.onBeforeLockDirectoryRemoval?.(lockPath);
-          await removeEmptyLockDirectory(lockPath);
+          await removeEmptyLockDirectory(lockPath, createdLock);
         },
       };
     }
 
-    const staleRecord = await readOwnerRecord(lockPath);
-    if (staleRecord === undefined || (await isProcessAlive(staleRecord.pid))) {
+    const staleOwner = await readOwnerRecord(lockPath);
+    if (staleOwner === undefined || (await isProcessAlive(staleOwner.record.pid))) {
       throw lockedError();
     }
 
-    await options.onStaleOwnerObserved?.(staleRecord);
-    if (!(await removeOwnerRecord(lockPath, staleRecord.ownerToken))) {
+    await options.onStaleOwnerObserved?.(staleOwner.record);
+    if (!(await removeOwnerRecord(lockPath, staleOwner.record.ownerToken, staleOwner.identity))) {
       continue;
     }
-    await removeEmptyLockDirectory(lockPath);
+    await removeEmptyLockDirectory(lockPath, staleOwner.identity);
   }
 }
 
-async function createLockDirectory(lockPath: string, record: LockRecord): Promise<boolean> {
+async function createLockDirectory(
+  lockPath: string,
+  record: LockRecord,
+): Promise<LockDirectoryIdentity | undefined> {
   try {
     await mkdir(lockPath);
   } catch (error: unknown) {
     if (isAlreadyPresent(error)) {
-      return false;
+      return undefined;
     }
     throw error;
   }
 
   try {
+    const identity = await assertLockDirectory(lockPath);
     const file = await open(ownerRecordPath(lockPath, record.ownerToken), 'wx', 0o600);
     try {
       await file.writeFile(JSON.stringify(record), 'utf8');
@@ -82,15 +92,18 @@ async function createLockDirectory(lockPath: string, record: LockRecord): Promis
     } finally {
       await file.close();
     }
-    return true;
+    return identity;
   } catch (error: unknown) {
     await removeEmptyLockDirectory(lockPath);
     throw error;
   }
 }
 
-async function readOwnerRecord(lockPath: string): Promise<LockRecord | undefined> {
+async function readOwnerRecord(
+  lockPath: string,
+): Promise<{ readonly record: LockRecord; readonly identity: LockDirectoryIdentity } | undefined> {
   let ownerFileName: string;
+  const identity = await assertLockDirectory(lockPath);
   try {
     const ownerFiles = (await readdir(lockPath)).filter(
       (entry) => entry.startsWith('owner-') && entry.endsWith('.json'),
@@ -107,14 +120,19 @@ async function readOwnerRecord(lockPath: string): Promise<LockRecord | undefined
     const content = await readFile(join(lockPath, ownerFileName), 'utf8');
     const record = parseLockRecord(content);
     return record !== undefined && ownerFileName === ownerRecordFileName(record.ownerToken)
-      ? record
+      ? { record, identity }
       : undefined;
   } catch {
     return undefined;
   }
 }
 
-async function removeOwnerRecord(lockPath: string, ownerToken: string): Promise<boolean> {
+async function removeOwnerRecord(
+  lockPath: string,
+  ownerToken: string,
+  expectedIdentity: LockDirectoryIdentity,
+): Promise<boolean> {
+  assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath));
   try {
     await unlink(ownerRecordPath(lockPath, ownerToken));
     return true;
@@ -126,7 +144,13 @@ async function removeOwnerRecord(lockPath: string, ownerToken: string): Promise<
   }
 }
 
-async function removeEmptyLockDirectory(lockPath: string): Promise<void> {
+async function removeEmptyLockDirectory(
+  lockPath: string,
+  expectedIdentity?: LockDirectoryIdentity,
+): Promise<void> {
+  if (expectedIdentity !== undefined) {
+    assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath));
+  }
   try {
     await rmdir(lockPath);
   } catch (error: unknown) {
@@ -134,6 +158,20 @@ async function removeEmptyLockDirectory(lockPath: string): Promise<void> {
       return;
     }
     throw error;
+  }
+}
+
+async function assertLockDirectory(lockPath: string): Promise<LockDirectoryIdentity> {
+  const entry = await lstat(lockPath);
+  if (entry.isSymbolicLink() || !entry.isDirectory()) {
+    throw new TypeError('Workspace lock path must be a real directory.');
+  }
+  return { device: entry.dev, inode: entry.ino };
+}
+
+function assertSameIdentity(expected: LockDirectoryIdentity, current: LockDirectoryIdentity): void {
+  if (expected.device !== current.device || expected.inode !== current.inode) {
+    throw new TypeError('Workspace lock directory changed ownership.');
   }
 }
 

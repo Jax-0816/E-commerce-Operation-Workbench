@@ -1,4 +1,13 @@
-import { mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,8 +31,9 @@ afterEach(async () => {
 
 async function createTemporaryWorkspace(): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'eaw-lock-'));
-  temporaryDirectories.push(directory);
-  return directory;
+  const physicalDirectory = await realpath(directory);
+  temporaryDirectories.push(physicalDirectory);
+  return physicalDirectory;
 }
 
 async function writeLockRecord(
@@ -202,5 +212,61 @@ describe('workspace locking', () => {
     await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toContain(
       'owner-owner-two.json',
     );
+  });
+
+  it('rejects a symbolic lock directory without touching its external owner record', async () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const workspacePath = await createTemporaryWorkspace();
+    const outsidePath = await createTemporaryWorkspace();
+    const externalLockPath = join(outsidePath, 'external-lock');
+    await mkdir(externalLockPath);
+    await writeFile(
+      join(externalLockPath, 'owner-external-owner.json'),
+      JSON.stringify({
+        ownerToken: 'external-owner',
+        pid: 101,
+        createdAt: '2026-08-19T00:00:00.000Z',
+      }),
+      'utf8',
+    );
+    await symlink(externalLockPath, join(workspacePath, '.workspace.lock'));
+
+    await expect(
+      acquireWorkspaceLock(workspacePath, { isProcessAlive: () => false }),
+    ).rejects.toThrow(TypeError);
+    await expect(
+      readFile(join(externalLockPath, 'owner-external-owner.json'), 'utf8'),
+    ).resolves.toContain('external-owner');
+  });
+
+  it('rejects release after a lock directory is swapped for a symbolic link', async () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const workspacePath = await createTemporaryWorkspace();
+    const outsidePath = await createTemporaryWorkspace();
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'owner-one',
+      pid: 101,
+      isProcessAlive: () => true,
+    });
+    await rm(join(workspacePath, '.workspace.lock'), { recursive: true });
+    const externalLockPath = join(outsidePath, 'external-lock');
+    await mkdir(externalLockPath);
+    await writeFile(
+      join(externalLockPath, 'owner-owner-one.json'),
+      JSON.stringify({ ownerToken: 'owner-one', pid: 101, createdAt: '2026-08-19T00:00:00.000Z' }),
+      'utf8',
+    );
+    await symlink(externalLockPath, join(workspacePath, '.workspace.lock'));
+
+    await expect(lock.release()).rejects.toThrow(TypeError);
+    await expect(
+      readFile(join(externalLockPath, 'owner-owner-one.json'), 'utf8'),
+    ).resolves.toContain('owner-one');
   });
 });
