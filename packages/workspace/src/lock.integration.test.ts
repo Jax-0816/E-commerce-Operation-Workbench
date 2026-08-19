@@ -1,5 +1,4 @@
 import {
-  access,
   mkdir,
   mkdtemp,
   readFile,
@@ -19,14 +18,20 @@ import { DomainError } from '@eaw/domain';
 import { acquireWorkspaceLock } from './index.js';
 
 const temporaryDirectories: string[] = [];
+const token = {
+  first: '00000000-0000-4000-8000-000000000001',
+  second: '00000000-0000-4000-8000-000000000002',
+  stale: '00000000-0000-4000-8000-000000000003',
+  contenderA: '00000000-0000-4000-8000-000000000004',
+  contenderB: '00000000-0000-4000-8000-000000000005',
+  replacement: '00000000-0000-4000-8000-000000000006',
+  claim: '00000000-0000-4000-8000-000000000007',
+} as const;
+const createdAt = '2026-08-19T00:00:00.000Z';
 
 afterEach(async () => {
   await Promise.all(
-    temporaryDirectories
-      .splice(0)
-      .map((path) =>
-        import('node:fs/promises').then(({ rm }) => rm(path, { recursive: true, force: true })),
-      ),
+    temporaryDirectories.splice(0).map((path) => rm(path, { recursive: true, force: true })),
   );
 });
 
@@ -37,15 +42,16 @@ async function createTemporaryWorkspace(): Promise<string> {
   return physicalDirectory;
 }
 
-async function writeLockRecord(
-  workspacePath: string,
-  record: { ownerToken: string; pid: number; createdAt: string },
-): Promise<void> {
+function lockRecord(ownerToken: string, pid: number): object {
+  return { ownerToken, pid, createdAt };
+}
+
+async function writeOwner(workspacePath: string, ownerToken: string, pid: number): Promise<void> {
   const lockPath = join(workspacePath, '.workspace.lock');
   await mkdir(lockPath);
   await writeFile(
-    join(lockPath, `owner-${record.ownerToken}.json`),
-    JSON.stringify(record),
+    join(lockPath, 'owner.json'),
+    JSON.stringify(lockRecord(ownerToken, pid)),
     'utf8',
   );
 }
@@ -53,393 +59,310 @@ async function writeLockRecord(
 describe('workspace locking', () => {
   it('rejects a second writer while the first owner remains alive', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    const firstLock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'first-owner',
+    const first = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: token.first,
       pid: 101,
       isProcessAlive: (pid) => pid === 101,
     });
 
     await expect(
       acquireWorkspaceLock(workspacePath, {
-        ownerToken: 'second-owner',
+        ownerToken: token.second,
         pid: 202,
         isProcessAlive: () => true,
       }),
     ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
-    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toContain(
-      'owner-first-owner.json',
-    );
-
-    await firstLock.release();
+    await expect(
+      readFile(join(workspacePath, '.workspace.lock', 'owner.json'), 'utf8'),
+    ).resolves.toContain(token.first);
+    await first.release();
   });
 
-  it('recovers a lock only when its recorded owner is no longer alive', async () => {
+  it('recovers a lock only when its strict recorded owner is no longer alive', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    await writeLockRecord(workspacePath, {
-      ownerToken: 'stale-owner',
-      pid: 101,
-      createdAt: '2026-08-19T00:00:00.000Z',
-    });
+    await writeOwner(workspacePath, token.stale, 101);
 
-    const recoveredLock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'new-owner',
+    const recovered = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: token.second,
       pid: 202,
       isProcessAlive: (pid) => pid === 202,
     });
 
-    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toContain(
-      'owner-new-owner.json',
-    );
-    await recoveredLock.release();
-  });
-
-  it('does not remove a valid foreign lock when its owner is alive', async () => {
-    const workspacePath = await createTemporaryWorkspace();
-    const lockPath = join(workspacePath, '.workspace.lock');
-    const foreignLock = {
-      ownerToken: 'foreign-owner',
-      pid: 777,
-      createdAt: '2026-08-19T00:00:00.000Z',
-    };
-    await writeLockRecord(workspacePath, foreignLock);
-
     await expect(
-      acquireWorkspaceLock(workspacePath, {
-        ownerToken: 'new-owner',
-        pid: 202,
-        isProcessAlive: (pid) => pid === 777,
-      }),
-    ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
-    await expect(readdir(lockPath)).resolves.toContain('owner-foreign-owner.json');
+      readFile(join(workspacePath, '.workspace.lock', 'owner.json'), 'utf8'),
+    ).resolves.toContain(token.second);
+    await recovered.release();
   });
 
-  it('keeps a malformed lock in place and rejects a writer safely', async () => {
+  it('keeps malformed or foreign owner states in place', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lockPath = join(workspacePath, '.workspace.lock');
     await mkdir(lockPath);
-    await writeFile(join(lockPath, 'owner-malformed.json'), '{not-json', 'utf8');
+    await writeFile(join(lockPath, 'owner.json'), '{not-json', 'utf8');
 
     await expect(
-      acquireWorkspaceLock(workspacePath, { isProcessAlive: () => false }),
+      acquireWorkspaceLock(workspacePath, { ownerToken: token.first, isProcessAlive: () => false }),
     ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
-    await expect(readFile(join(lockPath, 'owner-malformed.json'), 'utf8')).resolves.toBe(
-      '{not-json',
-    );
+    await expect(readFile(join(lockPath, 'owner.json'), 'utf8')).resolves.toBe('{not-json');
   });
 
-  it('releases only the lock owned by its token', async () => {
+  it('does not release when another entry makes the canonical directory foreign', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lockPath = join(workspacePath, '.workspace.lock');
     const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'owner-one',
+      ownerToken: token.first,
       pid: 101,
       isProcessAlive: () => true,
     });
-    await writeFile(
-      join(lockPath, 'owner-owner-two.json'),
-      JSON.stringify({ ownerToken: 'owner-two', pid: 202, createdAt: '2026-08-19T00:00:00.000Z' }),
-      'utf8',
-    );
+    await writeFile(join(lockPath, 'foreign.json'), 'foreign', 'utf8');
 
     await lock.release();
 
-    await expect(readdir(lockPath)).resolves.toContain('owner-owner-two.json');
+    await expect(readdir(lockPath)).resolves.toEqual(['foreign.json', 'owner.json']);
   });
 
-  it('allows only one stale contender to replace a stale owner after a forced interleaving', async () => {
+  it('allows only one stale contender to claim the fixed owner slot', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    await writeLockRecord(workspacePath, {
-      ownerToken: 'stale-owner',
-      pid: 101,
-      createdAt: '2026-08-19T00:00:00.000Z',
-    });
+    await writeOwner(workspacePath, token.stale, 101);
     let observed = 0;
     let resume: (() => void) | undefined;
     const bothObserved = new Promise<void>((resolve) => {
       resume = resolve;
     });
-    const pauseAtStaleOwner = async (): Promise<void> => {
+    const pause = async (): Promise<void> => {
       observed += 1;
-      if (observed === 2) {
-        resume?.();
-      }
+      if (observed === 2) resume?.();
       await bothObserved;
     };
 
     const outcomes = await Promise.allSettled([
       acquireWorkspaceLock(workspacePath, {
-        ownerToken: 'contender-a',
+        ownerToken: token.contenderA,
         pid: 201,
         isProcessAlive: (pid) => pid !== 101,
-        onStaleOwnerObserved: pauseAtStaleOwner,
+        onStaleOwnerObserved: pause,
       }),
       acquireWorkspaceLock(workspacePath, {
-        ownerToken: 'contender-b',
+        ownerToken: token.contenderB,
         pid: 202,
         isProcessAlive: (pid) => pid !== 101,
-        onStaleOwnerObserved: pauseAtStaleOwner,
+        onStaleOwnerObserved: pause,
       }),
     ]);
 
-    expect(observed).toBe(2);
     expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1);
-    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toSatisfy(
-      (entries) =>
-        entries.includes('owner-contender-a.json') || entries.includes('owner-contender-b.json'),
+    const ownerBytes = await readFile(join(workspacePath, '.workspace.lock', 'owner.json'), 'utf8');
+    expect(ownerBytes.includes(token.contenderA) || ownerBytes.includes(token.contenderB)).toBe(
+      true,
     );
+    expect(await readdir(join(workspacePath, '.workspace.lock'))).toEqual(['owner.json']);
+    const winner = outcomes.find((outcome) => outcome.status === 'fulfilled');
+    if (winner?.status === 'fulfilled') await winner.value.release();
   });
 
-  it('does not remove a replacement owner after the releasing owner wins its record compare-and-swap', async () => {
+  it('blocks a new owner while release has atomically claimed the owner slot', async () => {
     const workspacePath = await createTemporaryWorkspace();
+    let contenderRejected = false;
     const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'owner-one',
+      ownerToken: token.first,
       pid: 101,
       isProcessAlive: () => true,
-      onBeforeLockDirectoryRemoval: async (lockPath) => {
-        await writeFile(
-          join(lockPath, 'owner-owner-two.json'),
-          JSON.stringify({
-            ownerToken: 'owner-two',
+      onOwnerRecordClaimed: async () => {
+        await expect(
+          acquireWorkspaceLock(workspacePath, {
+            ownerToken: token.second,
             pid: 202,
-            createdAt: '2026-08-19T00:00:00.000Z',
+            isProcessAlive: () => true,
           }),
-          'utf8',
-        );
+        ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
+        contenderRejected = true;
       },
     });
 
     await lock.release();
 
-    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toContain(
-      'owner-owner-two.json',
-    );
+    expect(contenderRejected).toBe(true);
+    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toEqual([]);
   });
 
-  it('preserves an empty replacement lock installed after atomically retiring its directory', async () => {
+  it('recovers a strictly bound aged claim left by a crashed releaser', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lockPath = join(workspacePath, '.workspace.lock');
-    let retiredPath = '';
-    const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'owner-one',
-      pid: 101,
-      isProcessAlive: () => true,
-      onLockDirectoryRetired: async (claimedPath) => {
-        retiredPath = claimedPath;
-        await mkdir(lockPath);
-      },
-    });
-
-    await lock.release();
-
-    expect(retiredPath).not.toBe('');
-    await expect(readdir(lockPath)).resolves.toEqual([]);
-    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
-  });
-
-  it('recovers a strictly valid crashed directory-retirement artifact after its grace period', async () => {
-    const workspacePath = await createTemporaryWorkspace();
-    const retiredPath = join(
-      workspacePath,
-      `.workspace.lock.retired-${Date.now() - 60_000}-00000000-0000-4000-8000-000000000001`,
-    );
-    await mkdir(retiredPath);
+    const claimedAt = Date.now() - 60_000;
+    await mkdir(lockPath);
     await writeFile(
-      join(retiredPath, 'owner-crashed-owner.json'),
-      JSON.stringify({
-        ownerToken: 'crashed-owner',
-        pid: 101,
-        createdAt: '2026-08-19T00:00:00.000Z',
-      }),
+      join(lockPath, `claim-${claimedAt}-${token.claim}.json`),
+      JSON.stringify(lockRecord(token.claim, 101)),
       'utf8',
     );
 
     const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'new-owner',
+      ownerToken: token.second,
       pid: 202,
       isProcessAlive: () => true,
     });
 
-    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(readdir(lockPath)).resolves.toEqual(['owner.json']);
     await lock.release();
   });
 
-  it('recovers an old empty directory-retirement artifact left after marker deletion', async () => {
+  it('keeps a fresh strict claim as an acquisition barrier', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    const retiredPath = join(
-      workspacePath,
-      `.workspace.lock.retired-${Date.now() - 60_000}-00000000-0000-4000-8000-000000000001`,
+    const lockPath = join(workspacePath, '.workspace.lock');
+    await mkdir(lockPath);
+    await writeFile(
+      join(lockPath, `claim-${Date.now()}-${token.claim}.json`),
+      JSON.stringify(lockRecord(token.claim, 101)),
+      'utf8',
     );
-    await mkdir(retiredPath);
 
-    const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'new-owner',
-      pid: 202,
-      isProcessAlive: () => true,
-    });
-
-    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
-    await lock.release();
+    await expect(
+      acquireWorkspaceLock(workspacePath, { ownerToken: token.second, pid: 202 }),
+    ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
   });
 
-  it('leaves malformed directory-retirement artifacts untouched', async () => {
+  it.each([
+    ['PID zero', { ownerToken: token.first, pid: 0, createdAt }],
+    ['unsafe PID', { ownerToken: token.first, pid: Number.MAX_SAFE_INTEGER + 1, createdAt }],
+    ['noncanonical timestamp', { ownerToken: token.first, pid: 101, createdAt: '2026-08-19' }],
+    ['invalid token', { ownerToken: 'not-a-uuid', pid: 101, createdAt }],
+  ])('fails closed for a strict owner slot containing %s', async (_label, record) => {
     const workspacePath = await createTemporaryWorkspace();
-    const retiredPath = join(
-      workspacePath,
-      `.workspace.lock.retired-${Date.now() - 60_000}-00000000-0000-4000-8000-000000000001`,
+    const lockPath = join(workspacePath, '.workspace.lock');
+    await mkdir(lockPath);
+    await writeFile(join(lockPath, 'owner.json'), JSON.stringify(record), 'utf8');
+
+    await expect(
+      acquireWorkspaceLock(workspacePath, {
+        ownerToken: token.second,
+        pid: 202,
+        isProcessAlive: () => false,
+      }),
+    ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
+    await expect(readFile(join(lockPath, 'owner.json'), 'utf8')).resolves.toBe(
+      JSON.stringify(record),
     );
-    await mkdir(retiredPath);
-    await writeFile(join(retiredPath, 'foreign.txt'), 'foreign', 'utf8');
+  });
 
-    const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'new-owner',
-      pid: 202,
-      isProcessAlive: () => true,
-    });
+  it('fails closed when a claim filename token does not bind to its record', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const lockPath = join(workspacePath, '.workspace.lock');
+    await mkdir(lockPath);
+    const claimPath = join(lockPath, `claim-${Date.now() - 60_000}-${token.claim}.json`);
+    await writeFile(claimPath, JSON.stringify(lockRecord(token.first, 101)), 'utf8');
 
-    await expect(readFile(join(retiredPath, 'foreign.txt'), 'utf8')).resolves.toBe('foreign');
-    await lock.release();
+    await expect(
+      acquireWorkspaceLock(workspacePath, {
+        ownerToken: token.second,
+        pid: 202,
+        isProcessAlive: () => false,
+      }),
+    ).rejects.toMatchObject({ code: 'WORKSPACE_LOCKED' } satisfies Partial<DomainError>);
+    await expect(readFile(claimPath, 'utf8')).resolves.toContain(token.first);
   });
 
   it('rejects a symbolic lock directory without touching its external owner record', async () => {
-    if (process.platform === 'win32') {
-      return;
-    }
-
+    if (process.platform === 'win32') return;
     const workspacePath = await createTemporaryWorkspace();
     const outsidePath = await createTemporaryWorkspace();
-    const externalLockPath = join(outsidePath, 'external-lock');
-    await mkdir(externalLockPath);
-    await writeFile(
-      join(externalLockPath, 'owner-external-owner.json'),
-      JSON.stringify({
-        ownerToken: 'external-owner',
-        pid: 101,
-        createdAt: '2026-08-19T00:00:00.000Z',
-      }),
-      'utf8',
-    );
-    await symlink(externalLockPath, join(workspacePath, '.workspace.lock'));
+    await mkdir(join(outsidePath, 'external-lock'));
+    await writeFile(join(outsidePath, 'external-lock', 'owner.json'), 'outside', 'utf8');
+    await symlink(join(outsidePath, 'external-lock'), join(workspacePath, '.workspace.lock'));
 
     await expect(
-      acquireWorkspaceLock(workspacePath, { isProcessAlive: () => false }),
+      acquireWorkspaceLock(workspacePath, { ownerToken: token.first, pid: 101 }),
     ).rejects.toThrow(TypeError);
-    await expect(
-      readFile(join(externalLockPath, 'owner-external-owner.json'), 'utf8'),
-    ).resolves.toContain('external-owner');
+    await expect(readFile(join(outsidePath, 'external-lock', 'owner.json'), 'utf8')).resolves.toBe(
+      'outside',
+    );
   });
 
-  it('rejects release after a lock directory is swapped for a symbolic link', async () => {
-    if (process.platform === 'win32') {
-      return;
-    }
-
+  it('rejects release after the canonical directory is replaced by a symlink', async () => {
+    if (process.platform === 'win32') return;
     const workspacePath = await createTemporaryWorkspace();
     const outsidePath = await createTemporaryWorkspace();
     const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'owner-one',
+      ownerToken: token.first,
       pid: 101,
-      isProcessAlive: () => true,
     });
     await rm(join(workspacePath, '.workspace.lock'), { recursive: true });
-    const externalLockPath = join(outsidePath, 'external-lock');
-    await mkdir(externalLockPath);
+    await mkdir(join(outsidePath, 'external-lock'));
     await writeFile(
-      join(externalLockPath, 'owner-owner-one.json'),
-      JSON.stringify({ ownerToken: 'owner-one', pid: 101, createdAt: '2026-08-19T00:00:00.000Z' }),
+      join(outsidePath, 'external-lock', 'owner.json'),
+      JSON.stringify(lockRecord(token.first, 101)),
       'utf8',
     );
-    await symlink(externalLockPath, join(workspacePath, '.workspace.lock'));
+    await symlink(join(outsidePath, 'external-lock'), join(workspacePath, '.workspace.lock'));
 
     await expect(lock.release()).rejects.toThrow(TypeError);
     await expect(
-      readFile(join(externalLockPath, 'owner-owner-one.json'), 'utf8'),
-    ).resolves.toContain('owner-one');
+      readFile(join(outsidePath, 'external-lock', 'owner.json'), 'utf8'),
+    ).resolves.toContain(token.first);
   });
 
-  it('releases its owner record when Windows reports a zero directory identity', async () => {
+  it('releases normally when Windows reports a zero directory identity', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'zero-identity-owner',
+      ownerToken: token.first,
       pid: 101,
-      isProcessAlive: () => true,
       getLockDirectoryIdentity: async () => ({ device: 0, inode: 0 }),
     });
 
     await lock.release();
 
-    await expect(access(join(workspacePath, '.workspace.lock'))).rejects.toMatchObject({
-      code: 'ENOENT',
-    });
+    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toEqual([]);
   });
 
   it.each([
     ['zero', { device: 0, inode: 0 }],
     ['non-unique', { device: 1, inode: 1 }],
-  ])(
-    'does not delete a replacement owner when Windows reports a %s directory identity',
-    async (_label, identity) => {
-      const workspacePath = await createTemporaryWorkspace();
-      const lockPath = join(workspacePath, '.workspace.lock');
-      let identityReads = 0;
-      let replaced = false;
-      const lock = await acquireWorkspaceLock(workspacePath, {
-        ownerToken: 'original-owner',
-        pid: 101,
-        isProcessAlive: () => true,
-        getLockDirectoryIdentity: async () => {
-          identityReads += 1;
-          if (identityReads > 1 && !replaced) {
-            replaced = true;
-            await rm(lockPath, { recursive: true });
-            await mkdir(lockPath);
-            await writeFile(
-              join(lockPath, 'owner-original-owner.json'),
-              JSON.stringify({
-                ownerToken: 'replacement-owner',
-                pid: 202,
-                createdAt: '2026-08-19T00:00:00.000Z',
-              }),
-              'utf8',
-            );
-          }
-          return identity;
-        },
-      });
-
-      await lock.release();
-
-      expect(replaced).toBe(true);
-      await expect(
-        readFile(join(lockPath, 'owner-original-owner.json'), 'utf8'),
-      ).resolves.toContain('replacement-owner');
-    },
-  );
-
-  it('recovers a stale owner when Windows reports a zero directory identity', async () => {
+  ])('does not move a replacement owner with a %s directory identity', async (_label, identity) => {
     const workspacePath = await createTemporaryWorkspace();
-    await writeLockRecord(workspacePath, {
-      ownerToken: 'stale-owner',
+    const lockPath = join(workspacePath, '.workspace.lock');
+    let armed = false;
+    let replaced = false;
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: token.first,
       pid: 101,
-      createdAt: '2026-08-19T00:00:00.000Z',
-    });
-    let identityReads = 0;
-
-    const recoveredLock = await acquireWorkspaceLock(workspacePath, {
-      ownerToken: 'recovered-owner',
-      pid: 202,
-      isProcessAlive: (pid) => pid === 202,
       getLockDirectoryIdentity: async () => {
-        identityReads += 1;
-        if (identityReads > 12) {
-          throw new Error('Zero-identity stale recovery did not make progress.');
+        if (armed && !replaced) {
+          replaced = true;
+          await rm(lockPath, { recursive: true });
+          await mkdir(lockPath);
+          await writeFile(
+            join(lockPath, 'owner.json'),
+            JSON.stringify(lockRecord(token.replacement, 202)),
+            'utf8',
+          );
         }
-        return { device: 0, inode: 0 };
+        return identity;
       },
     });
+    armed = true;
 
-    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toEqual([
-      'owner-recovered-owner.json',
-    ]);
-    await recoveredLock.release();
+    await lock.release();
+
+    expect(replaced).toBe(true);
+    await expect(readFile(join(lockPath, 'owner.json'), 'utf8')).resolves.toContain(
+      token.replacement,
+    );
+  });
+
+  it('recovers a stale owner with a zero directory identity and leaves the container persistent', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    await writeOwner(workspacePath, token.stale, 101);
+
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: token.second,
+      pid: 202,
+      isProcessAlive: (pid) => pid === 202,
+      getLockDirectoryIdentity: async () => ({ device: 0, inode: 0 }),
+    });
+
+    await expect(
+      readFile(join(workspacePath, '.workspace.lock', 'owner.json'), 'utf8'),
+    ).resolves.toContain(token.second);
+    await lock.release();
+    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toEqual([]);
   });
 });

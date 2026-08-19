@@ -9,7 +9,6 @@ import {
   realpath,
   stat,
   symlink,
-  utimes,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -19,6 +18,7 @@ import { pathToFileURL } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createSecretConfigurationStatus, FileSecretStore } from './index.js';
+import { withPersistentMutationLock } from './persistent-mutation-lock.js';
 
 const temporaryDirectories: string[] = [];
 
@@ -46,22 +46,13 @@ function mutationLockPath(workspacePath: string): string {
   return join(workspacePath, '..secrets.json.mutation.lock');
 }
 
-async function makeMutationLockOld(lockPath: string, ownerPath?: string): Promise<void> {
-  const old = new Date(Date.now() - 60_000);
-  if (ownerPath !== undefined) {
-    await utimes(ownerPath, old, old);
-  }
-  await utimes(lockPath, old, old);
-}
-
 async function writeMutationOwnerFixture(
   workspacePath: string,
-  fileToken: string,
   record: { token: string; pid: number; createdAt: string },
 ): Promise<string> {
   const lockPath = mutationLockPath(workspacePath);
   await mkdir(lockPath);
-  const ownerPath = join(lockPath, `owner-${fileToken}.json`);
+  const ownerPath = join(lockPath, 'owner.json');
   await writeFile(ownerPath, JSON.stringify(record), 'utf8');
   return ownerPath;
 }
@@ -234,46 +225,47 @@ describe('file secret store', () => {
     );
   });
 
-  it('recovers an old empty mutation lock left by a crash before owner creation', async () => {
+  it('uses an existing empty persistent mutation directory as an available container', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lockPath = mutationLockPath(workspacePath);
     await mkdir(lockPath);
-    await makeMutationLockOld(lockPath);
 
     await new FileSecretStore(workspacePath).set('deepseek-api-key', 'recovered-secret');
 
     await expect(readFile(join(workspacePath, '.secrets.json'), 'utf8')).resolves.toContain(
       'recovered-secret',
     );
+    await expect(readdir(lockPath)).resolves.toEqual([]);
   });
 
-  it('does not steal a fresh empty mutation lock from an owner still creating its record', async () => {
+  it('does not treat a persistent empty mutation directory as an unavailable lock', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lockPath = mutationLockPath(workspacePath);
     await mkdir(lockPath);
+
+    await new FileSecretStore(workspacePath, {
+      mutationLockRetryAttempts: 1,
+      mutationLockRetryDelayMs: 0,
+    }).set('deepseek-api-key', 'new-secret');
+
+    await expect(readdir(lockPath)).resolves.toEqual([]);
+  });
+
+  it('fails closed on an incomplete fixed owner record', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const lockPath = mutationLockPath(workspacePath);
+    await mkdir(lockPath);
+    const ownerPath = join(lockPath, 'owner.json');
+    await writeFile(ownerPath, '{"token":', 'utf8');
 
     await expect(
       new FileSecretStore(workspacePath, {
         mutationLockRetryAttempts: 1,
         mutationLockRetryDelayMs: 0,
-      }).set('deepseek-api-key', 'new-secret'),
+      }).set('deepseek-api-key', 'recovered-secret'),
     ).rejects.toThrow('Secret mutation lock is unavailable.');
-    await expect(readdir(lockPath)).resolves.toEqual([]);
-  });
 
-  it('recovers an old incomplete owner record left by a crash during owner creation', async () => {
-    const workspacePath = await createTemporaryWorkspace();
-    const lockPath = mutationLockPath(workspacePath);
-    await mkdir(lockPath);
-    const ownerPath = join(lockPath, `owner-${deadOwnerToken}.json`);
-    await writeFile(ownerPath, '{"token":', 'utf8');
-    await makeMutationLockOld(lockPath, ownerPath);
-
-    await new FileSecretStore(workspacePath).set('deepseek-api-key', 'recovered-secret');
-
-    await expect(readFile(join(workspacePath, '.secrets.json'), 'utf8')).resolves.toContain(
-      'recovered-secret',
-    );
+    await expect(readFile(ownerPath, 'utf8')).resolves.toBe('{"token":');
   });
 
   it('rejects a symbolic mutation lock without touching its outside target', async () => {
@@ -298,11 +290,18 @@ describe('file secret store', () => {
 
   it('treats a filename-token mismatch as foreign and never probes or deletes it', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    const ownerPath = await writeMutationOwnerFixture(workspacePath, decoyFileToken, {
-      token: deadOwnerToken,
-      pid: 101,
-      createdAt: '2026-08-19T00:00:00.000Z',
-    });
+    const lockPath = mutationLockPath(workspacePath);
+    await mkdir(lockPath);
+    const ownerPath = join(lockPath, `claim-${Date.now() - 60_000}-${decoyFileToken}.json`);
+    await writeFile(
+      ownerPath,
+      JSON.stringify({
+        token: deadOwnerToken,
+        pid: 101,
+        createdAt: '2026-08-19T00:00:00.000Z',
+      }),
+      'utf8',
+    );
     let livenessChecks = 0;
 
     await expect(
@@ -322,7 +321,7 @@ describe('file secret store', () => {
 
   it('does not steal a strictly valid mutation lock from a live owner', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    const ownerPath = await writeMutationOwnerFixture(workspacePath, deadOwnerToken, {
+    const ownerPath = await writeMutationOwnerFixture(workspacePath, {
       token: deadOwnerToken,
       pid: 101,
       createdAt: '2026-08-19T00:00:00.000Z',
@@ -340,7 +339,7 @@ describe('file secret store', () => {
 
   it('recovers a strictly valid mutation lock from a dead owner', async () => {
     const workspacePath = await createTemporaryWorkspace();
-    await writeMutationOwnerFixture(workspacePath, deadOwnerToken, {
+    await writeMutationOwnerFixture(workspacePath, {
       token: deadOwnerToken,
       pid: 101,
       createdAt: '2026-08-19T00:00:00.000Z',
@@ -354,35 +353,66 @@ describe('file secret store', () => {
     await expect(readFile(join(workspacePath, '.secrets.json'), 'utf8')).resolves.toContain(
       'recovered-secret',
     );
-    await expect(readdir(workspacePath)).resolves.not.toContain('..secrets.json.mutation.lock');
+    await expect(readdir(mutationLockPath(workspacePath))).resolves.toEqual([]);
   });
 
-  it('preserves an empty replacement mutation lock installed after directory retirement', async () => {
+  it('keeps a stale-owner claim as a barrier so a second contender cannot move the new owner', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    await writeMutationOwnerFixture(workspacePath, {
+      token: deadOwnerToken,
+      pid: 101,
+      createdAt: '2026-08-19T00:00:00.000Z',
+    });
+    let releaseClaim: (() => void) | undefined;
+    let signalClaimed: (() => void) | undefined;
+    const claimed = new Promise<void>((resolve) => {
+      signalClaimed = resolve;
+    });
+    const resume = new Promise<void>((resolve) => {
+      releaseClaim = resolve;
+    });
+    let claimCount = 0;
+
+    const secretPath = join(workspacePath, '.secrets.json');
+    const first = withPersistentMutationLock(
+      secretPath,
+      {
+        isProcessAlive: () => false,
+        onOwnerClaimed: async () => {
+          claimCount += 1;
+          if (claimCount === 1) {
+            signalClaimed?.();
+            await resume;
+          }
+        },
+      },
+      async () => {
+        await writeFile(secretPath, '{"first-key":"first-secret"}\n', 'utf8');
+      },
+    );
+    await claimed;
+
+    await expect(
+      withPersistentMutationLock(secretPath, { retryAttempts: 1, retryDelayMs: 0 }, async () => {
+        await writeFile(secretPath, '{"second-key":"second-secret"}\n', 'utf8');
+      }),
+    ).rejects.toThrow('Secret mutation lock is unavailable.');
+    releaseClaim?.();
+    await first;
+
+    expect(JSON.parse(await readFile(join(workspacePath, '.secrets.json'), 'utf8'))).toEqual({
+      'first-key': 'first-secret',
+    });
+    await expect(readdir(mutationLockPath(workspacePath))).resolves.toEqual([]);
+  });
+
+  it('recovers a strictly bound aged claim left by a crashed mutation owner', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lockPath = mutationLockPath(workspacePath);
-    let retiredPath = '';
-
-    await new FileSecretStore(workspacePath, {
-      onMutationLockRetired: async (claimedPath) => {
-        retiredPath = claimedPath;
-        await mkdir(lockPath);
-      },
-    }).set('deepseek-api-key', 'new-secret');
-
-    expect(retiredPath).not.toBe('');
-    await expect(readdir(lockPath)).resolves.toEqual([]);
-    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
-  });
-
-  it('recovers a strictly valid crashed mutation-directory retirement after its grace period', async () => {
-    const workspacePath = await createTemporaryWorkspace();
-    const retiredPath = join(
-      workspacePath,
-      `..secrets.json.mutation.lock.retired-${Date.now() - 60_000}-${deadOwnerToken}`,
-    );
-    await mkdir(retiredPath);
+    const claimPath = join(lockPath, `claim-${Date.now() - 60_000}-${deadOwnerToken}.json`);
+    await mkdir(lockPath);
     await writeFile(
-      join(retiredPath, `owner-${deadOwnerToken}.json`),
+      claimPath,
       JSON.stringify({
         token: deadOwnerToken,
         pid: 101,
@@ -393,25 +423,39 @@ describe('file secret store', () => {
 
     await new FileSecretStore(workspacePath).set('deepseek-api-key', 'recovered-secret');
 
-    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(access(claimPath)).rejects.toMatchObject({ code: 'ENOENT' });
     await expect(readFile(join(workspacePath, '.secrets.json'), 'utf8')).resolves.toContain(
       'recovered-secret',
     );
   });
 
-  it('leaves malformed mutation-directory retirement artifacts untouched', async () => {
+  it.each([
+    ['PID zero', { token: deadOwnerToken, pid: 0, createdAt: '2026-08-19T00:00:00.000Z' }],
+    [
+      'unsafe PID',
+      {
+        token: deadOwnerToken,
+        pid: Number.MAX_SAFE_INTEGER + 1,
+        createdAt: '2026-08-19T00:00:00.000Z',
+      },
+    ],
+    ['noncanonical timestamp', { token: deadOwnerToken, pid: 101, createdAt: '2026-08-19' }],
+    ['invalid token', { token: 'not-a-uuid', pid: 101, createdAt: '2026-08-19T00:00:00.000Z' }],
+  ])('leaves a fixed owner containing %s untouched and fails closed', async (_label, record) => {
     const workspacePath = await createTemporaryWorkspace();
-    const retiredPath = join(
-      workspacePath,
-      `..secrets.json.mutation.lock.retired-${Date.now() - 60_000}-${deadOwnerToken}`,
-    );
-    await mkdir(retiredPath);
-    const malformedPath = join(retiredPath, `owner-${deadOwnerToken}.json`);
-    await writeFile(malformedPath, '{"token":', 'utf8');
+    const lockPath = mutationLockPath(workspacePath);
+    const ownerPath = join(lockPath, 'owner.json');
+    await mkdir(lockPath);
+    await writeFile(ownerPath, JSON.stringify(record), 'utf8');
 
-    await new FileSecretStore(workspacePath).set('deepseek-api-key', 'new-secret');
+    await expect(
+      new FileSecretStore(workspacePath, {
+        mutationLockRetryAttempts: 1,
+        mutationLockRetryDelayMs: 0,
+      }).set('deepseek-api-key', 'new-secret'),
+    ).rejects.toThrow('Secret mutation lock is unavailable.');
 
-    await expect(readFile(malformedPath, 'utf8')).resolves.toBe('{"token":');
+    await expect(readFile(ownerPath, 'utf8')).resolves.toBe(JSON.stringify(record));
   });
 
   it('rejects a symbolic mutation owner without reading or deleting its target', async () => {
@@ -433,7 +477,7 @@ describe('file secret store', () => {
     );
     const lockPath = mutationLockPath(workspacePath);
     await mkdir(lockPath);
-    await symlink(outsideOwnerPath, join(lockPath, `owner-${deadOwnerToken}.json`));
+    await symlink(outsideOwnerPath, join(lockPath, 'owner.json'));
 
     await expect(
       new FileSecretStore(workspacePath, { isProcessAlive: () => false }).set(
