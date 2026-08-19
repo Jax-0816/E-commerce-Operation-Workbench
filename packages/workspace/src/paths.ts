@@ -1,3 +1,4 @@
+import { lstatSync } from 'node:fs';
 import { isAbsolute, relative, resolve, sep, win32 } from 'node:path';
 
 export type WorkspacePlatform = 'win32' | (string & {});
@@ -61,5 +62,37 @@ export function resolveWorkspacePath(workspacePath: string, storedPath: string):
     throw new TypeError('Workspace path resolves outside the workspace.');
   }
 
+  assertNoSymbolicLinkComponents(resolvedWorkspacePath, normalizeWorkspaceRelativePath(storedPath));
+
   return resolvedAssetPath;
+}
+
+function assertNoSymbolicLinkComponents(workspacePath: string, relativePath: string): void {
+  assertDirectory(workspacePath);
+  let currentPath = workspacePath;
+  for (const segment of relativePath.split('/')) {
+    currentPath = resolve(currentPath, segment);
+    try {
+      const entry = lstatSync(currentPath);
+      if (entry.isSymbolicLink()) {
+        throw new TypeError('Workspace paths cannot traverse symbolic links.');
+      }
+    } catch (error: unknown) {
+      if (isFileMissing(error)) {
+        return;
+      }
+      throw error;
+    }
+  }
+}
+
+function assertDirectory(path: string): void {
+  const entry = lstatSync(path);
+  if (entry.isSymbolicLink() || !entry.isDirectory()) {
+    throw new TypeError('Workspace root must be a real directory.');
+  }
+}
+
+function isFileMissing(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT';
 }

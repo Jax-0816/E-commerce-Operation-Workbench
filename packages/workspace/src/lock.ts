@@ -1,10 +1,10 @@
-import { open, readFile, unlink } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { mkdir, open, readFile, readdir, rmdir, unlink } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 import { DomainError } from '@eaw/domain';
 
-const lockFilename = '.workspace.lock';
+const lockDirectoryName = '.workspace.lock';
 
 interface LockRecord {
   readonly ownerToken: string;
@@ -16,6 +16,8 @@ export interface AcquireWorkspaceLockOptions {
   readonly ownerToken?: string;
   readonly pid?: number;
   readonly isProcessAlive?: (pid: number) => boolean | Promise<boolean>;
+  readonly onStaleOwnerObserved?: (record: Readonly<LockRecord>) => void | Promise<void>;
+  readonly onBeforeLockDirectoryRemoval?: (lockPath: string) => void | Promise<void>;
 }
 
 export interface WorkspaceLock {
@@ -27,7 +29,7 @@ export async function acquireWorkspaceLock(
   workspacePath: string,
   options: AcquireWorkspaceLockOptions = {},
 ): Promise<WorkspaceLock> {
-  const lockPath = join(resolve(workspacePath), lockFilename);
+  const lockPath = join(resolve(workspacePath), lockDirectoryName);
   const record: LockRecord = {
     ownerToken: options.ownerToken ?? randomUUID(),
     pid: options.pid ?? process.pid,
@@ -35,49 +37,103 @@ export async function acquireWorkspaceLock(
   };
   const isProcessAlive = options.isProcessAlive ?? defaultProcessLiveness;
 
-  if (!(await createLock(lockPath, record))) {
-    const existingRecord = await readLock(lockPath);
-    if (existingRecord === undefined || (await isProcessAlive(existingRecord.pid))) {
+  for (;;) {
+    if (await createLockDirectory(lockPath, record)) {
+      return {
+        ownerToken: record.ownerToken,
+        release: async () => {
+          if (!(await removeOwnerRecord(lockPath, record.ownerToken))) {
+            return;
+          }
+          await options.onBeforeLockDirectoryRemoval?.(lockPath);
+          await removeEmptyLockDirectory(lockPath);
+        },
+      };
+    }
+
+    const staleRecord = await readOwnerRecord(lockPath);
+    if (staleRecord === undefined || (await isProcessAlive(staleRecord.pid))) {
       throw lockedError();
     }
 
-    await deleteLockIfUnchanged(lockPath, existingRecord);
-    if (!(await createLock(lockPath, record))) {
-      throw lockedError();
+    await options.onStaleOwnerObserved?.(staleRecord);
+    if (!(await removeOwnerRecord(lockPath, staleRecord.ownerToken))) {
+      continue;
     }
+    await removeEmptyLockDirectory(lockPath);
   }
-
-  return {
-    ownerToken: record.ownerToken,
-    release: async () => deleteLockIfOwned(lockPath, record.ownerToken),
-  };
 }
 
-async function createLock(lockPath: string, record: LockRecord): Promise<boolean> {
+async function createLockDirectory(lockPath: string, record: LockRecord): Promise<boolean> {
   try {
-    const file = await open(lockPath, 'wx', 0o600);
+    await mkdir(lockPath);
+  } catch (error: unknown) {
+    if (isAlreadyPresent(error)) {
+      return false;
+    }
+    throw error;
+  }
+
+  try {
+    const file = await open(ownerRecordPath(lockPath, record.ownerToken), 'wx', 0o600);
     try {
       await file.writeFile(JSON.stringify(record), 'utf8');
+      await file.sync();
     } finally {
       await file.close();
     }
     return true;
   } catch (error: unknown) {
-    if (isFileAlreadyPresent(error)) {
+    await removeEmptyLockDirectory(lockPath);
+    throw error;
+  }
+}
+
+async function readOwnerRecord(lockPath: string): Promise<LockRecord | undefined> {
+  let ownerFileName: string;
+  try {
+    const ownerFiles = (await readdir(lockPath)).filter(
+      (entry) => entry.startsWith('owner-') && entry.endsWith('.json'),
+    );
+    if (ownerFiles.length !== 1) {
+      return undefined;
+    }
+    ownerFileName = ownerFiles[0];
+  } catch {
+    return undefined;
+  }
+
+  try {
+    const content = await readFile(join(lockPath, ownerFileName), 'utf8');
+    const record = parseLockRecord(content);
+    return record !== undefined && ownerFileName === ownerRecordFileName(record.ownerToken)
+      ? record
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function removeOwnerRecord(lockPath: string, ownerToken: string): Promise<boolean> {
+  try {
+    await unlink(ownerRecordPath(lockPath, ownerToken));
+    return true;
+  } catch (error: unknown) {
+    if (isMissing(error)) {
       return false;
     }
     throw error;
   }
 }
 
-async function readLock(lockPath: string): Promise<LockRecord | undefined> {
+async function removeEmptyLockDirectory(lockPath: string): Promise<void> {
   try {
-    return parseLockRecord(await readFile(lockPath, 'utf8'));
+    await rmdir(lockPath);
   } catch (error: unknown) {
-    if (isFileMissing(error)) {
-      return undefined;
+    if (isMissing(error) || isNotEmpty(error)) {
+      return;
     }
-    return undefined;
+    throw error;
   }
 }
 
@@ -87,7 +143,6 @@ function parseLockRecord(value: string): LockRecord | undefined {
     if (!isLockRecord(parsed)) {
       return undefined;
     }
-
     return parsed;
   } catch {
     return undefined;
@@ -111,42 +166,12 @@ function isLockRecord(value: unknown): value is LockRecord {
   );
 }
 
-async function deleteLockIfUnchanged(lockPath: string, expected: LockRecord): Promise<void> {
-  const current = await readLock(lockPath);
-  if (!sameLock(current, expected)) {
-    throw lockedError();
-  }
-
-  try {
-    await unlink(lockPath);
-  } catch (error: unknown) {
-    if (!isFileMissing(error)) {
-      throw error;
-    }
-  }
+function ownerRecordPath(lockPath: string, ownerToken: string): string {
+  return join(lockPath, ownerRecordFileName(ownerToken));
 }
 
-async function deleteLockIfOwned(lockPath: string, ownerToken: string): Promise<void> {
-  const current = await readLock(lockPath);
-  if (current?.ownerToken !== ownerToken) {
-    return;
-  }
-
-  try {
-    await unlink(lockPath);
-  } catch (error: unknown) {
-    if (!isFileMissing(error)) {
-      throw error;
-    }
-  }
-}
-
-function sameLock(left: LockRecord | undefined, right: LockRecord): boolean {
-  return (
-    left?.ownerToken === right.ownerToken &&
-    left.pid === right.pid &&
-    left.createdAt === right.createdAt
-  );
+function ownerRecordFileName(ownerToken: string): string {
+  return `owner-${encodeURIComponent(ownerToken)}.json`;
 }
 
 function defaultProcessLiveness(pid: number): boolean {
@@ -167,10 +192,19 @@ function lockedError(): DomainError {
   return new DomainError('WORKSPACE_LOCKED', 'A workspace writer lock is already present.');
 }
 
-function isFileAlreadyPresent(error: unknown): error is NodeJS.ErrnoException {
+function isAlreadyPresent(error: unknown): error is NodeJS.ErrnoException {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'EEXIST';
 }
 
-function isFileMissing(error: unknown): error is NodeJS.ErrnoException {
+function isMissing(error: unknown): error is NodeJS.ErrnoException {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT';
+}
+
+function isNotEmpty(error: unknown): error is NodeJS.ErrnoException {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error.code === 'ENOTEMPTY' || error.code === 'EEXIST')
+  );
 }

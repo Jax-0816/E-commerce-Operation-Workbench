@@ -1,4 +1,4 @@
-import { access, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, win32 } from 'node:path';
 
@@ -92,6 +92,34 @@ describe('workspace bootstrap', () => {
     expect(() => normalizeWorkspaceRelativePath('../outside.txt')).toThrow(TypeError);
     expect(() => normalizeWorkspaceRelativePath('/absolute.txt')).toThrow(TypeError);
     expect(() => normalizeWorkspaceRelativePath(win32.join('C:\\', 'outside.txt'))).toThrow(
+      TypeError,
+    );
+  });
+
+  it('rejects a canonical directory that is an existing symbolic link', async () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const workspacePath = await createTemporaryWorkspace();
+    const outsidePath = await createTemporaryWorkspace();
+    await symlink(outsidePath, join(workspacePath, 'assets'));
+
+    await expect(initializeWorkspace(workspacePath)).rejects.toThrow(TypeError);
+    await expect(access(join(outsidePath, 'products'))).rejects.toThrow();
+  });
+
+  it('rejects an asset path with an existing symbolic-link component', async () => {
+    if (process.platform === 'win32') {
+      return;
+    }
+
+    const workspacePath = await createTemporaryWorkspace();
+    const outsidePath = await createTemporaryWorkspace();
+    await mkdir(join(workspacePath, 'assets'));
+    await symlink(outsidePath, join(workspacePath, 'assets', 'products'));
+
+    expect(() => resolveWorkspacePath(workspacePath, 'assets/products/photo.png')).toThrow(
       TypeError,
     );
   });
