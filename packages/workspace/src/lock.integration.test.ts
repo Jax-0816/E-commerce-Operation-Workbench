@@ -1,4 +1,5 @@
 import {
+  access,
   mkdir,
   mkdtemp,
   readFile,
@@ -270,7 +271,7 @@ describe('workspace locking', () => {
     ).resolves.toContain('owner-one');
   });
 
-  it('does not destructively release when an injected Windows-style identity is zero', async () => {
+  it('releases its owner record when Windows reports a zero directory identity', async () => {
     const workspacePath = await createTemporaryWorkspace();
     const lock = await acquireWorkspaceLock(workspacePath, {
       ownerToken: 'zero-identity-owner',
@@ -281,8 +282,79 @@ describe('workspace locking', () => {
 
     await lock.release();
 
-    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toContain(
-      'owner-zero-identity-owner.json',
-    );
+    await expect(access(join(workspacePath, '.workspace.lock'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+  });
+
+  it.each([
+    ['zero', { device: 0, inode: 0 }],
+    ['non-unique', { device: 1, inode: 1 }],
+  ])(
+    'does not delete a replacement owner when Windows reports a %s directory identity',
+    async (_label, identity) => {
+      const workspacePath = await createTemporaryWorkspace();
+      const lockPath = join(workspacePath, '.workspace.lock');
+      let identityReads = 0;
+      let replaced = false;
+      const lock = await acquireWorkspaceLock(workspacePath, {
+        ownerToken: 'original-owner',
+        pid: 101,
+        isProcessAlive: () => true,
+        getLockDirectoryIdentity: async () => {
+          identityReads += 1;
+          if (identityReads > 1 && !replaced) {
+            replaced = true;
+            await rm(lockPath, { recursive: true });
+            await mkdir(lockPath);
+            await writeFile(
+              join(lockPath, 'owner-original-owner.json'),
+              JSON.stringify({
+                ownerToken: 'replacement-owner',
+                pid: 202,
+                createdAt: '2026-08-19T00:00:00.000Z',
+              }),
+              'utf8',
+            );
+          }
+          return identity;
+        },
+      });
+
+      await lock.release();
+
+      expect(replaced).toBe(true);
+      await expect(
+        readFile(join(lockPath, 'owner-original-owner.json'), 'utf8'),
+      ).resolves.toContain('replacement-owner');
+    },
+  );
+
+  it('recovers a stale owner when Windows reports a zero directory identity', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    await writeLockRecord(workspacePath, {
+      ownerToken: 'stale-owner',
+      pid: 101,
+      createdAt: '2026-08-19T00:00:00.000Z',
+    });
+    let identityReads = 0;
+
+    const recoveredLock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'recovered-owner',
+      pid: 202,
+      isProcessAlive: (pid) => pid === 202,
+      getLockDirectoryIdentity: async () => {
+        identityReads += 1;
+        if (identityReads > 12) {
+          throw new Error('Zero-identity stale recovery did not make progress.');
+        }
+        return { device: 0, inode: 0 };
+      },
+    });
+
+    await expect(readdir(join(workspacePath, '.workspace.lock'))).resolves.toEqual([
+      'owner-recovered-owner.json',
+    ]);
+    await recoveredLock.release();
   });
 });

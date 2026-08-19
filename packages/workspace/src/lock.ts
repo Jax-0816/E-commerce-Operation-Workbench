@@ -1,5 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import { lstat, mkdir, open, readFile, readdir, rmdir, unlink } from 'node:fs/promises';
+import {
+  link,
+  lstat,
+  mkdir,
+  open,
+  readFile,
+  readdir,
+  rename,
+  rmdir,
+  unlink,
+} from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { DomainError } from '@eaw/domain';
@@ -58,7 +68,7 @@ export async function acquireWorkspaceLock(
           if (
             !(await removeOwnerRecord(
               lockPath,
-              record.ownerToken,
+              record,
               createdLock,
               options.getLockDirectoryIdentity,
             ))
@@ -80,7 +90,7 @@ export async function acquireWorkspaceLock(
     if (
       !(await removeOwnerRecord(
         lockPath,
-        staleOwner.record.ownerToken,
+        staleOwner.record,
         staleOwner.identity,
         options.getLockDirectoryIdentity,
       ))
@@ -128,19 +138,28 @@ async function readOwnerRecord(
   let ownerFileName: string;
   const identity = await assertLockDirectory(lockPath, getIdentity);
   try {
-    const ownerFiles = (await readdir(lockPath)).filter(
-      (entry) => entry.startsWith('owner-') && entry.endsWith('.json'),
-    );
-    if (ownerFiles.length !== 1) {
+    const entries = await readdir(lockPath, { withFileTypes: true });
+    if (
+      entries.length !== 1 ||
+      !entries[0].isFile() ||
+      entries[0].isSymbolicLink() ||
+      !entries[0].name.startsWith('owner-') ||
+      !entries[0].name.endsWith('.json')
+    ) {
       return undefined;
     }
-    ownerFileName = ownerFiles[0];
+    ownerFileName = entries[0].name;
   } catch {
     return undefined;
   }
 
   try {
-    const content = await readFile(join(lockPath, ownerFileName), 'utf8');
+    const ownerPath = join(lockPath, ownerFileName);
+    const entry = await lstat(ownerPath);
+    if (entry.isSymbolicLink() || !entry.isFile()) {
+      return undefined;
+    }
+    const content = await readFile(ownerPath, 'utf8');
     const record = parseLockRecord(content);
     return record !== undefined && ownerFileName === ownerRecordFileName(record.ownerToken)
       ? { record, identity }
@@ -152,21 +171,33 @@ async function readOwnerRecord(
 
 async function removeOwnerRecord(
   lockPath: string,
-  ownerToken: string,
+  expectedRecord: LockRecord,
   expectedIdentity: LockDirectoryIdentity,
   getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
 ): Promise<boolean> {
-  if (!isVerifiable(expectedIdentity)) return false;
-  assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath, getIdentity));
+  if (!(await ownsLockRecord(lockPath, expectedRecord, expectedIdentity, getIdentity))) {
+    return false;
+  }
+  if (!(await ownsLockRecord(lockPath, expectedRecord, expectedIdentity, getIdentity))) {
+    return false;
+  }
+  const ownerPath = ownerRecordPath(lockPath, expectedRecord.ownerToken);
+  const claimPath = join(lockPath, `release-${randomUUID()}.json`);
   try {
-    await unlink(ownerRecordPath(lockPath, ownerToken));
-    return true;
+    await rename(ownerPath, claimPath);
   } catch (error: unknown) {
     if (isMissing(error)) {
       return false;
     }
     throw error;
   }
+
+  if (await claimContainsRecord(claimPath, expectedRecord)) {
+    await unlink(claimPath);
+    return true;
+  }
+  await restoreForeignClaim(claimPath, ownerPath);
+  return false;
 }
 
 async function removeEmptyLockDirectory(
@@ -175,8 +206,7 @@ async function removeEmptyLockDirectory(
   getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
 ): Promise<void> {
   if (expectedIdentity !== undefined) {
-    if (!isVerifiable(expectedIdentity)) return;
-    assertSameIdentity(expectedIdentity, await assertLockDirectory(lockPath, getIdentity));
+    assertCompatibleIdentity(expectedIdentity, await assertLockDirectory(lockPath, getIdentity));
   }
   try {
     await rmdir(lockPath);
@@ -205,9 +235,79 @@ function isVerifiable(identity: LockDirectoryIdentity): boolean {
   return identity.device !== 0 && identity.inode !== 0;
 }
 
-function assertSameIdentity(expected: LockDirectoryIdentity, current: LockDirectoryIdentity): void {
-  if (expected.device !== current.device || expected.inode !== current.inode) {
+function assertCompatibleIdentity(
+  expected: LockDirectoryIdentity,
+  current: LockDirectoryIdentity,
+): void {
+  if (
+    isVerifiable(expected) &&
+    isVerifiable(current) &&
+    (expected.device !== current.device || expected.inode !== current.inode)
+  ) {
     throw new TypeError('Workspace lock directory changed ownership.');
+  }
+}
+
+async function ownsLockRecord(
+  lockPath: string,
+  expectedRecord: LockRecord,
+  expectedIdentity: LockDirectoryIdentity,
+  getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
+): Promise<boolean> {
+  let currentIdentity: LockDirectoryIdentity;
+  try {
+    currentIdentity = await assertLockDirectory(lockPath, getIdentity);
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+  assertCompatibleIdentity(expectedIdentity, currentIdentity);
+
+  const path = ownerRecordPath(lockPath, expectedRecord.ownerToken);
+  try {
+    const entry = await lstat(path);
+    if (entry.isSymbolicLink() || !entry.isFile()) {
+      throw new TypeError('Workspace lock owner must be a real regular file.');
+    }
+    const currentRecord = parseLockRecord(await readFile(path, 'utf8'));
+    return currentRecord !== undefined && lockRecordsEqual(currentRecord, expectedRecord);
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+}
+
+function lockRecordsEqual(left: LockRecord, right: LockRecord): boolean {
+  return (
+    left.ownerToken === right.ownerToken &&
+    left.pid === right.pid &&
+    left.createdAt === right.createdAt
+  );
+}
+
+async function claimContainsRecord(
+  claimPath: string,
+  expectedRecord: LockRecord,
+): Promise<boolean> {
+  try {
+    const entry = await lstat(claimPath);
+    if (entry.isSymbolicLink() || !entry.isFile()) return false;
+    const record = parseLockRecord(await readFile(claimPath, 'utf8'));
+    return record !== undefined && lockRecordsEqual(record, expectedRecord);
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+}
+
+async function restoreForeignClaim(claimPath: string, ownerPath: string): Promise<void> {
+  try {
+    await link(claimPath, ownerPath);
+    await unlink(claimPath);
+  } catch (error: unknown) {
+    if (!isAlreadyPresent(error) && !isMissing(error)) {
+      // Leaving the claim in place is conservative: readers treat it as a foreign lock entry.
+    }
   }
 }
 
@@ -230,6 +330,7 @@ function isLockRecord(value: unknown): value is LockRecord {
 
   const record = value as Partial<LockRecord>;
   return (
+    Object.keys(value).length === 3 &&
     typeof record.ownerToken === 'string' &&
     record.ownerToken.length > 0 &&
     typeof record.pid === 'number' &&

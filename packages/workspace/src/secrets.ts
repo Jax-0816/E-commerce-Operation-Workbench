@@ -1,5 +1,17 @@
 import { randomUUID } from 'node:crypto';
-import { lstat, mkdir, open, readFile, realpath, rename, rm, rmdir } from 'node:fs/promises';
+import {
+  link,
+  lstat,
+  mkdir,
+  open,
+  readFile,
+  readdir,
+  realpath,
+  rename,
+  rm,
+  rmdir,
+  unlink,
+} from 'node:fs/promises';
 import { basename, dirname, join, parse, relative, resolve, sep } from 'node:path';
 
 import { isPathContained } from './filesystem.js';
@@ -20,9 +32,43 @@ export interface FileSecretStoreOptions {
   readonly onTemporaryFileSynced?: (temporaryPath: string) => void | Promise<void>;
   readonly onBeforeMutation?: () => void | Promise<void>;
   readonly isProcessAlive?: (pid: number) => boolean | Promise<boolean>;
+  readonly mutationLockRetryAttempts?: number;
+  readonly mutationLockRetryDelayMs?: number;
 }
 
 const pathLocks = new Map<string, Promise<void>>();
+const defaultMutationLockRetryAttempts = 100;
+const defaultMutationLockRetryDelayMs = 5;
+const defaultMutationLockStaleAfterMs = 30_000;
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+interface MutationOwnerRecord {
+  readonly token: string;
+  readonly pid: number;
+  readonly createdAt: string;
+}
+
+interface MutationLockMetadata {
+  readonly device: number;
+  readonly inode: number;
+  readonly modifiedAtMs: number;
+}
+
+type MutationLockState =
+  | { readonly kind: 'empty'; readonly directory: MutationLockMetadata }
+  | {
+      readonly kind: 'incomplete';
+      readonly directory: MutationLockMetadata;
+      readonly fileName: string;
+      readonly fileModifiedAtMs: number;
+      readonly content: string;
+    }
+  | {
+      readonly kind: 'owned';
+      readonly directory: MutationLockMetadata;
+      readonly owner: MutationOwnerRecord;
+    }
+  | { readonly kind: 'foreign'; readonly directory: MutationLockMetadata };
 
 export class FileSecretStore implements SecretStore {
   readonly #filePath: string;
@@ -156,27 +202,39 @@ async function withFilesystemMutationLock<T>(
   operation: () => Promise<T>,
 ): Promise<T> {
   const lockPath = join(dirname(path), `.${basename(path)}.mutation.lock`);
-  const ownerToken = randomUUID();
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  const owner: MutationOwnerRecord = {
+    token: randomUUID(),
+    pid: process.pid,
+    createdAt: new Date().toISOString(),
+  };
+  const retryAttempts = options.mutationLockRetryAttempts ?? defaultMutationLockRetryAttempts;
+  const retryDelayMs = options.mutationLockRetryDelayMs ?? defaultMutationLockRetryDelayMs;
+  for (let attempt = 0; attempt < retryAttempts; attempt += 1) {
     try {
       await mkdir(lockPath, { mode: 0o700 });
-      await writeMutationOwner(lockPath, ownerToken);
-      return await runWithOwnedMutationLock(lockPath, ownerToken, operation);
     } catch (error: unknown) {
       if (!isAlreadyPresent(error)) {
         throw error;
       }
-      const owner = await readMutationOwner(lockPath);
-      if (
-        owner !== undefined &&
-        !(await (options.isProcessAlive ?? defaultProcessLiveness)(owner.pid))
-      ) {
-        if (await removeMutationOwner(lockPath, owner.token)) {
-          await removeEmptyMutationLock(lockPath);
-          continue;
-        }
+      if (await recoverMutationLock(lockPath, options)) {
+        continue;
       }
-      await new Promise<void>((resolveRetry) => setTimeout(resolveRetry, 5));
+      await new Promise<void>((resolveRetry) => setTimeout(resolveRetry, retryDelayMs));
+      continue;
+    }
+
+    try {
+      await writeMutationOwner(lockPath, owner);
+      return await runWithOwnedMutationLock(lockPath, owner, operation);
+    } catch (error: unknown) {
+      try {
+        if (await removeMutationOwner(lockPath, owner)) {
+          await removeEmptyMutationLock(lockPath);
+        }
+      } catch {
+        // Preserve the original acquisition error and leave any foreign replacement untouched.
+      }
+      throw error;
     }
   }
   throw new Error('Secret mutation lock is unavailable.');
@@ -184,7 +242,7 @@ async function withFilesystemMutationLock<T>(
 
 async function runWithOwnedMutationLock<T>(
   lockPath: string,
-  token: string,
+  owner: MutationOwnerRecord,
   operation: () => Promise<T>,
 ): Promise<T> {
   let result: T | undefined;
@@ -197,7 +255,7 @@ async function runWithOwnedMutationLock<T>(
 
   let cleanupError: unknown;
   try {
-    if (await removeMutationOwner(lockPath, token)) await removeEmptyMutationLock(lockPath);
+    if (await removeMutationOwner(lockPath, owner)) await removeEmptyMutationLock(lockPath);
   } catch (error: unknown) {
     if (!isMissing(error) && !isNotEmpty(error)) {
       cleanupError = error;
@@ -212,49 +270,298 @@ async function runWithOwnedMutationLock<T>(
   return result as T;
 }
 
-async function writeMutationOwner(lockPath: string, token: string): Promise<void> {
-  const file = await open(join(lockPath, `owner-${token}.json`), 'wx', 0o600);
+async function writeMutationOwner(lockPath: string, owner: MutationOwnerRecord): Promise<void> {
+  await assertMutationLockDirectory(lockPath);
+  const file = await open(mutationOwnerPath(lockPath, owner.token), 'wx', 0o600);
   try {
-    await file.writeFile(
-      JSON.stringify({ token, pid: process.pid, createdAt: new Date().toISOString() }),
-    );
+    await file.writeFile(JSON.stringify(owner));
     await file.sync();
   } finally {
     await file.close();
   }
-}
-async function readMutationOwner(
-  lockPath: string,
-): Promise<{ token: string; pid: number } | undefined> {
-  try {
-    const names = await import('node:fs/promises').then(({ readdir }) => readdir(lockPath));
-    const name = names.find((value) => value.startsWith('owner-') && value.endsWith('.json'));
-    if (name === undefined) return undefined;
-    const value: unknown = JSON.parse(await readFile(join(lockPath, name), 'utf8'));
-    const owner = value as { token?: unknown; pid?: unknown };
-    return typeof owner.token === 'string' && typeof owner.pid === 'number'
-      ? { token: owner.token, pid: owner.pid }
-      : undefined;
-  } catch {
-    return undefined;
+  const state = await readMutationLockState(lockPath);
+  if (state.kind !== 'owned' || !mutationOwnersEqual(state.owner, owner)) {
+    throw new TypeError('Secret mutation lock ownership changed during acquisition.');
   }
 }
-async function removeMutationOwner(lockPath: string, token: string): Promise<boolean> {
+
+async function recoverMutationLock(
+  lockPath: string,
+  options: FileSecretStoreOptions,
+): Promise<boolean> {
+  let state: MutationLockState;
   try {
-    await rm(join(lockPath, `owner-${token}.json`));
+    state = await readMutationLockState(lockPath);
+  } catch (error: unknown) {
+    if (isMissing(error)) return true;
+    throw error;
+  }
+  if (state.kind === 'foreign') return false;
+
+  if (state.kind === 'owned') {
+    if (await (options.isProcessAlive ?? defaultProcessLiveness)(state.owner.pid)) {
+      return false;
+    }
+    if (!(await removeMutationOwner(lockPath, state.owner))) return false;
+    await removeEmptyMutationLock(lockPath);
     return true;
+  }
+
+  const lastModifiedAt =
+    state.kind === 'empty'
+      ? state.directory.modifiedAtMs
+      : Math.max(state.directory.modifiedAtMs, state.fileModifiedAtMs);
+  if (Date.now() - lastModifiedAt < defaultMutationLockStaleAfterMs) return false;
+
+  if (state.kind === 'incomplete' && !(await removeIncompleteMutationOwner(lockPath, state))) {
+    return false;
+  }
+  if (state.kind === 'empty' && !(await mutationLockStateMatches(lockPath, state))) {
+    return false;
+  }
+  await removeEmptyMutationLock(lockPath);
+  return true;
+}
+
+async function readMutationLockState(lockPath: string): Promise<MutationLockState> {
+  const directory = await assertMutationLockDirectory(lockPath);
+  const entries = await readdir(lockPath, { withFileTypes: true });
+  if (entries.length === 0) return { kind: 'empty', directory };
+  if (entries.length !== 1) return { kind: 'foreign', directory };
+
+  const entry = entries[0];
+  if (entry.isSymbolicLink()) {
+    throw new TypeError('Secret mutation owner must not be a symbolic link.');
+  }
+  if (!entry.isFile()) return { kind: 'foreign', directory };
+
+  const ownerPath = join(lockPath, entry.name);
+  const ownerEntry = await lstat(ownerPath);
+  if (ownerEntry.isSymbolicLink()) {
+    throw new TypeError('Secret mutation owner must not be a symbolic link.');
+  }
+  if (!ownerEntry.isFile()) return { kind: 'foreign', directory };
+
+  const fileToken = mutationOwnerTokenFromFileName(entry.name);
+  if (fileToken === undefined) return { kind: 'foreign', directory };
+  const content = await readFile(ownerPath, 'utf8');
+  let value: unknown;
+  try {
+    value = JSON.parse(content);
+  } catch {
+    return {
+      kind: 'incomplete',
+      directory,
+      fileName: entry.name,
+      fileModifiedAtMs: ownerEntry.mtimeMs,
+      content,
+    };
+  }
+  if (!isMutationOwnerRecord(value) || value.token !== fileToken) {
+    return { kind: 'foreign', directory };
+  }
+  return { kind: 'owned', directory, owner: value };
+}
+
+async function removeMutationOwner(
+  lockPath: string,
+  expectedOwner: MutationOwnerRecord,
+): Promise<boolean> {
+  let first: MutationLockState;
+  try {
+    first = await readMutationLockState(lockPath);
   } catch (error: unknown) {
     if (isMissing(error)) return false;
     throw error;
   }
+  if (
+    first.kind !== 'owned' ||
+    !mutationOwnersEqual(first.owner, expectedOwner) ||
+    !(await mutationLockStateMatches(lockPath, first))
+  ) {
+    return false;
+  }
+  return claimAndRemoveMutationEntry(
+    lockPath,
+    `owner-${expectedOwner.token}.json`,
+    async (claimPath) => mutationClaimContainsOwner(claimPath, expectedOwner),
+  );
 }
+
+async function removeIncompleteMutationOwner(
+  lockPath: string,
+  expected: Extract<MutationLockState, { kind: 'incomplete' }>,
+): Promise<boolean> {
+  if (!(await mutationLockStateMatches(lockPath, expected))) return false;
+  return claimAndRemoveMutationEntry(lockPath, expected.fileName, async (claimPath) =>
+    mutationClaimContainsBytes(claimPath, expected.content),
+  );
+}
+
+async function mutationLockStateMatches(
+  lockPath: string,
+  expected: MutationLockState,
+): Promise<boolean> {
+  let current: MutationLockState;
+  try {
+    current = await readMutationLockState(lockPath);
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+  if (!mutationDirectoryMetadataMatches(current.directory, expected.directory)) return false;
+  if (current.kind !== expected.kind) return false;
+  if (current.kind === 'owned' && expected.kind === 'owned') {
+    return mutationOwnersEqual(current.owner, expected.owner);
+  }
+  if (current.kind === 'incomplete' && expected.kind === 'incomplete') {
+    return (
+      current.fileName === expected.fileName &&
+      current.fileModifiedAtMs === expected.fileModifiedAtMs &&
+      current.content === expected.content
+    );
+  }
+  return current.kind === 'empty' && expected.kind === 'empty';
+}
+
+async function claimAndRemoveMutationEntry(
+  lockPath: string,
+  sourceName: string,
+  claimMatches: (claimPath: string) => Promise<boolean>,
+): Promise<boolean> {
+  const sourcePath = join(lockPath, sourceName);
+  const claimPath = join(lockPath, `retire-${randomUUID()}.json`);
+  try {
+    await rename(sourcePath, claimPath);
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
+  }
+
+  if (await claimMatches(claimPath)) {
+    await unlink(claimPath);
+    return true;
+  }
+  await restoreForeignMutationClaim(claimPath, sourcePath);
+  return false;
+}
+
+async function mutationClaimContainsOwner(
+  claimPath: string,
+  expectedOwner: MutationOwnerRecord,
+): Promise<boolean> {
+  const content = await readRegularMutationClaim(claimPath);
+  if (content === undefined) return false;
+  try {
+    const value: unknown = JSON.parse(content);
+    return isMutationOwnerRecord(value) && mutationOwnersEqual(value, expectedOwner);
+  } catch {
+    return false;
+  }
+}
+
+async function mutationClaimContainsBytes(
+  claimPath: string,
+  expectedContent: string,
+): Promise<boolean> {
+  return (await readRegularMutationClaim(claimPath)) === expectedContent;
+}
+
+async function readRegularMutationClaim(claimPath: string): Promise<string | undefined> {
+  try {
+    const entry = await lstat(claimPath);
+    if (entry.isSymbolicLink() || !entry.isFile()) return undefined;
+    return readFile(claimPath, 'utf8');
+  } catch (error: unknown) {
+    if (isMissing(error)) return undefined;
+    throw error;
+  }
+}
+
+async function restoreForeignMutationClaim(claimPath: string, sourcePath: string): Promise<void> {
+  try {
+    await link(claimPath, sourcePath);
+    await unlink(claimPath);
+  } catch (error: unknown) {
+    if (!isAlreadyPresent(error) && !isMissing(error)) {
+      // Leaving the claim in place prevents acquisition and preserves the foreign entry.
+    }
+  }
+}
+
+function mutationDirectoryMetadataMatches(
+  current: MutationLockMetadata,
+  expected: MutationLockMetadata,
+): boolean {
+  const bothIdentitiesAreUsable =
+    current.device !== 0 && current.inode !== 0 && expected.device !== 0 && expected.inode !== 0;
+  return (
+    (!bothIdentitiesAreUsable ||
+      (current.device === expected.device && current.inode === expected.inode)) &&
+    current.modifiedAtMs === expected.modifiedAtMs
+  );
+}
+
 async function removeEmptyMutationLock(lockPath: string): Promise<void> {
+  let state: MutationLockState;
+  try {
+    state = await readMutationLockState(lockPath);
+  } catch (error: unknown) {
+    if (isMissing(error)) return;
+    throw error;
+  }
+  if (state.kind !== 'empty') return;
   try {
     await rmdir(lockPath);
   } catch (error: unknown) {
     if (!isMissing(error) && !isNotEmpty(error)) throw error;
   }
 }
+
+async function assertMutationLockDirectory(lockPath: string): Promise<MutationLockMetadata> {
+  const entry = await lstat(lockPath);
+  if (entry.isSymbolicLink() || !entry.isDirectory()) {
+    throw new TypeError('Secret mutation lock must be a real directory.');
+  }
+  return { device: entry.dev, inode: entry.ino, modifiedAtMs: entry.mtimeMs };
+}
+
+function mutationOwnerPath(lockPath: string, token: string): string {
+  return join(lockPath, `owner-${token}.json`);
+}
+
+function mutationOwnerTokenFromFileName(fileName: string): string | undefined {
+  const match = /^owner-(.+)\.json$/u.exec(fileName);
+  return match !== null && uuidPattern.test(match[1]) ? match[1] : undefined;
+}
+
+function isMutationOwnerRecord(value: unknown): value is MutationOwnerRecord {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  const owner = value as Partial<MutationOwnerRecord>;
+  return (
+    Object.keys(value).length === 3 &&
+    typeof owner.token === 'string' &&
+    uuidPattern.test(owner.token) &&
+    typeof owner.pid === 'number' &&
+    Number.isInteger(owner.pid) &&
+    owner.pid > 0 &&
+    typeof owner.createdAt === 'string' &&
+    isCanonicalTimestamp(owner.createdAt)
+  );
+}
+
+function isCanonicalTimestamp(value: string): boolean {
+  try {
+    return new Date(value).toISOString() === value;
+  } catch {
+    return false;
+  }
+}
+
+function mutationOwnersEqual(left: MutationOwnerRecord, right: MutationOwnerRecord): boolean {
+  return left.token === right.token && left.pid === right.pid && left.createdAt === right.createdAt;
+}
+
 function defaultProcessLiveness(pid: number): boolean {
   try {
     process.kill(pid, 0);
