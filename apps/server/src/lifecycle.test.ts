@@ -37,10 +37,15 @@ describe('standalone server lifecycle', () => {
     expect(manifest.scripts.prestart).toBe('pnpm run build');
   });
 
-  it('recreates a missing internal build artifact and restores the prior artifact safely', async () => {
+  it('recreates a missing secondary internal build artifact and restores it safely', async () => {
     const databasePackage = join(process.cwd(), '..', '..', 'packages', 'database');
-    const artifact = join(databasePackage, 'dist', 'index.js');
-    const backup = join(databasePackage, 'dist', 'index.lifecycle-backup.js');
+    const artifact = join(databasePackage, 'dist', 'repositories', 'product-repository.js');
+    const backup = join(
+      databasePackage,
+      'dist',
+      'repositories',
+      'product-repository.lifecycle-backup.js',
+    );
     await rename(artifact, backup);
     try {
       await execFileAsync('pnpm', ['run', 'prepare:internal'], {
