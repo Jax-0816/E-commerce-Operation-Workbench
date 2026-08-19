@@ -6,10 +6,16 @@ interface ProductListResponse {
 
 export function createBrowserProductsApi(): ProductsApi {
   return {
+    async archive(id) {
+      const response = await fetch(`/api/v1/products/${encodeURIComponent(id)}/archive`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Unable to archive product.');
+    },
     async list() {
       const response = await fetch('/api/v1/products');
       if (!response.ok) throw new Error('Unable to load products.');
-      return (await response.json() as ProductListResponse).items;
+      return ((await response.json()) as ProductListResponse).items;
     },
     async create(input) {
       const response = await fetch('/api/v1/products', {

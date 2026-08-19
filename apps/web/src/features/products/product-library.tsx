@@ -10,6 +10,7 @@ export interface ProductItem {
 export interface ProductsApi {
   list(): Promise<readonly ProductItem[]>;
   create(input: { name: string }): Promise<ProductItem | undefined>;
+  archive(id: string): Promise<void>;
 }
 
 export function ProductLibrary({ api }: { readonly api: ProductsApi }): React.JSX.Element {
@@ -18,6 +19,7 @@ export function ProductLibrary({ api }: { readonly api: ProductsApi }): React.JS
   const [isNewFormOpen, setIsNewFormOpen] = useState(false);
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [archivingIds, setArchivingIds] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
     void api
@@ -41,6 +43,23 @@ export function ProductLibrary({ api }: { readonly api: ProductsApi }): React.JS
       setError('无法新建产品，请检查名称后重试。');
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function archive(product: ProductItem): Promise<void> {
+    setArchivingIds((current) => new Set(current).add(product.id));
+    setError(undefined);
+    try {
+      await api.archive(product.id);
+      setItems((current) => current?.filter((item) => item.id !== product.id));
+    } catch {
+      setError('无法归档产品，请稍后重试。');
+    } finally {
+      setArchivingIds((current) => {
+        const next = new Set(current);
+        next.delete(product.id);
+        return next;
+      });
     }
   }
 
@@ -71,11 +90,23 @@ export function ProductLibrary({ api }: { readonly api: ProductsApi }): React.JS
 
       {error !== undefined ? <p role="alert">{error}</p> : null}
       {items === undefined && error === undefined ? <p>正在加载产品…</p> : null}
-      {items !== undefined && items.length === 0 ? <p>还没有产品，先新建一个产品开始运营。</p> : null}
+      {items !== undefined && items.length === 0 ? (
+        <p>还没有产品，先新建一个产品开始运营。</p>
+      ) : null}
       {items !== undefined && items.length > 0 ? (
         <ul aria-label="产品列表">
           {items.map((product) => (
-            <li key={product.id}>{product.name}</li>
+            <li key={product.id}>
+              <span>{product.name}</span>
+              <button
+                aria-label={`归档 ${product.name}`}
+                disabled={archivingIds.has(product.id)}
+                onClick={() => void archive(product)}
+                type="button"
+              >
+                {archivingIds.has(product.id) ? '正在归档…' : '归档'}
+              </button>
+            </li>
           ))}
         </ul>
       ) : null}

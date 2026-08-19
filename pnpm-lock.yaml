@@ -44,12 +44,18 @@ importers:
       '@eaw/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@eaw/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@eaw/domain':
         specifier: workspace:*
         version: link:../../packages/domain
       '@eaw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@eaw/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
       '@fastify/static':
         specifier: 8.3.0
         version: 8.3.0

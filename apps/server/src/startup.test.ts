@@ -10,10 +10,15 @@ describe('server startup options', () => {
     const options = createServerStartupOptions({
       moduleUrl: compiledServerEntry,
       port: '3100',
+      workspacePath: '/explicit/workspace',
     });
 
     expect(options.webDistDir).toBe(fileURLToPath(new URL('../../web/dist/', import.meta.url)));
+    expect(options.migrationsDirectory).toBe(
+      fileURLToPath(new URL('../../../migrations/', compiledServerEntry)),
+    );
     expect(options.port).toBe(3100);
+    expect(options.workspacePath).toBe('/explicit/workspace');
   });
 
   it('rejects HOST values that expose the listener beyond loopback', () => {
