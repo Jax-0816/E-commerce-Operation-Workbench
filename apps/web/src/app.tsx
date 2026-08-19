@@ -1,7 +1,12 @@
+import { useState } from 'react';
+
+import { createBrowserFactsApi } from './features/facts/api.js';
+import { FactStatusTable } from './features/facts/fact-status-table.js';
 import { createBrowserProductsApi } from './features/products/api.js';
-import { ProductLibrary } from './features/products/product-library.js';
+import { ProductLibrary, type ProductItem } from './features/products/product-library.js';
 
 const browserProductsApi = createBrowserProductsApi();
+const browserFactsApi = createBrowserFactsApi();
 
 const navigationItems = [
   '工作台',
@@ -22,6 +27,7 @@ const contextFields = [
 ];
 
 export function App(): React.JSX.Element {
+  const [selectedProduct, setSelectedProduct] = useState<ProductItem>();
   return (
     <main className="workbench-shell">
       <header className="topbar">
@@ -55,7 +61,10 @@ export function App(): React.JSX.Element {
         <p>从产品事实、SKU 与成本开始，逐步建立可追溯的运营方案。</p>
       </section>
 
-      <ProductLibrary api={browserProductsApi} />
+      <ProductLibrary api={browserProductsApi} onSelect={setSelectedProduct} />
+      {selectedProduct ? (
+        <FactStatusTable api={browserFactsApi} productId={selectedProduct.id} />
+      ) : null}
     </main>
   );
 }

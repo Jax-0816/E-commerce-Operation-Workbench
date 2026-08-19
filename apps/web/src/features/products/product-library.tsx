@@ -13,7 +13,13 @@ export interface ProductsApi {
   archive(id: string): Promise<void>;
 }
 
-export function ProductLibrary({ api }: { readonly api: ProductsApi }): React.JSX.Element {
+export function ProductLibrary({
+  api,
+  onSelect,
+}: {
+  readonly api: ProductsApi;
+  readonly onSelect?: (product: ProductItem) => void;
+}): React.JSX.Element {
   const [items, setItems] = useState<readonly ProductItem[] | undefined>();
   const [error, setError] = useState<string>();
   const [isNewFormOpen, setIsNewFormOpen] = useState(false);
@@ -98,6 +104,11 @@ export function ProductLibrary({ api }: { readonly api: ProductsApi }): React.JS
           {items.map((product) => (
             <li key={product.id}>
               <span>{product.name}</span>
+              {onSelect ? (
+                <button onClick={() => onSelect(product)} type="button">
+                  管理事实
+                </button>
+              ) : null}
               <button
                 aria-label={`归档 ${product.name}`}
                 disabled={archivingIds.has(product.id)}

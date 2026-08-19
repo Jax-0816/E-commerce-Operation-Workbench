@@ -9,6 +9,7 @@ import { DomainError } from '@eaw/domain';
 import type { AppContext } from './context.js';
 import { registerHealthRoute } from './routes/health.js';
 import { registerProductRoutes } from './routes/products.js';
+import { registerFactRoutes } from './routes/facts.js';
 
 export function buildApp(context: AppContext): FastifyInstance {
   const app = Fastify();
@@ -21,6 +22,7 @@ export function buildApp(context: AppContext): FastifyInstance {
 
   registerHealthRoute(app, context);
   registerProductRoutes(app, context.products);
+  registerFactRoutes(app, context.facts);
 
   if (context.webDistDir !== undefined && existsSync(context.webDistDir)) {
     app.register(fastifyStatic, {
@@ -40,6 +42,7 @@ function errorStatusCode(code: DomainError['code']): number {
     case 'NOT_FOUND':
       return 404;
     case 'CONFLICT':
+    case 'FACT_VERIFICATION_REQUIRED':
       return 409;
     default:
       return 503;

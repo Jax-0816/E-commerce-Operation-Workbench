@@ -14,3 +14,23 @@ export type {
   ProductListResponse,
   ProductResponse,
 } from './products.js';
+export {
+  ConfirmFactInputSchema,
+  CreateFactInputSchema,
+  DeleteFactInputSchema,
+  FactValueSchema,
+  ProductFactListResponseSchema,
+  ProductFactParamsSchema,
+  ProductFactResponseSchema,
+  ProductFactsParamsSchema,
+  ReviseFactInputSchema,
+  UpdateFactInputSchema,
+} from './facts.js';
+export type {
+  ConfirmFactInput,
+  CreateFactInput,
+  DeleteFactInput,
+  ProductFactResponse,
+  ReviseFactInput,
+  UpdateFactInput,
+} from './facts.js';

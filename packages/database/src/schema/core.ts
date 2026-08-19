@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 import { products } from './products.js';
+import { productFacts } from './product-facts.js';
 
 export const appMetadata = sqliteTable('app_metadata', {
   key: text('key').primaryKey(),
@@ -25,5 +26,6 @@ export const workspaceSettings = sqliteTable('workspace_settings', {
 export const coreSchema = {
   appMetadata,
   products,
+  productFacts,
   workspaceSettings,
 };

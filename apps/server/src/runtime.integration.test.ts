@@ -53,4 +53,63 @@ describe('production app composition', () => {
     );
     await restarted.close();
   });
+
+  it('persists an explicitly confirmed product fact across production restarts', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-facts-')));
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const product = await first.inject({
+      method: 'POST',
+      url: '/api/v1/products',
+      payload: { name: '事实测试保温杯' },
+    });
+    const productId = product.json().id as string;
+    const created = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/facts`,
+      payload: {
+        key: 'material',
+        label: '材质',
+        value: { type: 'text', value: '304不锈钢' },
+        unit: null,
+        sourceType: 'ai_inferred',
+        sourceRef: 'generation:1',
+        verification: 'inferred',
+        sensitive: false,
+        policyEligible: true,
+      },
+    });
+    expect(created.statusCode).toBe(201);
+    const fact = created.json() as { id: string; updatedAt: string };
+    const confirmed = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/facts/${fact.id}/confirm`,
+      payload: {
+        expectedUpdatedAt: fact.updatedAt,
+        actorRef: 'local-user',
+        evidenceRef: 'supplier:certificate-1',
+      },
+    });
+    expect(confirmed.statusCode).toBe(200);
+    expect(confirmed.json()).toMatchObject({
+      verification: 'confirmed',
+      confirmation: {
+        actorType: 'user',
+        actorRef: 'local-user',
+        evidenceRef: 'supplier:certificate-1',
+      },
+    });
+    await first.close();
+
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const listed = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/products/${productId}/facts`,
+    });
+    expect(listed.statusCode).toBe(200);
+    expect(listed.json()).toMatchObject({
+      items: [{ key: 'material', verification: 'confirmed' }],
+    });
+    await restarted.close();
+  });
 });

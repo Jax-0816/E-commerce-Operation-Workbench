@@ -5,3 +5,4 @@ export type { UuidV7 } from './ids.js';
 export { createProduct, normalizeProductName } from './product/product.js';
 export type { CreateProductProps, Product } from './product/product.js';
 export type { ProductRepository } from './product/product-repository.js';
+export * from './facts/index.js';

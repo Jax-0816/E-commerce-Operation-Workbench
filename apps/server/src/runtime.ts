@@ -1,8 +1,9 @@
 import type { FastifyInstance } from 'fastify';
 
-import { createProductsApplication } from '@eaw/application';
+import { createFactsApplication, createProductsApplication } from '@eaw/application';
 import {
   DrizzleProductRepository,
+  DrizzleProductFactRepository,
   migrateDatabase,
   openDatabase,
   type OpenDatabase,
@@ -49,10 +50,13 @@ export async function createProductionApp({
     database = openDatabase(databasePath);
     await migrateDatabase(database, migrationsDirectory);
 
-    const products = createProductsApplication({
-      repository: new DrizzleProductRepository(database.drizzle),
+    const productRepository = new DrizzleProductRepository(database.drizzle);
+    const products = createProductsApplication({ repository: productRepository });
+    const facts = createFactsApplication({
+      repository: new DrizzleProductFactRepository(database),
+      products: productRepository,
     });
-    const app = buildApp(createAppContext({ products, webDistDir }));
+    const app = buildApp(createAppContext({ facts, products, webDistDir }));
     app.addHook('onClose', cleanup);
     return app;
   } catch (error) {
