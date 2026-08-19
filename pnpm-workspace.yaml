@@ -1,5 +1,8 @@
 packages:
+  - 'apps/*'
   - 'packages/*'
+allowBuilds:
+  esbuild: true
 engineStrict: true
 minimumReleaseAgeExclude:
   - '@vitest/expect@4.1.11'
@@ -10,3 +13,4 @@ minimumReleaseAgeExclude:
   - '@vitest/spy@4.1.11'
   - '@vitest/utils@4.1.11'
   - vitest@4.1.11
+  - fastify@5.12.1

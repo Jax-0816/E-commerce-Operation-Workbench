@@ -1,0 +1,26 @@
+{
+  "name": "@eaw/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "start": "vite preview --host 127.0.0.1",
+    "test": "vitest run src",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint src vite.config.ts"
+  },
+  "dependencies": {
+    "@eaw/shared": "workspace:*",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.5",
+    "jsdom": "27.0.0",
+    "vite": "8.2.1"
+  }
+}
