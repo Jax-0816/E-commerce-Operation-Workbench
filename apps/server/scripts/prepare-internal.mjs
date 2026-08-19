@@ -1,42 +1,64 @@
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const workspaceRoot = fileURLToPath(new URL('../../../', import.meta.url));
-const pnpmCli = process.env.npm_execpath;
 
-if (pnpmCli === undefined) {
-  throw new Error('prepare-internal must be run through pnpm.');
+export const internalPackages = Object.freeze([
+  Object.freeze({ name: '@eaw/domain', command: Object.freeze(['run', 'build']) }),
+  Object.freeze({ name: '@eaw/shared', command: Object.freeze(['run', 'build']) }),
+  Object.freeze({
+    name: '@eaw/application',
+    command: Object.freeze(['exec', 'tsc', '-p', 'tsconfig.json']),
+  }),
+  Object.freeze({
+    name: '@eaw/contracts',
+    command: Object.freeze(['exec', 'tsc', '-p', 'tsconfig.json']),
+  }),
+  Object.freeze({
+    name: '@eaw/database',
+    command: Object.freeze(['exec', 'tsc', '-p', 'tsconfig.json']),
+  }),
+  Object.freeze({
+    name: '@eaw/workspace',
+    command: Object.freeze(['exec', 'tsc', '-p', 'tsconfig.json']),
+  }),
+]);
+
+export async function prepareInternalPackages(buildPackage = runPackageBuild) {
+  for (const internalPackage of internalPackages) {
+    await buildPackage(internalPackage);
+  }
 }
 
-const packages = [
-  { name: '@eaw/domain', command: ['run', 'build'] },
-  { name: '@eaw/shared', command: ['run', 'build'] },
+export function runPackageBuild(
+  internalPackage,
   {
-    name: '@eaw/application',
-    command: ['exec', 'tsc', '-p', 'tsconfig.json'],
-  },
-  {
-    name: '@eaw/contracts',
-    command: ['exec', 'tsc', '-p', 'tsconfig.json'],
-  },
-  {
-    name: '@eaw/database',
-    command: ['exec', 'tsc', '-p', 'tsconfig.json'],
-  },
-  {
-    name: '@eaw/workspace',
-    command: ['exec', 'tsc', '-p', 'tsconfig.json'],
-  },
-];
+    execute = execFileSync,
+    nodeExecutable = process.execPath,
+    pnpmCli = process.env.npm_execpath,
+    cwd = workspaceRoot,
+    env = process.env,
+  } = {},
+) {
+  if (pnpmCli === undefined) {
+    throw new Error('prepare-internal must be run through pnpm.');
+  }
 
-for (const internalPackage of packages) {
-  execFileSync(
-    process.execPath,
-    [pnpmCli, '--filter', internalPackage.name, ...internalPackage.command],
-    {
-      cwd: workspaceRoot,
-      env: process.env,
-      stdio: 'inherit',
-    },
+  execute(nodeExecutable, [pnpmCli, '--filter', internalPackage.name, ...internalPackage.command], {
+    cwd,
+    env,
+    stdio: 'inherit',
+  });
+}
+
+function isDirectExecution() {
+  return (
+    process.argv[1] !== undefined &&
+    pathToFileURL(resolve(process.argv[1])).href === import.meta.url
   );
+}
+
+if (isDirectExecution()) {
+  await prepareInternalPackages();
 }
