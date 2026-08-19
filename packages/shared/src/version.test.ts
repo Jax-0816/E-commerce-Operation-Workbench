@@ -12,4 +12,10 @@ describe('APP_VERSION', () => {
     expect(APP_VERSION).toBe('0.1.0');
     expect(APP_VERSION).toBe(packageJson.version);
   });
+
+  it('is available through the package public entry point', async () => {
+    const shared = await import('@eaw/shared');
+
+    expect(shared.APP_VERSION).toBe('0.1.0');
+  });
 });

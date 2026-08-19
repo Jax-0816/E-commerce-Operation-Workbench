@@ -4,10 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare:shared": "pnpm --filter @eaw/shared run build",
+    "prebuild": "pnpm run prepare:shared",
+    "predev": "pnpm run prepare:shared",
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
+    "prestart": "pnpm run prepare:shared",
     "start": "node dist/index.js",
+    "pretest": "pnpm run prepare:shared",
     "test": "vitest run src",
+    "pretypecheck": "pnpm run prepare:shared",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
