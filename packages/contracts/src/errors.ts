@@ -36,15 +36,41 @@ export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 
 export function toErrorResponse(error: unknown, traceId: string): ErrorResponse {
   const domainError = error instanceof DomainError ? error : undefined;
-  const code = domainError?.code ?? 'CAPABILITY_UNAVAILABLE';
-  const details = domainError?.details ?? {};
+  const code = isErrorCode(domainError?.code) ? domainError.code : 'CAPABILITY_UNAVAILABLE';
 
   return {
     error: {
       code,
       message: errorMessages[code],
-      details: details as Record<string, SafeErrorDetail>,
-      traceId,
+      details: sanitizeDetails(domainError?.details),
+      traceId: sanitizeTraceId(traceId),
     },
   };
+}
+
+function isErrorCode(value: unknown): value is ErrorCode {
+  return typeof value === 'string' && ERROR_CODES.includes(value as ErrorCode);
+}
+
+function sanitizeDetails(details: unknown): Record<string, SafeErrorDetail> {
+  if (details === null || typeof details !== 'object' || Array.isArray(details)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(details).filter(([, value]) => isSafeErrorDetail(value)),
+  );
+}
+
+function isSafeErrorDetail(value: unknown): value is SafeErrorDetail {
+  return (
+    value === null ||
+    typeof value === 'boolean' ||
+    typeof value === 'string' ||
+    (typeof value === 'number' && Number.isFinite(value))
+  );
+}
+
+function sanitizeTraceId(traceId: string): string {
+  return traceId.trim().length > 0 ? traceId : 'trace-unavailable';
 }

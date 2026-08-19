@@ -75,4 +75,50 @@ describe('toErrorResponse', () => {
     expect(JSON.stringify(response)).not.toContain('secret://never-return');
     expect(JSON.stringify(response)).not.toContain('internal.ts');
   });
+
+  it('keeps only safe primitive details when a DomainError is mutated at runtime', () => {
+    const domainError = new DomainError('VALIDATION_ERROR', 'internal diagnostic');
+    (domainError as unknown as { details: unknown }).details = {
+      field: 'title',
+      minimumLength: 1,
+      required: true,
+      expectedValue: null,
+      diagnostic: { stack: 'secret-stack-trace' },
+      relatedFields: ['description'],
+    };
+
+    const response = toErrorResponse(domainError, 'trace-sanitized-details');
+
+    expect(response.error.details).toEqual({
+      field: 'title',
+      minimumLength: 1,
+      required: true,
+      expectedValue: null,
+    });
+    expect(JSON.stringify(response)).not.toContain('secret-stack-trace');
+    expect(ErrorResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it('maps a runtime-mutated noncanonical DomainError code to the generic response', () => {
+    const domainError = new DomainError('VALIDATION_ERROR', 'internal diagnostic');
+    (domainError as unknown as { code: unknown }).code = 'UNRECOGNIZED_RUNTIME_CODE';
+
+    const response = toErrorResponse(domainError, 'trace-invalid-code');
+
+    expect(response.error).toEqual({
+      code: 'CAPABILITY_UNAVAILABLE',
+      message: 'This capability is currently unavailable.',
+      details: {},
+      traceId: 'trace-invalid-code',
+    });
+    expect(ErrorResponseSchema.parse(response)).toEqual(response);
+  });
+
+  it('substitutes a nonempty safe trace ID when the supplied trace ID is empty', () => {
+    const response = toErrorResponse(new DomainError('NOT_FOUND', 'internal diagnostic'), '');
+
+    expect(response.error.traceId).not.toBe('');
+    expect(response.error.traceId).toBe('trace-unavailable');
+    expect(ErrorResponseSchema.parse(response)).toEqual(response);
+  });
 });
