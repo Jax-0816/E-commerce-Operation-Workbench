@@ -1,6 +1,8 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -10,6 +12,7 @@ import { appMetadata, checkIntegrity, migrateDatabase, openDatabase } from './in
 
 const temporaryDirectories: string[] = [];
 const migrationsDirectory = join(process.cwd(), '..', '..', 'migrations');
+const execFileAsync = promisify(execFile);
 
 afterEach(async () => {
   await Promise.all(
@@ -26,6 +29,41 @@ async function createTemporaryDirectory(): Promise<string> {
 }
 
 describe('database migrations', () => {
+  it('lets pinned Drizzle Kit generate only an additive migration from the committed baseline', async () => {
+    const fixtureDirectory = await mkdtemp(join(process.cwd(), '.drizzle-generate-'));
+    temporaryDirectories.push(fixtureDirectory);
+    const fixtureMigrations = join(fixtureDirectory, 'migrations');
+    await cp(migrationsDirectory, fixtureMigrations, { recursive: true });
+    const currentSchema = await readFile(join(process.cwd(), 'src', 'schema', 'core.ts'), 'utf8');
+    await writeFile(
+      join(fixtureDirectory, 'schema.ts'),
+      `${currentSchema}\nexport const futureProbe = sqliteTable('future_probe', { id: text('id').primaryKey() });\n`,
+      'utf8',
+    );
+
+    await execFileAsync(
+      process.execPath,
+      [
+        join(process.cwd(), 'node_modules', 'drizzle-kit', 'bin.cjs'),
+        'generate',
+        '--dialect=sqlite',
+        '--schema=./schema.ts',
+        '--out=./migrations',
+        '--name=additive_probe',
+      ],
+      { cwd: fixtureDirectory, env: { ...process.env, NO_COLOR: '1' } },
+    );
+
+    const generatedFilename = (await readdir(fixtureMigrations)).find((filename) =>
+      filename.endsWith('_additive_probe.sql'),
+    );
+    expect(generatedFilename).toBeDefined();
+    const generatedSql = await readFile(join(fixtureMigrations, generatedFilename!), 'utf8');
+    expect(generatedSql).toContain('CREATE TABLE `future_probe`');
+    expect(generatedSql).not.toContain('CREATE TABLE `app_metadata`');
+    expect(generatedSql).not.toContain('CREATE TABLE `workspace_settings`');
+  });
+
   it('migrates a fresh SQLite database and reports a healthy pragma result', async () => {
     const directory = await createTemporaryDirectory();
     const database = openDatabase(join(directory, 'workspace.sqlite'));

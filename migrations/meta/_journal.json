@@ -1,11 +1,11 @@
 {
-  "version": "1",
+  "version": "7",
   "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "1",
-      "when": 1787040000000,
+      "version": "6",
+      "when": 1787142970641,
       "tag": "0000_foundation",
       "breakpoints": true
     }
