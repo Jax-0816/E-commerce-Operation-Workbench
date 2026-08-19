@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import {
-  link,
   lstat,
   mkdir,
   open,
@@ -34,6 +33,7 @@ export interface FileSecretStoreOptions {
   readonly isProcessAlive?: (pid: number) => boolean | Promise<boolean>;
   readonly mutationLockRetryAttempts?: number;
   readonly mutationLockRetryDelayMs?: number;
+  readonly onMutationLockRetired?: (retiredPath: string) => void | Promise<void>;
 }
 
 const pathLocks = new Map<string, Promise<void>>();
@@ -209,6 +209,7 @@ async function withFilesystemMutationLock<T>(
   };
   const retryAttempts = options.mutationLockRetryAttempts ?? defaultMutationLockRetryAttempts;
   const retryDelayMs = options.mutationLockRetryDelayMs ?? defaultMutationLockRetryDelayMs;
+  await cleanupRetiredMutationLocks(lockPath);
   for (let attempt = 0; attempt < retryAttempts; attempt += 1) {
     try {
       await mkdir(lockPath, { mode: 0o700 });
@@ -225,12 +226,19 @@ async function withFilesystemMutationLock<T>(
 
     try {
       await writeMutationOwner(lockPath, owner);
-      return await runWithOwnedMutationLock(lockPath, owner, operation);
+      return await runWithOwnedMutationLock(
+        lockPath,
+        owner,
+        operation,
+        options.onMutationLockRetired,
+      );
     } catch (error: unknown) {
       try {
-        if (await removeMutationOwner(lockPath, owner)) {
-          await removeEmptyMutationLock(lockPath);
-        }
+        await retireMutationLock(
+          lockPath,
+          { kind: 'owned', directory: await assertMutationLockDirectory(lockPath), owner },
+          options.onMutationLockRetired,
+        );
       } catch {
         // Preserve the original acquisition error and leave any foreign replacement untouched.
       }
@@ -244,6 +252,7 @@ async function runWithOwnedMutationLock<T>(
   lockPath: string,
   owner: MutationOwnerRecord,
   operation: () => Promise<T>,
+  onRetired?: (retiredPath: string) => void | Promise<void>,
 ): Promise<T> {
   let result: T | undefined;
   let operationError: unknown;
@@ -255,7 +264,10 @@ async function runWithOwnedMutationLock<T>(
 
   let cleanupError: unknown;
   try {
-    if (await removeMutationOwner(lockPath, owner)) await removeEmptyMutationLock(lockPath);
+    const state = await readMutationLockState(lockPath);
+    if (state.kind === 'owned' && mutationOwnersEqual(state.owner, owner)) {
+      await retireMutationLock(lockPath, state, onRetired);
+    }
   } catch (error: unknown) {
     if (!isMissing(error) && !isNotEmpty(error)) {
       cleanupError = error;
@@ -302,9 +314,7 @@ async function recoverMutationLock(
     if (await (options.isProcessAlive ?? defaultProcessLiveness)(state.owner.pid)) {
       return false;
     }
-    if (!(await removeMutationOwner(lockPath, state.owner))) return false;
-    await removeEmptyMutationLock(lockPath);
-    return true;
+    return retireMutationLock(lockPath, state, options.onMutationLockRetired);
   }
 
   const lastModifiedAt =
@@ -313,14 +323,7 @@ async function recoverMutationLock(
       : Math.max(state.directory.modifiedAtMs, state.fileModifiedAtMs);
   if (Date.now() - lastModifiedAt < defaultMutationLockStaleAfterMs) return false;
 
-  if (state.kind === 'incomplete' && !(await removeIncompleteMutationOwner(lockPath, state))) {
-    return false;
-  }
-  if (state.kind === 'empty' && !(await mutationLockStateMatches(lockPath, state))) {
-    return false;
-  }
-  await removeEmptyMutationLock(lockPath);
-  return true;
+  return retireMutationLock(lockPath, state, options.onMutationLockRetired);
 }
 
 async function readMutationLockState(lockPath: string): Promise<MutationLockState> {
@@ -363,41 +366,6 @@ async function readMutationLockState(lockPath: string): Promise<MutationLockStat
   return { kind: 'owned', directory, owner: value };
 }
 
-async function removeMutationOwner(
-  lockPath: string,
-  expectedOwner: MutationOwnerRecord,
-): Promise<boolean> {
-  let first: MutationLockState;
-  try {
-    first = await readMutationLockState(lockPath);
-  } catch (error: unknown) {
-    if (isMissing(error)) return false;
-    throw error;
-  }
-  if (
-    first.kind !== 'owned' ||
-    !mutationOwnersEqual(first.owner, expectedOwner) ||
-    !(await mutationLockStateMatches(lockPath, first))
-  ) {
-    return false;
-  }
-  return claimAndRemoveMutationEntry(
-    lockPath,
-    `owner-${expectedOwner.token}.json`,
-    async (claimPath) => mutationClaimContainsOwner(claimPath, expectedOwner),
-  );
-}
-
-async function removeIncompleteMutationOwner(
-  lockPath: string,
-  expected: Extract<MutationLockState, { kind: 'incomplete' }>,
-): Promise<boolean> {
-  if (!(await mutationLockStateMatches(lockPath, expected))) return false;
-  return claimAndRemoveMutationEntry(lockPath, expected.fileName, async (claimPath) =>
-    mutationClaimContainsBytes(claimPath, expected.content),
-  );
-}
-
 async function mutationLockStateMatches(
   lockPath: string,
   expected: MutationLockState,
@@ -424,69 +392,29 @@ async function mutationLockStateMatches(
   return current.kind === 'empty' && expected.kind === 'empty';
 }
 
-async function claimAndRemoveMutationEntry(
+async function retireMutationLock(
   lockPath: string,
-  sourceName: string,
-  claimMatches: (claimPath: string) => Promise<boolean>,
+  expected: MutationLockState,
+  onRetired?: (retiredPath: string) => void | Promise<void>,
 ): Promise<boolean> {
-  const sourcePath = join(lockPath, sourceName);
-  const claimPath = join(lockPath, `retire-${randomUUID()}.json`);
+  if (expected.kind === 'foreign') return false;
+  if (!(await mutationLockStateMatches(lockPath, expected))) return false;
+  const retiredPath = join(
+    dirname(lockPath),
+    `${basename(lockPath)}.retired-${Date.now()}-${randomUUID()}`,
+  );
   try {
-    await rename(sourcePath, claimPath);
+    await rename(lockPath, retiredPath);
   } catch (error: unknown) {
     if (isMissing(error)) return false;
     throw error;
   }
 
-  if (await claimMatches(claimPath)) {
-    await unlink(claimPath);
-    return true;
-  }
-  await restoreForeignMutationClaim(claimPath, sourcePath);
-  return false;
-}
-
-async function mutationClaimContainsOwner(
-  claimPath: string,
-  expectedOwner: MutationOwnerRecord,
-): Promise<boolean> {
-  const content = await readRegularMutationClaim(claimPath);
-  if (content === undefined) return false;
-  try {
-    const value: unknown = JSON.parse(content);
-    return isMutationOwnerRecord(value) && mutationOwnersEqual(value, expectedOwner);
-  } catch {
-    return false;
-  }
-}
-
-async function mutationClaimContainsBytes(
-  claimPath: string,
-  expectedContent: string,
-): Promise<boolean> {
-  return (await readRegularMutationClaim(claimPath)) === expectedContent;
-}
-
-async function readRegularMutationClaim(claimPath: string): Promise<string | undefined> {
-  try {
-    const entry = await lstat(claimPath);
-    if (entry.isSymbolicLink() || !entry.isFile()) return undefined;
-    return readFile(claimPath, 'utf8');
-  } catch (error: unknown) {
-    if (isMissing(error)) return undefined;
-    throw error;
-  }
-}
-
-async function restoreForeignMutationClaim(claimPath: string, sourcePath: string): Promise<void> {
-  try {
-    await link(claimPath, sourcePath);
-    await unlink(claimPath);
-  } catch (error: unknown) {
-    if (!isAlreadyPresent(error) && !isMissing(error)) {
-      // Leaving the claim in place prevents acquisition and preserves the foreign entry.
-    }
-  }
+  await onRetired?.(retiredPath);
+  const current = await readMutationLockState(retiredPath);
+  if (current.kind === 'foreign' || !mutationLockStatesEquivalent(current, expected)) return false;
+  await removeValidatedRetiredMutationLock(retiredPath, current);
+  return true;
 }
 
 function mutationDirectoryMetadataMatches(
@@ -502,19 +430,80 @@ function mutationDirectoryMetadataMatches(
   );
 }
 
-async function removeEmptyMutationLock(lockPath: string): Promise<void> {
-  let state: MutationLockState;
+function mutationLockStatesEquivalent(left: MutationLockState, right: MutationLockState): boolean {
+  if (left.kind !== right.kind) return false;
+  if (left.kind === 'owned' && right.kind === 'owned') {
+    return mutationOwnersEqual(left.owner, right.owner);
+  }
+  if (left.kind === 'incomplete' && right.kind === 'incomplete') {
+    return left.fileName === right.fileName && left.content === right.content;
+  }
+  return left.kind === 'empty' && right.kind === 'empty';
+}
+
+async function removeValidatedRetiredMutationLock(
+  retiredPath: string,
+  expected: Exclude<MutationLockState, { kind: 'foreign' }>,
+): Promise<void> {
+  let current: MutationLockState;
   try {
-    state = await readMutationLockState(lockPath);
+    current = await readMutationLockState(retiredPath);
   } catch (error: unknown) {
     if (isMissing(error)) return;
     throw error;
   }
-  if (state.kind !== 'empty') return;
+  if (!mutationLockStatesEquivalent(current, expected)) return;
   try {
-    await rmdir(lockPath);
+    if (current.kind === 'owned') {
+      await unlink(mutationOwnerPath(retiredPath, current.owner.token));
+    } else if (current.kind === 'incomplete') {
+      await unlink(join(retiredPath, current.fileName));
+    }
+  } catch (error: unknown) {
+    if (!isMissing(error)) throw error;
+    return;
+  }
+  try {
+    await rmdir(retiredPath);
   } catch (error: unknown) {
     if (!isMissing(error) && !isNotEmpty(error)) throw error;
+  }
+}
+
+async function cleanupRetiredMutationLocks(lockPath: string): Promise<void> {
+  const parentPath = dirname(lockPath);
+  let entries;
+  try {
+    entries = await readdir(parentPath, { withFileTypes: true });
+  } catch (error: unknown) {
+    if (isMissing(error)) return;
+    throw error;
+  }
+  const prefix = `${basename(lockPath)}.retired-`;
+  for (const entry of entries) {
+    if (entry.isSymbolicLink() || !entry.isDirectory() || !entry.name.startsWith(prefix)) continue;
+    const suffix = entry.name.slice(prefix.length);
+    const separator = suffix.indexOf('-');
+    if (separator < 1 || !uuidPattern.test(suffix.slice(separator + 1))) continue;
+    const retiredAt = Number(suffix.slice(0, separator));
+    if (
+      !Number.isSafeInteger(retiredAt) ||
+      retiredAt < 0 ||
+      Date.now() - retiredAt < defaultMutationLockStaleAfterMs
+    ) {
+      continue;
+    }
+    const retiredPath = join(parentPath, entry.name);
+    let state: MutationLockState;
+    try {
+      state = await readMutationLockState(retiredPath);
+    } catch (error: unknown) {
+      if (isMissing(error) || error instanceof TypeError) continue;
+      throw error;
+    }
+    if (state.kind === 'owned' || state.kind === 'empty') {
+      await removeValidatedRetiredMutationLock(retiredPath, state);
+    }
   }
 }
 

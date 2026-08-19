@@ -1,5 +1,6 @@
 import { fork, type ChildProcess } from 'node:child_process';
 import {
+  access,
   chmod,
   mkdir,
   mkdtemp,
@@ -354,6 +355,63 @@ describe('file secret store', () => {
       'recovered-secret',
     );
     await expect(readdir(workspacePath)).resolves.not.toContain('..secrets.json.mutation.lock');
+  });
+
+  it('preserves an empty replacement mutation lock installed after directory retirement', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const lockPath = mutationLockPath(workspacePath);
+    let retiredPath = '';
+
+    await new FileSecretStore(workspacePath, {
+      onMutationLockRetired: async (claimedPath) => {
+        retiredPath = claimedPath;
+        await mkdir(lockPath);
+      },
+    }).set('deepseek-api-key', 'new-secret');
+
+    expect(retiredPath).not.toBe('');
+    await expect(readdir(lockPath)).resolves.toEqual([]);
+    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('recovers a strictly valid crashed mutation-directory retirement after its grace period', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const retiredPath = join(
+      workspacePath,
+      `..secrets.json.mutation.lock.retired-${Date.now() - 60_000}-${deadOwnerToken}`,
+    );
+    await mkdir(retiredPath);
+    await writeFile(
+      join(retiredPath, `owner-${deadOwnerToken}.json`),
+      JSON.stringify({
+        token: deadOwnerToken,
+        pid: 101,
+        createdAt: '2026-08-19T00:00:00.000Z',
+      }),
+      'utf8',
+    );
+
+    await new FileSecretStore(workspacePath).set('deepseek-api-key', 'recovered-secret');
+
+    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(readFile(join(workspacePath, '.secrets.json'), 'utf8')).resolves.toContain(
+      'recovered-secret',
+    );
+  });
+
+  it('leaves malformed mutation-directory retirement artifacts untouched', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const retiredPath = join(
+      workspacePath,
+      `..secrets.json.mutation.lock.retired-${Date.now() - 60_000}-${deadOwnerToken}`,
+    );
+    await mkdir(retiredPath);
+    const malformedPath = join(retiredPath, `owner-${deadOwnerToken}.json`);
+    await writeFile(malformedPath, '{"token":', 'utf8');
+
+    await new FileSecretStore(workspacePath).set('deepseek-api-key', 'new-secret');
+
+    await expect(readFile(malformedPath, 'utf8')).resolves.toBe('{"token":');
   });
 
   it('rejects a symbolic mutation owner without reading or deleting its target', async () => {

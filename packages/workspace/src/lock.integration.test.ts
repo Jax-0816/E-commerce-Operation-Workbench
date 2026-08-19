@@ -215,6 +215,91 @@ describe('workspace locking', () => {
     );
   });
 
+  it('preserves an empty replacement lock installed after atomically retiring its directory', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const lockPath = join(workspacePath, '.workspace.lock');
+    let retiredPath = '';
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'owner-one',
+      pid: 101,
+      isProcessAlive: () => true,
+      onLockDirectoryRetired: async (claimedPath) => {
+        retiredPath = claimedPath;
+        await mkdir(lockPath);
+      },
+    });
+
+    await lock.release();
+
+    expect(retiredPath).not.toBe('');
+    await expect(readdir(lockPath)).resolves.toEqual([]);
+    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('recovers a strictly valid crashed directory-retirement artifact after its grace period', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const retiredPath = join(
+      workspacePath,
+      `.workspace.lock.retired-${Date.now() - 60_000}-00000000-0000-4000-8000-000000000001`,
+    );
+    await mkdir(retiredPath);
+    await writeFile(
+      join(retiredPath, 'owner-crashed-owner.json'),
+      JSON.stringify({
+        ownerToken: 'crashed-owner',
+        pid: 101,
+        createdAt: '2026-08-19T00:00:00.000Z',
+      }),
+      'utf8',
+    );
+
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'new-owner',
+      pid: 202,
+      isProcessAlive: () => true,
+    });
+
+    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    await lock.release();
+  });
+
+  it('recovers an old empty directory-retirement artifact left after marker deletion', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const retiredPath = join(
+      workspacePath,
+      `.workspace.lock.retired-${Date.now() - 60_000}-00000000-0000-4000-8000-000000000001`,
+    );
+    await mkdir(retiredPath);
+
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'new-owner',
+      pid: 202,
+      isProcessAlive: () => true,
+    });
+
+    await expect(access(retiredPath)).rejects.toMatchObject({ code: 'ENOENT' });
+    await lock.release();
+  });
+
+  it('leaves malformed directory-retirement artifacts untouched', async () => {
+    const workspacePath = await createTemporaryWorkspace();
+    const retiredPath = join(
+      workspacePath,
+      `.workspace.lock.retired-${Date.now() - 60_000}-00000000-0000-4000-8000-000000000001`,
+    );
+    await mkdir(retiredPath);
+    await writeFile(join(retiredPath, 'foreign.txt'), 'foreign', 'utf8');
+
+    const lock = await acquireWorkspaceLock(workspacePath, {
+      ownerToken: 'new-owner',
+      pid: 202,
+      isProcessAlive: () => true,
+    });
+
+    await expect(readFile(join(retiredPath, 'foreign.txt'), 'utf8')).resolves.toBe('foreign');
+    await lock.release();
+  });
+
   it('rejects a symbolic lock directory without touching its external owner record', async () => {
     if (process.platform === 'win32') {
       return;

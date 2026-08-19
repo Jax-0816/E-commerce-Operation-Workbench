@@ -1,20 +1,13 @@
 import { randomUUID } from 'node:crypto';
-import {
-  link,
-  lstat,
-  mkdir,
-  open,
-  readFile,
-  readdir,
-  rename,
-  rmdir,
-  unlink,
-} from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { lstat, mkdir, open, readFile, readdir, rename, rmdir, unlink } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import { DomainError } from '@eaw/domain';
 
 const lockDirectoryName = '.workspace.lock';
+const retiredLockGraceMs = 30_000;
+const retiredLockNamePattern =
+  /^\.workspace\.lock\.retired-(\d+)-[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 interface LockRecord {
   readonly ownerToken: string;
@@ -33,6 +26,7 @@ export interface AcquireWorkspaceLockOptions {
   readonly isProcessAlive?: (pid: number) => boolean | Promise<boolean>;
   readonly onStaleOwnerObserved?: (record: Readonly<LockRecord>) => void | Promise<void>;
   readonly onBeforeLockDirectoryRemoval?: (lockPath: string) => void | Promise<void>;
+  readonly onLockDirectoryRetired?: (retiredPath: string) => void | Promise<void>;
   readonly getLockDirectoryIdentity?: (
     lockPath: string,
   ) => Promise<{ device: number; inode: number }>;
@@ -55,6 +49,8 @@ export async function acquireWorkspaceLock(
   };
   const isProcessAlive = options.isProcessAlive ?? defaultProcessLiveness;
 
+  await cleanupRetiredLockDirectories(lockPath);
+
   for (;;) {
     const createdLock = await createLockDirectory(
       lockPath,
@@ -65,18 +61,14 @@ export async function acquireWorkspaceLock(
       return {
         ownerToken: record.ownerToken,
         release: async () => {
-          if (
-            !(await removeOwnerRecord(
-              lockPath,
-              record,
-              createdLock,
-              options.getLockDirectoryIdentity,
-            ))
-          ) {
-            return;
-          }
           await options.onBeforeLockDirectoryRemoval?.(lockPath);
-          await removeEmptyLockDirectory(lockPath, createdLock, options.getLockDirectoryIdentity);
+          await retireLockDirectory(
+            lockPath,
+            record,
+            createdLock,
+            options.getLockDirectoryIdentity,
+            options.onLockDirectoryRetired,
+          );
         },
       };
     }
@@ -88,7 +80,7 @@ export async function acquireWorkspaceLock(
 
     await options.onStaleOwnerObserved?.(staleOwner.record);
     if (
-      !(await removeOwnerRecord(
+      !(await retireLockDirectory(
         lockPath,
         staleOwner.record,
         staleOwner.identity,
@@ -97,7 +89,6 @@ export async function acquireWorkspaceLock(
     ) {
       continue;
     }
-    await removeEmptyLockDirectory(lockPath, staleOwner.identity, options.getLockDirectoryIdentity);
   }
 }
 
@@ -169,22 +160,24 @@ async function readOwnerRecord(
   }
 }
 
-async function removeOwnerRecord(
+async function retireLockDirectory(
   lockPath: string,
   expectedRecord: LockRecord,
   expectedIdentity: LockDirectoryIdentity,
   getIdentity?: AcquireWorkspaceLockOptions['getLockDirectoryIdentity'],
+  onRetired?: (retiredPath: string) => void | Promise<void>,
 ): Promise<boolean> {
   if (!(await ownsLockRecord(lockPath, expectedRecord, expectedIdentity, getIdentity))) {
     return false;
   }
-  if (!(await ownsLockRecord(lockPath, expectedRecord, expectedIdentity, getIdentity))) {
-    return false;
-  }
-  const ownerPath = ownerRecordPath(lockPath, expectedRecord.ownerToken);
-  const claimPath = join(lockPath, `release-${randomUUID()}.json`);
+  const exactRecord = await readExactLockRecord(lockPath);
+  if (exactRecord === undefined || !lockRecordsEqual(exactRecord, expectedRecord)) return false;
+  const retiredPath = join(
+    dirname(lockPath),
+    `${basename(lockPath)}.retired-${Date.now()}-${randomUUID()}`,
+  );
   try {
-    await rename(ownerPath, claimPath);
+    await rename(lockPath, retiredPath);
   } catch (error: unknown) {
     if (isMissing(error)) {
       return false;
@@ -192,12 +185,13 @@ async function removeOwnerRecord(
     throw error;
   }
 
-  if (await claimContainsRecord(claimPath, expectedRecord)) {
-    await unlink(claimPath);
-    return true;
+  await onRetired?.(retiredPath);
+  const retiredRecord = await readExactLockRecord(retiredPath);
+  if (retiredRecord === undefined || !lockRecordsEqual(retiredRecord, expectedRecord)) {
+    return false;
   }
-  await restoreForeignClaim(claimPath, ownerPath);
-  return false;
+  await removeValidatedRetiredLockDirectory(retiredPath, retiredRecord);
+  return true;
 }
 
 async function removeEmptyLockDirectory(
@@ -285,29 +279,94 @@ function lockRecordsEqual(left: LockRecord, right: LockRecord): boolean {
   );
 }
 
-async function claimContainsRecord(
-  claimPath: string,
-  expectedRecord: LockRecord,
-): Promise<boolean> {
+async function readExactLockRecord(lockPath: string): Promise<LockRecord | undefined> {
   try {
-    const entry = await lstat(claimPath);
-    if (entry.isSymbolicLink() || !entry.isFile()) return false;
-    const record = parseLockRecord(await readFile(claimPath, 'utf8'));
-    return record !== undefined && lockRecordsEqual(record, expectedRecord);
+    const directory = await lstat(lockPath);
+    if (directory.isSymbolicLink() || !directory.isDirectory()) return undefined;
+    const entries = await readdir(lockPath, { withFileTypes: true });
+    if (
+      entries.length !== 1 ||
+      entries[0].isSymbolicLink() ||
+      !entries[0].isFile() ||
+      !entries[0].name.startsWith('owner-') ||
+      !entries[0].name.endsWith('.json')
+    ) {
+      return undefined;
+    }
+    const ownerPath = join(lockPath, entries[0].name);
+    const owner = await lstat(ownerPath);
+    if (owner.isSymbolicLink() || !owner.isFile()) return undefined;
+    const record = parseLockRecord(await readFile(ownerPath, 'utf8'));
+    return record !== undefined && entries[0].name === ownerRecordFileName(record.ownerToken)
+      ? record
+      : undefined;
   } catch (error: unknown) {
-    if (isMissing(error)) return false;
+    if (isMissing(error)) return undefined;
     throw error;
   }
 }
 
-async function restoreForeignClaim(claimPath: string, ownerPath: string): Promise<void> {
+async function removeValidatedRetiredLockDirectory(
+  retiredPath: string,
+  expectedRecord: LockRecord,
+): Promise<void> {
+  const current = await readExactLockRecord(retiredPath);
+  if (current === undefined || !lockRecordsEqual(current, expectedRecord)) return;
   try {
-    await link(claimPath, ownerPath);
-    await unlink(claimPath);
+    await unlink(ownerRecordPath(retiredPath, expectedRecord.ownerToken));
   } catch (error: unknown) {
-    if (!isAlreadyPresent(error) && !isMissing(error)) {
-      // Leaving the claim in place is conservative: readers treat it as a foreign lock entry.
+    if (!isMissing(error)) throw error;
+    return;
+  }
+  try {
+    await rmdir(retiredPath);
+  } catch (error: unknown) {
+    if (!isMissing(error) && !isNotEmpty(error)) throw error;
+  }
+}
+
+async function cleanupRetiredLockDirectories(lockPath: string): Promise<void> {
+  const parentPath = dirname(lockPath);
+  let entries;
+  try {
+    entries = await readdir(parentPath, { withFileTypes: true });
+  } catch (error: unknown) {
+    if (isMissing(error)) return;
+    throw error;
+  }
+
+  for (const entry of entries) {
+    const match = retiredLockNamePattern.exec(entry.name);
+    if (match === null || entry.isSymbolicLink() || !entry.isDirectory()) continue;
+    const retiredAt = Number(match[1]);
+    if (
+      !Number.isSafeInteger(retiredAt) ||
+      retiredAt < 0 ||
+      Date.now() - retiredAt < retiredLockGraceMs
+    ) {
+      continue;
     }
+    const retiredPath = join(parentPath, entry.name);
+    const record = await readExactLockRecord(retiredPath);
+    if (record !== undefined) {
+      await removeValidatedRetiredLockDirectory(retiredPath, record);
+    } else if (await isEmptyRealDirectory(retiredPath)) {
+      try {
+        await rmdir(retiredPath);
+      } catch (error: unknown) {
+        if (!isMissing(error) && !isNotEmpty(error)) throw error;
+      }
+    }
+  }
+}
+
+async function isEmptyRealDirectory(path: string): Promise<boolean> {
+  try {
+    const entry = await lstat(path);
+    return !entry.isSymbolicLink() && entry.isDirectory() && (await readdir(path)).length === 0;
+  } catch (error: unknown) {
+    if (isMissing(error)) return false;
+    throw error;
   }
 }
 
