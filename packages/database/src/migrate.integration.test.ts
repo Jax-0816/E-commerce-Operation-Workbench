@@ -34,30 +34,41 @@ describe('database migrations', () => {
     temporaryDirectories.push(fixtureDirectory);
     const fixtureMigrations = join(fixtureDirectory, 'migrations');
     await cp(migrationsDirectory, fixtureMigrations, { recursive: true });
-    const currentSchema = await readFile(join(process.cwd(), 'src', 'schema', 'core.ts'), 'utf8');
+    const fixtureSchemaDirectory = join(fixtureDirectory, 'schema');
+    await cp(join(process.cwd(), 'src', 'schema'), fixtureSchemaDirectory, { recursive: true });
+    const currentSchema = await readFile(join(fixtureSchemaDirectory, 'core.ts'), 'utf8');
+    const futureProbe =
+      "export const futureProbe = sqliteTable('future_probe', { id: text('id').primaryKey() });\n\n";
     await writeFile(
-      join(fixtureDirectory, 'schema.ts'),
-      `${currentSchema}\nexport const futureProbe = sqliteTable('future_probe', { id: text('id').primaryKey() });\n`,
+      join(fixtureSchemaDirectory, 'core.ts'),
+      currentSchema.replace(
+        'export const coreSchema = {',
+        `${futureProbe}export const coreSchema = {\n  futureProbe,`,
+      ),
       'utf8',
     );
 
-    await execFileAsync(
+    const generation = await execFileAsync(
       process.execPath,
       [
         join(process.cwd(), 'node_modules', 'drizzle-kit', 'bin.cjs'),
         'generate',
         '--dialect=sqlite',
-        '--schema=./schema.ts',
+        '--schema=./schema/*.ts',
         '--out=./migrations',
         '--name=additive_probe',
       ],
       { cwd: fixtureDirectory, env: { ...process.env, NO_COLOR: '1' } },
     );
 
-    const generatedFilename = (await readdir(fixtureMigrations)).find((filename) =>
+    const generatedFilenames = await readdir(fixtureMigrations);
+    const generatedFilename = generatedFilenames.find((filename) =>
       filename.endsWith('_additive_probe.sql'),
     );
-    expect(generatedFilename).toBeDefined();
+    expect(
+      generatedFilename,
+      `${generatedFilenames.join(', ')}\n${generation.stdout}`,
+    ).toBeDefined();
     const generatedSql = await readFile(join(fixtureMigrations, generatedFilename!), 'utf8');
     expect(generatedSql).toContain('CREATE TABLE `future_probe`');
     expect(generatedSql).not.toContain('CREATE TABLE `app_metadata`');
@@ -105,8 +116,13 @@ describe('database migrations', () => {
         .prepare('SELECT value FROM app_metadata WHERE key = ?')
         .get('installation-id'),
     ).toEqual({ value: 'persisted-value' });
+    const migrationCount = (await readdir(migrationsDirectory)).filter((filename) =>
+      /^\d+_[\w-]+\.sql$/u.test(filename),
+    ).length;
     expect(database.sqlite.prepare('SELECT COUNT(*) AS count FROM __eaw_migrations').get()).toEqual(
-      { count: 1 },
+      {
+        count: migrationCount,
+      },
     );
     database.close();
   });

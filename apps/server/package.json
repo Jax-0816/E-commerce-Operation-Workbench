@@ -18,6 +18,9 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@eaw/application": "workspace:*",
+    "@eaw/contracts": "workspace:*",
+    "@eaw/domain": "workspace:*",
     "@eaw/shared": "workspace:*",
     "@fastify/static": "8.3.0",
     "fastify": "5.12.1"

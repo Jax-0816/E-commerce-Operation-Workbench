@@ -1,3 +1,8 @@
+import { createBrowserProductsApi } from './features/products/api.js';
+import { ProductLibrary } from './features/products/product-library.js';
+
+const browserProductsApi = createBrowserProductsApi();
+
 const navigationItems = [
   '工作台',
   '产品库',
@@ -49,6 +54,8 @@ export function App(): React.JSX.Element {
       <section className="workspace-intro">
         <p>从产品事实、SKU 与成本开始，逐步建立可追溯的运营方案。</p>
       </section>
+
+      <ProductLibrary api={browserProductsApi} />
     </main>
   );
 }

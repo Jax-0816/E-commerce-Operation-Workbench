@@ -8,6 +8,13 @@
       "when": 1787142970641,
       "tag": "0000_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787144249237,
+      "tag": "0001_add-products",
+      "breakpoints": true
     }
   ]
 }

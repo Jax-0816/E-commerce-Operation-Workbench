@@ -38,6 +38,15 @@ importers:
 
   apps/server:
     dependencies:
+      '@eaw/application':
+        specifier: workspace:*
+        version: link:../../packages/application
+      '@eaw/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@eaw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -80,6 +89,12 @@ importers:
         specifier: 8.2.1
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.27.7)(tsx@4.21.0)
 
+  packages/application:
+    dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
+
   packages/contracts:
     dependencies:
       '@eaw/domain':
@@ -91,6 +106,9 @@ importers:
 
   packages/database:
     dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2
