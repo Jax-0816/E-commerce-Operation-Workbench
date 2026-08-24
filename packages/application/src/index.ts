@@ -16,3 +16,5 @@ export type {
 } from './facts/index.js';
 export { createSkusApplication } from './skus/index.js';
 export type { ConfigureDimensionInput, SkusApplication, UpdateSkuInput } from './skus/index.js';
+export { createPlatformProfilesApplication } from './platform-profiles/index.js';
+export type { PlatformProfilesApplication } from './platform-profiles/index.js';

@@ -169,4 +169,49 @@ describe('production app composition', () => {
     );
     await restarted.close();
   });
+
+  it('persists independent platform profiles across production restarts', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-platforms-')));
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const product = await first.inject({
+      method: 'POST',
+      url: '/api/v1/products',
+      payload: { name: '平台档案测试保温杯' },
+    });
+    const productId = product.json().id as string;
+    for (const [platformId, categoryCode, title] of [
+      ['pinduoduo', 'pdd-100', '拼多多标题'],
+      ['taobao', 'tb-200', '淘宝标题'],
+    ] as const) {
+      const response = await first.inject({
+        method: 'PUT',
+        url: `/api/v1/products/${productId}/platform-profiles/${platformId}`,
+        payload: {
+          categoryCode,
+          categoryName: '杯具',
+          externalProductId: null,
+          title,
+          description: `${title}内容`,
+          metadata: { channel: platformId },
+        },
+      });
+      expect(response.statusCode).toBe(200);
+    }
+    await first.close();
+
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const listed = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/products/${productId}/platform-profiles`,
+    });
+    expect(listed.statusCode).toBe(200);
+    expect(listed.json()).toMatchObject({
+      items: [
+        { platformId: 'pinduoduo', categoryCode: 'pdd-100', title: '拼多多标题' },
+        { platformId: 'taobao', categoryCode: 'tb-200', title: '淘宝标题' },
+      ],
+    });
+    await restarted.close();
+  });
 });

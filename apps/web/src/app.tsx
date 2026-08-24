@@ -1,15 +1,25 @@
 import { useState } from 'react';
 
 import { createBrowserFactsApi } from './features/facts/api.js';
-import { FactStatusTable } from './features/facts/fact-status-table.js';
+import { FactStatusTable, type FactsApi } from './features/facts/fact-status-table.js';
+import {
+  createBrowserPlatformProfilesApi,
+  type PlatformProfilesApi,
+} from './features/platform-profile/api.js';
+import { PlatformProfilePanel } from './features/platform-profile/platform-profile-panel.js';
 import { createBrowserProductsApi } from './features/products/api.js';
-import { ProductLibrary, type ProductItem } from './features/products/product-library.js';
-import { createBrowserSkusApi } from './features/skus/api.js';
+import {
+  ProductLibrary,
+  type ProductItem,
+  type ProductsApi,
+} from './features/products/product-library.js';
+import { createBrowserSkusApi, type SkusApi } from './features/skus/api.js';
 import { SkuMatrix } from './features/skus/sku-matrix.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
 const browserSkusApi = createBrowserSkusApi();
+const browserPlatformProfilesApi = createBrowserPlatformProfilesApi();
 
 const navigationItems = [
   '工作台',
@@ -29,7 +39,17 @@ const contextFields = [
   ['AI 提供商', '待配置'],
 ];
 
-export function App(): React.JSX.Element {
+export function App({
+  factsApi = browserFactsApi,
+  platformProfilesApi = browserPlatformProfilesApi,
+  productsApi = browserProductsApi,
+  skusApi = browserSkusApi,
+}: {
+  readonly factsApi?: FactsApi;
+  readonly platformProfilesApi?: PlatformProfilesApi;
+  readonly productsApi?: ProductsApi;
+  readonly skusApi?: SkusApi;
+} = {}): React.JSX.Element {
   const [selectedProduct, setSelectedProduct] = useState<ProductItem>();
   return (
     <main className="workbench-shell">
@@ -64,11 +84,12 @@ export function App(): React.JSX.Element {
         <p>从产品事实、SKU 与成本开始，逐步建立可追溯的运营方案。</p>
       </section>
 
-      <ProductLibrary api={browserProductsApi} onSelect={setSelectedProduct} />
+      <ProductLibrary api={productsApi} onSelect={setSelectedProduct} />
       {selectedProduct ? (
         <>
-          <FactStatusTable api={browserFactsApi} productId={selectedProduct.id} />
-          <SkuMatrix api={browserSkusApi} productId={selectedProduct.id} />
+          <PlatformProfilePanel api={platformProfilesApi} productId={selectedProduct.id} />
+          <FactStatusTable api={factsApi} productId={selectedProduct.id} />
+          <SkuMatrix api={skusApi} productId={selectedProduct.id} />
         </>
       ) : null}
     </main>

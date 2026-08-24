@@ -2,12 +2,14 @@ import type { FastifyInstance } from 'fastify';
 
 import {
   createFactsApplication,
+  createPlatformProfilesApplication,
   createProductsApplication,
   createSkusApplication,
 } from '@eaw/application';
 import {
   DrizzleProductRepository,
   DrizzleProductFactRepository,
+  DrizzlePlatformProfileRepository,
   DrizzleSkuMatrixRepository,
   migrateDatabase,
   openDatabase,
@@ -65,7 +67,11 @@ export async function createProductionApp({
       repository: new DrizzleSkuMatrixRepository(database),
       products: productRepository,
     });
-    const app = buildApp(createAppContext({ facts, products, skus, webDistDir }));
+    const platformProfiles = createPlatformProfilesApplication({
+      repository: new DrizzlePlatformProfileRepository(database),
+      products: productRepository,
+    });
+    const app = buildApp(createAppContext({ facts, platformProfiles, products, skus, webDistDir }));
     app.addHook('onClose', cleanup);
     return app;
   } catch (error) {

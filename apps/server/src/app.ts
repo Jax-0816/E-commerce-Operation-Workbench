@@ -11,6 +11,7 @@ import { registerHealthRoute } from './routes/health.js';
 import { registerProductRoutes } from './routes/products.js';
 import { registerFactRoutes } from './routes/facts.js';
 import { registerSkuRoutes } from './routes/skus.js';
+import { registerPlatformProfileRoutes } from './routes/platform-profiles.js';
 
 export function buildApp(context: AppContext): FastifyInstance {
   const app = Fastify();
@@ -25,6 +26,7 @@ export function buildApp(context: AppContext): FastifyInstance {
   registerProductRoutes(app, context.products);
   registerFactRoutes(app, context.facts);
   registerSkuRoutes(app, context.skus);
+  registerPlatformProfileRoutes(app, context.platformProfiles);
 
   if (context.webDistDir !== undefined && existsSync(context.webDistDir)) {
     app.register(fastifyStatic, {

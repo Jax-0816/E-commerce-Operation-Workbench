@@ -52,4 +52,47 @@ describe('workbench shell', () => {
     expect(container.textContent).toContain('AI 提供商');
     root.unmount();
   });
+
+  it('opens platform profiles for the selected product', async () => {
+    const product = {
+      id: '0198f255-6a84-7000-8000-000000000001',
+      name: '防晒衣',
+      createdAt: '2026-08-24T00:00:00.000Z',
+      updatedAt: '2026-08-24T00:00:00.000Z',
+    };
+    const container = document.createElement('div');
+    document.body.append(container);
+    containers.push(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <App
+          factsApi={{ confirm: async () => undefined as never, list: async () => [] }}
+          platformProfilesApi={{ get: async () => undefined, save: async () => undefined as never }}
+          productsApi={{
+            archive: async () => undefined,
+            create: async () => undefined,
+            list: async () => [product],
+          }}
+          skusApi={{
+            configure: async () => ({ dimensions: [], skus: [] }),
+            get: async () => ({ dimensions: [], skus: [] }),
+            update: async () => ({ dimensions: [], skus: [] }),
+          }}
+        />,
+      );
+    });
+
+    const manageButton = [...container.querySelectorAll('button')].find(
+      (button) => button.textContent === '管理事实',
+    );
+    expect(manageButton).toBeDefined();
+    await act(async () => {
+      manageButton?.click();
+    });
+
+    expect(container.querySelector('[aria-label="平台档案"]')).not.toBeNull();
+    root.unmount();
+  });
 });

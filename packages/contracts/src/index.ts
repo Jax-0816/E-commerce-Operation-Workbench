@@ -34,6 +34,14 @@ export {
   UpdateSkuInputSchema,
 } from './skus.js';
 export type { SkuMatrixResponse } from './skus.js';
+export {
+  PlatformIdSchema,
+  PlatformProfileParamsSchema,
+  PlatformProfileListResponseSchema,
+  PlatformProfilesParamsSchema,
+  PlatformProfileResponseSchema,
+  SavePlatformProfileInputSchema,
+} from './platform-profiles.js';
 export type {
   ConfirmFactInput,
   CreateFactInput,

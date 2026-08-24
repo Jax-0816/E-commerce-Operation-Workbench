@@ -1,11 +1,17 @@
 import { APP_VERSION, type AppVersion } from '@eaw/shared';
-import type { FactsApplication, ProductsApplication, SkusApplication } from '@eaw/application';
+import type {
+  FactsApplication,
+  PlatformProfilesApplication,
+  ProductsApplication,
+  SkusApplication,
+} from '@eaw/application';
 
 export interface AppContextOptions {
   readonly webDistDir?: string;
   readonly products?: ProductsApplication;
   readonly facts?: FactsApplication;
   readonly skus?: SkusApplication;
+  readonly platformProfiles?: PlatformProfilesApplication;
 }
 
 export interface AppContext {
@@ -14,6 +20,7 @@ export interface AppContext {
   readonly products?: ProductsApplication;
   readonly facts?: FactsApplication;
   readonly skus?: SkusApplication;
+  readonly platformProfiles?: PlatformProfilesApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -23,5 +30,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     products: options.products,
     facts: options.facts,
     skus: options.skus,
+    platformProfiles: options.platformProfiles,
   };
 }
