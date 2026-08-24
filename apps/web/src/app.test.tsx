@@ -9,6 +9,7 @@ import { App } from './app.js';
 const containers: HTMLDivElement[] = [];
 
 afterEach(() => {
+  window.history.replaceState(null, '', '/');
   for (const container of containers.splice(0)) {
     container.remove();
   }
@@ -26,7 +27,7 @@ describe('workbench shell', () => {
     });
 
     expect(container.textContent).toContain('工作台');
-    expect(container.textContent).toContain('产品库');
+    expect(container.textContent).toContain('商品库');
     expect(container.textContent).toContain('内容资产');
     expect(container.textContent).toContain('平台与规则');
     expect(container.textContent).toContain('AI 设置');
@@ -45,15 +46,16 @@ describe('workbench shell', () => {
       root.render(<App />);
     });
 
-    expect(container.textContent).toContain('当前产品');
+    expect(container.textContent).toContain('当前商品');
     expect(container.textContent).toContain('SKU');
     expect(container.textContent).toContain('平台');
     expect(container.textContent).toContain('规则包');
-    expect(container.textContent).toContain('AI 提供商');
+    expect(container.textContent).toContain('AI Provider');
     root.unmount();
   });
 
   it('opens platform profiles for the selected product', async () => {
+    window.history.replaceState(null, '', '/products');
     const product = {
       id: '0198f255-6a84-7000-8000-000000000001',
       name: '防晒衣',
@@ -68,7 +70,12 @@ describe('workbench shell', () => {
     await act(async () => {
       root.render(
         <App
-          factsApi={{ confirm: async () => undefined as never, list: async () => [] }}
+          factsApi={{
+            confirm: async () => undefined as never,
+            create: async () => undefined as never,
+            list: async () => [],
+            update: async () => undefined as never,
+          }}
           platformProfilesApi={{ get: async () => undefined, save: async () => undefined as never }}
           productsApi={{
             archive: async () => undefined,
@@ -85,11 +92,19 @@ describe('workbench shell', () => {
     });
 
     const manageButton = [...container.querySelectorAll('button')].find(
-      (button) => button.textContent === '管理事实',
+      (button) => button.textContent === '进入商品工作区',
     );
     expect(manageButton).toBeDefined();
     await act(async () => {
       manageButton?.click();
+    });
+
+    const platformLink = [...container.querySelectorAll('a')].find(
+      (link) => link.textContent === '平台档案',
+    );
+    expect(platformLink).toBeDefined();
+    await act(async () => {
+      platformLink?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     });
 
     expect(container.querySelector('[aria-label="平台档案"]')).not.toBeNull();

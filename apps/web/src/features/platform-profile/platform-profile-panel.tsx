@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import {
   PLATFORM_IDS,
@@ -21,17 +22,12 @@ export function PlatformProfilePanel({
   readonly api: PlatformProfilesApi;
   readonly productId: string;
 }): React.JSX.Element {
-  const [platformId, setPlatformId] = useState<PlatformId>(platformFromUrl);
+  const [searchParameters, setSearchParameters] = useSearchParams();
+  const platformId = platformFromSearch(searchParameters.get('platform'));
   const [profile, setProfile] = useState<PlatformProfileResponse>();
   const [fields, setFields] = useState<SavePlatformProfileInput>(emptyFields);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const onHistory = (): void => setPlatformId(platformFromUrl());
-    window.addEventListener('popstate', onHistory);
-    return () => window.removeEventListener('popstate', onHistory);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -52,10 +48,9 @@ export function PlatformProfilePanel({
   }, [api, platformId, productId]);
 
   const switchPlatform = (next: PlatformId): void => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('platform', next);
-    window.history.pushState(null, '', url);
-    setPlatformId(next);
+    const nextParameters = new URLSearchParams(searchParameters);
+    nextParameters.set('platform', next);
+    setSearchParameters(nextParameters);
   };
   const save = async (): Promise<void> => {
     try {
@@ -136,8 +131,7 @@ function Field({
   );
 }
 
-function platformFromUrl(): PlatformId {
-  const value = new URL(window.location.href).searchParams.get('platform');
+function platformFromSearch(value: string | null): PlatformId {
   return PLATFORM_IDS.includes(value as PlatformId) ? (value as PlatformId) : 'pinduoduo';
 }
 

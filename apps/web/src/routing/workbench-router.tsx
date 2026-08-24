@@ -1,0 +1,321 @@
+import { useEffect, useState } from 'react';
+import {
+  Link,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+} from 'react-router-dom';
+
+import { FactStatusTable, type FactWorkspaceApi } from '../features/facts/fact-status-table.js';
+import type { PlatformProfilesApi } from '../features/platform-profile/api.js';
+import { PlatformProfilePanel } from '../features/platform-profile/platform-profile-panel.js';
+import { ProductDashboard } from '../features/products/dashboard.js';
+import { ProductOnboarding } from '../features/products/product-onboarding.js';
+import {
+  ProductLibrary,
+  type ProductItem,
+  type ProductsApi,
+} from '../features/products/product-library.js';
+import type { SkusApi } from '../features/skus/api.js';
+import { SkuMatrix } from '../features/skus/sku-matrix.js';
+
+export interface WorkbenchDependencies {
+  readonly factsApi: FactWorkspaceApi;
+  readonly platformProfilesApi: PlatformProfilesApi;
+  readonly productsApi: ProductsApi;
+  readonly skusApi: SkusApi;
+}
+
+const globalNavigation = [
+  ['工作台', '/'],
+  ['商品库', '/products'],
+  ['新建商品', '/products/new'],
+  ['内容资产', '/capabilities/content'],
+  ['平台与规则', '/capabilities/rules'],
+  ['AI 设置', '/capabilities/ai'],
+  ['数据管理', '/capabilities/data'],
+  ['系统设置', '/capabilities/settings'],
+] as const;
+
+const productNavigation = [
+  ['概览', 'overview'],
+  ['商品事实', 'facts'],
+  ['SKU', 'skus'],
+  ['平台档案', 'platforms'],
+  ['竞品', 'competitors'],
+  ['市场分析', 'market'],
+  ['卖点', 'selling-points'],
+  ['标题', 'titles'],
+  ['视觉', 'creative'],
+  ['详情页', 'detail'],
+  ['成本', 'costs'],
+  ['定价', 'pricing'],
+  ['活动', 'promotion'],
+  ['运营方案', 'plans'],
+  ['历史', 'history'],
+] as const;
+
+export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.Element {
+  return (
+    <Routes>
+      <Route element={<WorkbenchShell productsApi={dependencies.productsApi} />}>
+        <Route index element={<Dashboard productsApi={dependencies.productsApi} />} />
+        <Route path="products" element={<ProductHome productsApi={dependencies.productsApi} />} />
+        <Route
+          path="products/new"
+          element={<Onboarding productsApi={dependencies.productsApi} />}
+        />
+        <Route path="products/:productId" element={<Navigate replace to="overview" />} />
+        <Route path="products/:productId/overview" element={<ProductOverview />} />
+        <Route
+          path="products/:productId/facts"
+          element={<FactsPage api={dependencies.factsApi} />}
+        />
+        <Route path="products/:productId/skus" element={<SkusPage api={dependencies.skusApi} />} />
+        <Route
+          path="products/:productId/platforms"
+          element={<PlatformsPage api={dependencies.platformProfilesApi} />}
+        />
+        {['competitors', 'market', 'selling-points'].map((section) => (
+          <Route
+            key={section}
+            path={`products/:productId/${section}`}
+            element={<Unavailable title={sectionTitle(section)} phase="Phase 7" />}
+          />
+        ))}
+        {['titles'].map((section) => (
+          <Route
+            key={section}
+            path={`products/:productId/${section}`}
+            element={<Unavailable title={sectionTitle(section)} phase="Phase 8" />}
+          />
+        ))}
+        {['creative', 'detail'].map((section) => (
+          <Route
+            key={section}
+            path={`products/:productId/${section}`}
+            element={<Unavailable title={sectionTitle(section)} phase="Phase 9" />}
+          />
+        ))}
+        {['costs', 'pricing'].map((section) => (
+          <Route
+            key={section}
+            path={`products/:productId/${section}`}
+            element={<Unavailable title={sectionTitle(section)} phase="Phase 3" />}
+          />
+        ))}
+        <Route
+          path="products/:productId/promotion"
+          element={<Unavailable title="活动模拟" phase="Phase 5" />}
+        />
+        <Route
+          path="products/:productId/plans"
+          element={<Unavailable title="运营方案" phase="Phase 10" />}
+        />
+        <Route
+          path="products/:productId/history"
+          element={<Unavailable title="历史版本" phase="Phase 12" />}
+        />
+        <Route
+          path="capabilities/:capability"
+          element={<Unavailable title="该工作区模块" phase="后续实施阶段" />}
+        />
+        <Route path="*" element={<Unavailable title="页面" phase="当前版本" />} />
+      </Route>
+    </Routes>
+  );
+}
+
+function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }): React.JSX.Element {
+  const { productId } = useParams();
+  const location = useLocation();
+  const [products, setProducts] = useState<readonly ProductItem[]>([]);
+  useEffect(() => {
+    void productsApi
+      .list()
+      .then(setProducts)
+      .catch(() => setProducts([]));
+  }, [productsApi]);
+  const product = products.find((candidate) => candidate.id === productId);
+  return (
+    <main className="workbench-shell">
+      <header className="topbar">
+        <Link className="brand" to="/">
+          电商运营工作台
+        </Link>
+        <nav aria-label="全局导航">
+          <ul className="navigation-list">
+            {globalNavigation.map(([label, to]) => (
+              <li key={to}>
+                <Link to={to}>{label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </header>
+      <section aria-label="运营上下文" className="context-bar">
+        <dl>
+          <Context label="当前商品" value={product?.name ?? '未选择商品'} />
+          <Context label="SKU" value="未选择 SKU" />
+          <Context
+            label="平台"
+            value={platformLabel(new URLSearchParams(location.search).get('platform'))}
+          />
+          <Context label="规则包" value="尚未配置" />
+          <Context label="AI Provider" value="尚未配置" />
+        </dl>
+        <button disabled title="Phase 10 完成后可用" type="button">
+          生成完整运营方案
+        </button>
+      </section>
+      {productId ? (
+        <nav aria-label="商品导航" className="product-navigation">
+          {productNavigation.map(([label, section]) => (
+            <Link key={section} to={`/products/${productId}/${section}`}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+      <div className="workspace-content">
+        <Outlet />
+      </div>
+    </main>
+  );
+}
+
+function ProductHome({ productsApi }: { readonly productsApi: ProductsApi }): React.JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <ProductLibrary
+      api={productsApi}
+      onSelect={(product) => navigate(`/products/${product.id}/overview`)}
+    />
+  );
+}
+
+function Dashboard({ productsApi }: { readonly productsApi: ProductsApi }): React.JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <ProductDashboard
+      productsApi={productsApi}
+      onOpen={(product) => navigate(`/products/${product.id}/overview`)}
+    />
+  );
+}
+
+function Onboarding({ productsApi }: { readonly productsApi: ProductsApi }): React.JSX.Element {
+  const navigate = useNavigate();
+  return (
+    <ProductOnboarding
+      productsApi={productsApi}
+      onCreated={(product) => navigate(`/products/${product.id}/facts`)}
+    />
+  );
+}
+
+function ProductOverview(): React.JSX.Element {
+  return (
+    <ProductFeature title="商品概览">
+      <p>从商品事实、SKU 与平台档案开始完善这个商品。</p>
+    </ProductFeature>
+  );
+}
+
+function FactsPage({ api }: { readonly api: FactWorkspaceApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="商品事实">
+      <FactStatusTable api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function SkusPage({ api }: { readonly api: SkusApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="SKU 与规格">
+      <SkuMatrix api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function PlatformsPage({ api }: { readonly api: PlatformProfilesApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="平台档案">
+      <PlatformProfilePanel api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function ProductFeature({
+  children,
+  title,
+}: {
+  readonly children: React.ReactNode;
+  readonly title: string;
+}): React.JSX.Element {
+  return (
+    <section className="feature-page">
+      <h1>{title}</h1>
+      {children}
+    </section>
+  );
+}
+
+function Unavailable({
+  phase,
+  title,
+}: {
+  readonly phase: string;
+  readonly title: string;
+}): React.JSX.Element {
+  return (
+    <section className="unavailable-page">
+      <h1>{title}</h1>
+      <p role="status">当前能力尚未实现，将在 {phase} 完成。</p>
+    </section>
+  );
+}
+
+function Context({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: string;
+}): React.JSX.Element {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
+function useProductId(): string {
+  return useParams().productId ?? '';
+}
+
+function platformLabel(platform: string | null): string {
+  return (
+    { pinduoduo: '拼多多', taobao: '淘宝', douyin: '抖音' }[platform ?? 'pinduoduo'] ?? '拼多多'
+  );
+}
+
+function sectionTitle(section: string): string {
+  return (
+    {
+      competitors: '竞品',
+      market: '市场分析',
+      'selling-points': '卖点',
+      titles: '标题 Studio',
+      creative: '视觉方案',
+      detail: '详情页',
+      costs: '成本中心',
+      pricing: '价格实验室',
+    }[section] ?? section
+  );
+}

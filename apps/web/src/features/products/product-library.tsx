@@ -106,7 +106,7 @@ export function ProductLibrary({
               <span>{product.name}</span>
               {onSelect ? (
                 <button onClick={() => onSelect(product)} type="button">
-                  管理事实
+                  进入商品工作区
                 </button>
               ) : null}
               <button

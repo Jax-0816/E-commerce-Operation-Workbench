@@ -1,12 +1,10 @@
-import type { FactItem, FactsApi } from './fact-status-table.js';
+import type { FactItem, FactWorkspaceApi } from './fact-status-table.js';
 
 interface FactListResponse {
   readonly items: FactItem[];
 }
 
-export interface BrowserFactsApi extends FactsApi {
-  create(productId: string, input: unknown): Promise<FactItem>;
-  update(productId: string, factId: string, input: unknown): Promise<FactItem>;
+export interface BrowserFactsApi extends FactWorkspaceApi {
   revise(productId: string, factId: string, input: unknown): Promise<FactItem>;
   delete(productId: string, factId: string, expectedUpdatedAt: string): Promise<void>;
 }

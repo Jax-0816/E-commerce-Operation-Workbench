@@ -2,6 +2,7 @@
 
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createBrowserPlatformProfilesApi } from './api.js';
@@ -32,10 +33,12 @@ describe('PlatformProfilePanel', () => {
     const root = createRoot(container);
     await act(async () =>
       root.render(
-        <PlatformProfilePanel
-          api={createBrowserPlatformProfilesApi(fetcher as typeof fetch)}
-          productId={productId}
-        />,
+        <BrowserRouter>
+          <PlatformProfilePanel
+            api={createBrowserPlatformProfilesApi(fetcher as typeof fetch)}
+            productId={productId}
+          />
+        </BrowserRouter>,
       ),
     );
 
@@ -79,7 +82,13 @@ describe('PlatformProfilePanel', () => {
     document.body.append(container);
     containers.push(container);
     const root = createRoot(container);
-    await act(async () => root.render(<PlatformProfilePanel api={api} productId={productId} />));
+    await act(async () =>
+      root.render(
+        <BrowserRouter>
+          <PlatformProfilePanel api={api} productId={productId} />
+        </BrowserRouter>,
+      ),
+    );
     const title = container.querySelector<HTMLInputElement>('[aria-label="平台标题"]')!;
     await act(async () => {
       const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;

@@ -4,7 +4,12 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { FactStatusTable, type FactItem, type FactsApi } from './fact-status-table.js';
+import {
+  FactStatusTable,
+  type FactItem,
+  type FactsApi,
+  type FactWorkspaceApi,
+} from './fact-status-table.js';
 
 const containers: HTMLDivElement[] = [];
 const productId = '0198f0a0-0000-7000-8000-000000000001';
@@ -71,24 +76,107 @@ describe('FactStatusTable', () => {
     expect(container.textContent).toContain('已确认');
     root.unmount();
   });
+
+  it('adds a manual unverified text fact', async () => {
+    const calls: unknown[] = [];
+    const created = fact('000000000105', '杯身材质', 'unverified');
+    const { container, root } = await render([], {
+      async create(_productId, input) {
+        calls.push(input);
+        return created;
+      },
+    });
+
+    await click(container, '添加事实');
+    await input(container, '事实键', 'material');
+    await input(container, '事实名称', '杯身材质');
+    await input(container, '事实值', '304 不锈钢');
+    await click(container, '保存事实');
+
+    expect(calls).toEqual([
+      {
+        key: 'material',
+        label: '杯身材质',
+        value: { type: 'text', value: '304 不锈钢' },
+        unit: null,
+        sourceType: 'manual',
+        sourceRef: null,
+        verification: 'unverified',
+        sensitive: false,
+        policyEligible: true,
+      },
+    ]);
+    expect(container.textContent).toContain('杯身材质');
+    root.unmount();
+  });
+
+  it('edits an unconfirmed fact with its optimistic token', async () => {
+    const original = fact('000000000106', '材质', 'unverified');
+    const calls: unknown[] = [];
+    const { container, root } = await render([original], {
+      async update(_productId, _factId, input) {
+        calls.push(input);
+        return { ...original, label: input.label, value: input.value };
+      },
+    });
+
+    await click(container, '编辑 材质');
+    await input(container, '事实名称', '杯身材料');
+    await input(container, '事实值', '316 不锈钢');
+    await click(container, '保存修改');
+
+    expect(calls).toEqual([
+      expect.objectContaining({
+        label: '杯身材料',
+        value: { type: 'text', value: '316 不锈钢' },
+        expectedUpdatedAt: original.updatedAt,
+      }),
+    ]);
+    expect(container.textContent).toContain('杯身材料');
+    root.unmount();
+  });
 });
 
-async function render(items: FactItem[], overrides: Partial<FactsApi> = {}) {
+async function render(items: FactItem[], overrides: Partial<FactWorkspaceApi> = {}) {
   const container = document.createElement('div');
   document.body.append(container);
   containers.push(container);
   const root = createRoot(container);
-  const api: FactsApi = {
+  const api: FactWorkspaceApi = {
+    async create() {
+      throw new Error('unexpected create');
+    },
     async list() {
       return items;
     },
     async confirm() {
       throw new Error('unexpected confirm');
     },
+    async update() {
+      throw new Error('unexpected update');
+    },
     ...overrides,
   };
   await act(async () => root.render(<FactStatusTable api={api} productId={productId} />));
   return { container, root };
+}
+
+async function click(container: HTMLElement, label: string): Promise<void> {
+  const button = [...container.querySelectorAll('button')].find(
+    (candidate) =>
+      candidate.getAttribute('aria-label') === label || candidate.textContent === label,
+  );
+  expect(button).toBeDefined();
+  await act(async () => button?.click());
+}
+
+async function input(container: HTMLElement, label: string, value: string): Promise<void> {
+  const field = container.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
+  expect(field).not.toBeNull();
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(field, value);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  });
 }
 
 function fact(suffix: string, label: string, verification: FactItem['verification']): FactItem {
