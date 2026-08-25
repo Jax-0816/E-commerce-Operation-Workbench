@@ -113,6 +113,8 @@ importers:
         specifier: workspace:*
         version: link:../domain
 
+  packages/calculation-engine: {}
+
   packages/contracts:
     dependencies:
       '@eaw/domain':
