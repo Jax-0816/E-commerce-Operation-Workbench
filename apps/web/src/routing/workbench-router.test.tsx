@@ -20,6 +20,32 @@ afterEach(() => {
 });
 
 describe('routed workbench', () => {
+  it('turns the dashboard into an actionable product readiness ledger', async () => {
+    const { container, root } = await render('/');
+
+    expect(container.querySelector('nav[aria-label="主导航"]')).not.toBeNull();
+    expect(
+      [...container.querySelectorAll('button')].find((button) =>
+        button.textContent?.includes('新建商品'),
+      ),
+    ).toBeDefined();
+
+    const readiness = container.querySelector('[aria-label="商品工作流入口"]');
+    expect(readiness?.textContent).toContain('商品事实');
+    expect(readiness?.textContent).toContain('SKU');
+    expect(readiness?.textContent).toContain('平台档案');
+    expect(readiness?.textContent).toContain('成本（Phase 3）');
+
+    const ledger = container.querySelector('table');
+    expect(ledger?.querySelector('caption')?.textContent).toBe('商品任务账本');
+    expect(ledger?.textContent).toContain('保温杯');
+    expect(ledger?.textContent).toContain('SKU 与规格');
+    expect(container.querySelector('aside[aria-label="快捷入口"]')?.textContent).toMatch(
+      /进入\s*保温杯\s*的平台档案/u,
+    );
+    root.unmount();
+  });
+
   it('shows real product context and navigates between completed and unavailable sections', async () => {
     const { container, factProductIds, root } = await render(
       '/products/0198f0a0-0000-7000-8000-000000000001/facts',

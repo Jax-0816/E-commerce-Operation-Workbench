@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Link,
   Navigate,
+  NavLink,
   Outlet,
   Route,
   Routes,
@@ -9,6 +10,18 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
+import { ArchiveIcon } from '@phosphor-icons/react/dist/csr/Archive';
+import { BrainIcon } from '@phosphor-icons/react/dist/csr/Brain';
+import { ChartLineUpIcon } from '@phosphor-icons/react/dist/csr/ChartLineUp';
+import { DatabaseIcon } from '@phosphor-icons/react/dist/csr/Database';
+import { GearIcon } from '@phosphor-icons/react/dist/csr/Gear';
+import { HouseIcon } from '@phosphor-icons/react/dist/csr/House';
+import { PackageIcon } from '@phosphor-icons/react/dist/csr/Package';
+import { PlusIcon } from '@phosphor-icons/react/dist/csr/Plus';
+import { ShieldCheckIcon } from '@phosphor-icons/react/dist/csr/ShieldCheck';
+import { SlidersHorizontalIcon } from '@phosphor-icons/react/dist/csr/SlidersHorizontal';
+import { SquaresFourIcon } from '@phosphor-icons/react/dist/csr/SquaresFour';
+import { StorefrontIcon } from '@phosphor-icons/react/dist/csr/Storefront';
 
 import { FactStatusTable, type FactWorkspaceApi } from '../features/facts/fact-status-table.js';
 import type { PlatformProfilesApi } from '../features/platform-profile/api.js';
@@ -31,14 +44,29 @@ export interface WorkbenchDependencies {
 }
 
 const globalNavigation = [
-  ['工作台', '/'],
-  ['商品库', '/products'],
-  ['新建商品', '/products/new'],
-  ['内容资产', '/capabilities/content'],
-  ['平台与规则', '/capabilities/rules'],
-  ['AI 设置', '/capabilities/ai'],
-  ['数据管理', '/capabilities/data'],
-  ['系统设置', '/capabilities/settings'],
+  {
+    label: '运营中心',
+    items: [
+      ['工作台', '/', HouseIcon],
+      ['商品库', '/products', PackageIcon],
+      ['新建商品', '/products/new', PlusIcon],
+    ],
+  },
+  {
+    label: '内容与策略',
+    items: [
+      ['内容资产', '/capabilities/content', ArchiveIcon],
+      ['平台与规则', '/capabilities/rules', ShieldCheckIcon],
+      ['AI 设置', '/capabilities/ai', BrainIcon],
+    ],
+  },
+  {
+    label: '数据与系统',
+    items: [
+      ['数据管理', '/capabilities/data', DatabaseIcon],
+      ['系统设置', '/capabilities/settings', GearIcon],
+    ],
+  },
 ] as const;
 
 const productNavigation = [
@@ -143,47 +171,88 @@ function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }):
   const product = products.find((candidate) => candidate.id === productId);
   return (
     <main className="workbench-shell">
-      <header className="topbar">
-        <Link className="brand" to="/">
-          电商运营工作台
+      <aside className="command-sidebar">
+        <Link aria-label="返回工作台" className="brand" to="/">
+          <StorefrontIcon aria-hidden="true" size={28} weight="duotone" />
+          <span>
+            电商运营工作台
+            <small>本地优先</small>
+          </span>
         </Link>
-        <nav aria-label="全局导航">
-          <ul className="navigation-list">
-            {globalNavigation.map(([label, to]) => (
-              <li key={to}>
-                <Link to={to}>{label}</Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </header>
-      <section aria-label="运营上下文" className="context-bar">
-        <dl>
-          <Context label="当前商品" value={product?.name ?? '未选择商品'} />
-          <Context label="SKU" value="未选择 SKU" />
-          <Context
-            label="平台"
-            value={platformLabel(new URLSearchParams(location.search).get('platform'))}
-          />
-          <Context label="规则包" value="尚未配置" />
-          <Context label="AI Provider" value="尚未配置" />
-        </dl>
-        <button disabled title="Phase 10 完成后可用" type="button">
-          生成完整运营方案
-        </button>
-      </section>
-      {productId ? (
-        <nav aria-label="商品导航" className="product-navigation">
-          {productNavigation.map(([label, section]) => (
-            <Link key={section} to={`/products/${productId}/${section}`}>
-              {label}
-            </Link>
+        <nav aria-label="主导航" className="primary-navigation">
+          {globalNavigation.map((group) => (
+            <section key={group.label}>
+              <h2>{group.label}</h2>
+              <ul>
+                {group.items.map(([label, to, Icon]) => (
+                  <li key={to}>
+                    <NavLink
+                      end={to === '/'}
+                      to={to}
+                      className={({ isActive }) => (isActive ? 'active' : undefined)}
+                    >
+                      <Icon aria-hidden="true" size={19} weight="regular" />
+                      <span>{label}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
         </nav>
-      ) : null}
-      <div className="workspace-content">
-        <Outlet />
-      </div>
+        <section aria-label="当前工作区" className="sidebar-workspace">
+          <span>当前商品</span>
+          <strong>{product?.name ?? '尚未选择'}</strong>
+          <small>数据仅在本地存储</small>
+        </section>
+      </aside>
+      <section className="command-surface">
+        <header aria-label="运营上下文" className="context-bar">
+          <dl>
+            <Context label="当前商品" value={product?.name ?? '未选择商品'} />
+            <Context label="SKU" value="未选择 SKU" />
+            <Context
+              label="平台"
+              value={platformLabel(new URLSearchParams(location.search).get('platform'))}
+            />
+            <Context label="规则包" value="尚未配置" />
+            <Context label="AI Provider" value="尚未配置" />
+          </dl>
+          <div className="plan-action">
+            <button disabled title="Phase 10 完成后可用" type="button">
+              <ChartLineUpIcon aria-hidden="true" size={18} />
+              生成运营方案
+            </button>
+            <small>Phase 10 开放；财务能力从 Phase 3 开始</small>
+          </div>
+        </header>
+        {productId ? (
+          <nav aria-label="商品导航" className="product-navigation">
+            {productNavigation.map(([label, section]) => (
+              <NavLink
+                key={section}
+                to={`/products/${productId}/${section}`}
+                className={({ isActive }) => (isActive ? 'active' : undefined)}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+        ) : null}
+        <div className="workspace-content">
+          <Outlet />
+        </div>
+        <footer className="workspace-status">
+          <span>
+            <SquaresFourIcon aria-hidden="true" size={15} /> 本地工作区
+          </span>
+          <span>
+            <SlidersHorizontalIcon aria-hidden="true" size={15} /> 当前平台：
+            {platformLabel(new URLSearchParams(location.search).get('platform'))}
+          </span>
+          <span>未连接的能力不会生成伪结果</span>
+        </footer>
+      </section>
     </main>
   );
 }
@@ -203,6 +272,7 @@ function Dashboard({ productsApi }: { readonly productsApi: ProductsApi }): Reac
   return (
     <ProductDashboard
       productsApi={productsApi}
+      onCreate={() => navigate('/products/new')}
       onOpen={(product) => navigate(`/products/${product.id}/overview`)}
     />
   );
