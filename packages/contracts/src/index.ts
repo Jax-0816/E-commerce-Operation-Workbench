@@ -27,6 +27,15 @@ export {
   UpdateFactInputSchema,
 } from './facts.js';
 export {
+  CalculatePricingInputSchema,
+  CostPricingParamsSchema,
+  CostProfileItemSchema,
+  CostProfileResponseSchema,
+  PricingCalculationResponseSchema,
+  PricingHistoryResponseSchema,
+  SaveCostProfileInputSchema,
+} from './pricing.js';
+export {
   ConfigureSkusInputSchema,
   SkuMatrixResponseSchema,
   SkuParamsSchema,

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@eaw/application": "workspace:*",
+    "@eaw/calculation-engine": "workspace:*",
     "@eaw/contracts": "workspace:*",
     "@eaw/database": "workspace:*",
     "@eaw/domain": "workspace:*",

@@ -10,3 +10,5 @@ export { DrizzleProductRepository } from './repositories/product-repository.js';
 export { DrizzleProductFactRepository } from './repositories/product-fact-repository.js';
 export { DrizzleSkuMatrixRepository } from './repositories/sku-matrix-repository.js';
 export { DrizzlePlatformProfileRepository } from './repositories/platform-profile-repository.js';
+export { DrizzleCostProfileRepository } from './repositories/cost-profile-repository.js';
+export { DrizzlePricingRepository } from './repositories/pricing-repository.js';

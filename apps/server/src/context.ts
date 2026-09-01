@@ -2,6 +2,7 @@ import { APP_VERSION, type AppVersion } from '@eaw/shared';
 import type {
   FactsApplication,
   PlatformProfilesApplication,
+  PricingApplication,
   ProductsApplication,
   SkusApplication,
 } from '@eaw/application';
@@ -12,6 +13,7 @@ export interface AppContextOptions {
   readonly facts?: FactsApplication;
   readonly skus?: SkusApplication;
   readonly platformProfiles?: PlatformProfilesApplication;
+  readonly pricing?: PricingApplication;
 }
 
 export interface AppContext {
@@ -21,6 +23,7 @@ export interface AppContext {
   readonly facts?: FactsApplication;
   readonly skus?: SkusApplication;
   readonly platformProfiles?: PlatformProfilesApplication;
+  readonly pricing?: PricingApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -31,5 +34,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     facts: options.facts,
     skus: options.skus,
     platformProfiles: options.platformProfiles,
+    pricing: options.pricing,
   };
 }

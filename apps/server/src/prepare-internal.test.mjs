@@ -14,6 +14,8 @@ import {
 } from '../scripts/prepare-internal.mjs';
 
 const expectedPackageNames = [
+  '@eaw/calculation-engine',
+  '@eaw/pricing-engine',
   '@eaw/domain',
   '@eaw/shared',
   '@eaw/application',
@@ -84,7 +86,7 @@ describe('internal package preparation', () => {
     expect(calls).toEqual([
       [
         execPath,
-        [fakePnpmCli, '--filter', '@eaw/domain', 'run', 'build'],
+        [fakePnpmCli, '--filter', '@eaw/calculation-engine', 'run', 'build'],
         { cwd: fakeWorkspace, env: fakeEnvironment, stdio: 'inherit' },
       ],
     ]);

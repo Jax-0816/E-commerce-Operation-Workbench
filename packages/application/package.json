@@ -11,15 +11,18 @@
   },
   "scripts": {
     "prepare:domain": "pnpm --filter @eaw/domain run build",
-    "prebuild": "pnpm run prepare:domain",
+    "prepare:pricing": "pnpm --filter @eaw/calculation-engine run build && pnpm --filter @eaw/pricing-engine run build",
+    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:domain",
+    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing",
     "test": "vitest run src",
-    "pretypecheck": "pnpm run prepare:domain",
+    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
   "dependencies": {
-    "@eaw/domain": "workspace:*"
+    "@eaw/calculation-engine": "workspace:*",
+    "@eaw/domain": "workspace:*",
+    "@eaw/pricing-engine": "workspace:*"
   }
 }

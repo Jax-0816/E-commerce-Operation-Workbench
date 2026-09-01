@@ -18,3 +18,10 @@ export { createSkusApplication } from './skus/index.js';
 export type { ConfigureDimensionInput, SkusApplication, UpdateSkuInput } from './skus/index.js';
 export { createPlatformProfilesApplication } from './platform-profiles/index.js';
 export type { PlatformProfilesApplication } from './platform-profiles/index.js';
+export { createPricingApplication } from './pricing/index.js';
+export type {
+  CalculatePricingInput,
+  PricingApplication,
+  PricingCalculation,
+  SaveCostProfileInput,
+} from './pricing/index.js';

@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 1 — Task 13：成本档案与定价实验室（next）
+Wave 2 — Task 14：平台能力注册表（next）
 
 ## Phases
 
@@ -21,8 +21,8 @@ Wave 1 — Task 13：成本档案与定价实验室（next）
 ### Wave 1: 完成财务基础
 
 - [x] Task 12：安全公式 AST 与依赖 DAG（complete）
-- [ ] Task 13：成本档案与定价实验室
-- **Status:** in_progress
+- [x] Task 13：成本档案与定价实验室（complete）
+- **Status:** complete
 
 ### Wave 2: 平台规则与促销闭环
 
@@ -89,6 +89,9 @@ Wave 1 — Task 13：成本档案与定价实验室（next）
 | 旧 graphify 图只覆盖设计文档，查询当前进度无匹配节点 | 1 | 改用提交历史、源码、路由和测试证据建立基线 |
 | 当前终端 Node 26.4 / pnpm 11.19 与锁定版本不符 | 1 | 未重装依赖；实施前先恢复受支持工具链 |
 | 从仓库根直接扫全部 Vitest 导致重复 dist 和错误 cwd 假失败 | 1 | 按各 workspace 的真实 cwd 复核，关键测试通过 |
+| GitHub HTTPS 默认路由连续空响应/超时 | 2 | 诊断为 IPv6 路由异常；仅对本次 Git 命令绑定 GitHub IPv4 后推送成功 |
+| Phase 3 E2E 的“已验证”同时命中结果和历史 | 1 | 按结果面板与指标语义收紧定位器；Phase 2/3 E2E 共同通过 |
+| 初版定价 solver 对公式分段作单调性假设 | 1 | 独立审查复现漏选全局最低价；改为有复合工作预算的有界穷举，并覆盖六种比较符、有理阈值和非单调窗口 |
 
 ## Notes
 

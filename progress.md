@@ -46,6 +46,14 @@
 | 2026-08-31 | calculation-engine typecheck 报 3 处 `unknown` 传入 `Set<string>.has` | 1 | 根因是 Record 属性窄化未跨别名保留；在验证函数入口将 `node.type` 收窄为局部 string |
 | 2026-08-31 | 新增公式文件未满足 Prettier 格式检查 | 1 | 对 4 个公式实现文件运行仓库 Prettier，随后根级 `format:check` 通过 |
 | 2026-08-31 | 一次聚焦测试误用了系统 pnpm 11.19.0，触发依赖状态检查 | 1 | 未允许其修改依赖；立即改用临时精确 Node 24.19.0 / pnpm 11.22.0 工具链 |
+| 2026-08-31 | GitHub HTTPS 推送两次收到空响应，随后 443 连接超时 | 2 | IPv4 探测成功；使用单次 `http.curloptResolve` 定向后成功推送，不改系统设置 |
+| 2026-08-31 | GitHub SSH 连接可达但无可用公钥，`gh` 旧令牌失效 | 1 | 未创建新凭据；改用已有 Git credential + IPv4 HTTPS 完成推送 |
+| 2026-08-31 | 新增 pricing-engine 后冻结锁文件因缺少 workspace importer 拒绝安装 | 1 | 先离线更新 lockfile-only，再恢复冻结安装 |
+| 2026-08-31 | 离线冻结安装缺少供应链元数据并中止 | 1 | 使用获批网络从本地内容仓恢复 299 个锁定包，未改变版本 |
+| 2026-08-31 | pricing-engine 测试 helper 返回宽泛联合导致 2 处 TS2322 | 1 | 将 helper 返回类型收窄为 `AmountCostItem`，实现代码无需修改 |
+| 2026-08-31 | Prettier 无法推断 SQL parser | 1 | 不用 Prettier 改写迁移；以真实 SQLite 迁移测试和 `git diff --check` 验证 |
+| 2026-08-31 | application 测试中的过期修订用例缺少 `now` 字段 | 1 | 修正测试输入后确认领域实现通过 |
+| 2026-08-31 | server 首轮 GREEN 暴露 fake 未保存状态及 prepare-internal 预期过期 | 1 | 修正有状态 fake，并把 calculation/pricing engine 加入依赖顺序契约 |
 
 ## Next Action
 
@@ -90,3 +98,55 @@
   - `packages/calculation-engine/src/formula/*`（新增 AST、schema、evaluator、DAG、导出与测试）
   - `packages/calculation-engine/src/index.ts`（公开公式模块）
   - `packages/calculation-engine/package.json`、`pnpm-lock.yaml`（加入精确版本 Zod 依赖）
+
+## Session: 2026-08-31 — Wave 1 / Task 13
+
+### Cost profiles and pricing laboratory
+
+- **Status:** in_progress
+- Actions taken:
+  - 将 Task 12 提交 `c1511e7` 推送到 GitHub `codex/phase-0` 分支并建立远端跟踪。
+  - 重新读取 master plan、task plan、findings、progress，并确认继续在独立 worktree 分支执行。
+  - 标记 Task 13 为 in_progress；下一步先核对现有垂直切片模式，再以失败测试定义纯定价引擎契约。
+  - 完成纯 pricing-engine 的 RED→GREEN：首次正确 RED 为 calculate/solver 模块缺失；随后 8 项单元/性质测试通过。
+  - 定价引擎支持固定分摊、按件、按订单、按收入百分比与安全公式成本，目标利润/毛利率/净利率/保本求解，以及 verified/warning/incomplete 状态与完整 trace。
+  - 分段公式通过阈值分区、区间二分和候选复核寻找最早安全价格；固定成本增长的保本单调性测试通过。
+  - 完成 CostProfile 领域模型、乐观 revision、`0005_add-cost-pricing.sql`、真实 SQLite 仓储与不可变 scenario/result 触发器。
+  - 完成 application 用例、严格 Zod contracts、成本/定价 Fastify routes 和生产组合根注入。
+  - 当前聚焦结果：domain 31、database 22、application 12、contracts 29、server 21 项测试通过；相关 typecheck 通过。
+
+## Session: 2026-09-01 — Wave 1 / Task 13 验收
+
+### Cost profiles and pricing laboratory closeout
+
+- **Status:** complete
+- Actions taken:
+  - 为 `PricingRepository` 增加原子 `appendCalculation`，将 scenario/result 放入同一 `BEGIN IMMEDIATE` 事务；新增结果写入失败回滚集成测试。
+  - 为持久化定价状态增加运行时枚举校验，防止类型断言掩盖畸形数据库内容。
+  - 完成成本中心 React 编辑器：已启用 SKU 选择、revision、五类成本、三种输入状态、关键项、动态字段、保存与冲突错误反馈。
+  - 完成价格实验室 React 页面：四类定价目标、候选价范围、可信状态、建议价、利润/利润率、完整 trace 和不可变历史。
+  - 接通浏览器 API、Workbench 路由、应用组合根和响应式财务样式。
+  - 新增 Phase 3 Playwright 黄金路径；第一次运行准确暴露重复文本定位器歧义，按结果区域和指标语义收紧定位后 Phase 2/3 E2E 共同通过。
+  - 重连后从 Codex bundled runtime 恢复 Node 24.19.0，并把 pnpm 11.22.0 安装到临时目录，未修改系统工具链。
+  - 启动独立只读代码审查，等待审查结论后再提交。
+  - 独立审查首次发现 solver 非单调错误、百分比基数未显式选择、轨迹不完整、计算异常 503、UI 请求竞态和大整数展示精度问题；逐项以回归测试修复。
+  - solver 最终改为 100,000 分窗口内的升序全局最小值搜索，并为所有公共入口增加 2,000,000 复合工作预算、256 节点上限和四变量白名单。
+  - 补齐六类比较、有理表达式阈值、单点有效窗口、复杂公式终止、公共 solver 预算旁路、四种百分比基数、完整财务 trace、422 错误映射、跨商品/SKU 竞态、旧保存解锁和超大 BigInt 展示测试。
+  - 独立审查共四轮复核；最终结论为无 Critical/Important/Minor 剩余问题，`Ready to merge: Yes`。
+
+### Fresh verification evidence
+
+| Gate | Result |
+|---|---|
+| Root unit/integration tests | 289 passed, 0 failed |
+| Playwright E2E | 2 passed, 0 failed |
+| Root typecheck | passed |
+| Root lint | passed |
+| Root production build | passed |
+| Root format check | passed |
+| `git diff --check` | passed |
+
+### Next action
+
+1. 提交并推送 Task 13：`feat: add traceable sku cost and pricing laboratory`。
+2. 进入 Wave 2 / Task 14：平台能力注册表。

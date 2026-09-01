@@ -24,9 +24,13 @@ import { SquaresFourIcon } from '@phosphor-icons/react/dist/csr/SquaresFour';
 import { StorefrontIcon } from '@phosphor-icons/react/dist/csr/Storefront';
 
 import { FactStatusTable, type FactWorkspaceApi } from '../features/facts/fact-status-table.js';
+import type { CostsApi } from '../features/costs/api.js';
+import { CostProfileEditor } from '../features/costs/cost-profile-editor.js';
 import type { PlatformProfilesApi } from '../features/platform-profile/api.js';
 import { PlatformProfilePanel } from '../features/platform-profile/platform-profile-panel.js';
 import { ProductDashboard } from '../features/products/dashboard.js';
+import type { PricingApi } from '../features/pricing/api.js';
+import { PricingLaboratory } from '../features/pricing/pricing-laboratory.js';
 import { ProductOnboarding } from '../features/products/product-onboarding.js';
 import {
   ProductLibrary,
@@ -37,9 +41,11 @@ import type { SkusApi } from '../features/skus/api.js';
 import { SkuMatrix } from '../features/skus/sku-matrix.js';
 
 export interface WorkbenchDependencies {
+  readonly costsApi: CostsApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
+  readonly pricingApi: PricingApi;
   readonly skusApi: SkusApi;
 }
 
@@ -129,13 +135,16 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
             element={<Unavailable title={sectionTitle(section)} phase="Phase 9" />}
           />
         ))}
-        {['costs', 'pricing'].map((section) => (
-          <Route
-            key={section}
-            path={`products/:productId/${section}`}
-            element={<Unavailable title={sectionTitle(section)} phase="Phase 3" />}
-          />
-        ))}
+        <Route
+          path="products/:productId/costs"
+          element={<CostsPage costsApi={dependencies.costsApi} skusApi={dependencies.skusApi} />}
+        />
+        <Route
+          path="products/:productId/pricing"
+          element={
+            <PricingPage pricingApi={dependencies.pricingApi} skusApi={dependencies.skusApi} />
+          }
+        />
         <Route
           path="products/:productId/promotion"
           element={<Unavailable title="活动模拟" phase="Phase 5" />}
@@ -316,6 +325,34 @@ function PlatformsPage({ api }: { readonly api: PlatformProfilesApi }): React.JS
   return (
     <ProductFeature title="平台档案">
       <PlatformProfilePanel api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function CostsPage({
+  costsApi,
+  skusApi,
+}: {
+  readonly costsApi: CostsApi;
+  readonly skusApi: SkusApi;
+}): React.JSX.Element {
+  return (
+    <ProductFeature title="成本中心">
+      <CostProfileEditor costsApi={costsApi} productId={useProductId()} skusApi={skusApi} />
+    </ProductFeature>
+  );
+}
+
+function PricingPage({
+  pricingApi,
+  skusApi,
+}: {
+  readonly pricingApi: PricingApi;
+  readonly skusApi: SkusApi;
+}): React.JSX.Element {
+  return (
+    <ProductFeature title="价格实验室">
+      <PricingLaboratory pricingApi={pricingApi} productId={useProductId()} skusApi={skusApi} />
     </ProductFeature>
   );
 }

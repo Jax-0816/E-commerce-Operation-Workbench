@@ -32,9 +32,10 @@
 | Phase 2 usability closeout | complete | 总控台、四步建档、事实编辑确认、SKU/平台独立页面已存在 |
 | Task 11：精确金额、费率、舍入、追踪 | complete | `packages/calculation-engine` 已实现并有单元/性质测试 |
 | Task 12：安全公式 AST 与依赖 DAG | complete | 严格 Zod AST、精确求值、资源预算、稳定拓扑与完整循环诊断已通过审查和全仓门禁 |
-| Task 13–29 | pending | 下一项为成本档案与定价实验室 |
+| Task 13：成本档案与定价实验室 | complete | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
+| Task 14–29 | pending | 下一项为平台能力注册表 |
 
-当前主线完成度按原计划 29 个任务计为 `12/29 ≈ 41%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `13/29 ≈ 45%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -111,12 +112,12 @@ calculatePricing(input: PricingInput): PricingResult
 solveBreakEven(input: BreakEvenInput): BreakEvenResult
 ```
 
-- [ ] 测试 SKU 成本项、固定/按件/按订单/按收入基数、估算状态与缺失关键成本。
-- [ ] 测试目标利润、毛利率、净利率、保本点、单调性和完整计算追踪。
-- [ ] 实现纯定价引擎，再实现持久化、用例、API 和 UI；引擎内不得访问数据库。
-- [ ] 验证历史计算不可变，缺失/待确认输入不能显示 `verified`。
-- [ ] 运行引擎性质测试、SQLite 集成测试、UI 测试、构建与 E2E 回归。
-- [ ] 提交 `feat: add traceable sku cost and pricing laboratory`。
+- [x] 测试 SKU 成本项、固定/按件/按订单/按收入基数、估算状态与缺失关键成本。
+- [x] 测试目标利润、毛利率、净利率、保本点、单调性和完整计算追踪。
+- [x] 实现纯定价引擎，再实现持久化、用例、API 和 UI；引擎内不得访问数据库。
+- [x] 验证历史计算不可变，缺失/待确认输入不能显示 `verified`。
+- [x] 运行引擎性质测试、SQLite 集成测试、UI 测试、构建与 E2E 回归。
+- [x] 提交 `feat: add traceable sku cost and pricing laboratory`。
 
 ## Wave 2 — 平台规则与促销闭环
 

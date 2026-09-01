@@ -3,11 +3,14 @@ import type { FastifyInstance } from 'fastify';
 import {
   createFactsApplication,
   createPlatformProfilesApplication,
+  createPricingApplication,
   createProductsApplication,
   createSkusApplication,
 } from '@eaw/application';
 import {
   DrizzleProductRepository,
+  DrizzleCostProfileRepository,
+  DrizzlePricingRepository,
   DrizzleProductFactRepository,
   DrizzlePlatformProfileRepository,
   DrizzleSkuMatrixRepository,
@@ -63,15 +66,24 @@ export async function createProductionApp({
       repository: new DrizzleProductFactRepository(database),
       products: productRepository,
     });
+    const skuRepository = new DrizzleSkuMatrixRepository(database);
     const skus = createSkusApplication({
-      repository: new DrizzleSkuMatrixRepository(database),
+      repository: skuRepository,
       products: productRepository,
     });
     const platformProfiles = createPlatformProfilesApplication({
       repository: new DrizzlePlatformProfileRepository(database),
       products: productRepository,
     });
-    const app = buildApp(createAppContext({ facts, platformProfiles, products, skus, webDistDir }));
+    const pricing = createPricingApplication({
+      costs: new DrizzleCostProfileRepository(database),
+      pricing: new DrizzlePricingRepository(database),
+      products: productRepository,
+      skus: skuRepository,
+    });
+    const app = buildApp(
+      createAppContext({ facts, platformProfiles, pricing, products, skus, webDistDir }),
+    );
     app.addHook('onClose', cleanup);
     return app;
   } catch (error) {

@@ -5,6 +5,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const workspaceRoot = fileURLToPath(new URL('../../../', import.meta.url));
 
 export const internalPackages = Object.freeze([
+  Object.freeze({ name: '@eaw/calculation-engine', command: Object.freeze(['run', 'build']) }),
+  Object.freeze({
+    name: '@eaw/pricing-engine',
+    command: Object.freeze(['exec', 'tsc', '-p', 'tsconfig.json']),
+  }),
   Object.freeze({ name: '@eaw/domain', command: Object.freeze(['run', 'build']) }),
   Object.freeze({ name: '@eaw/shared', command: Object.freeze(['run', 'build']) }),
   Object.freeze({

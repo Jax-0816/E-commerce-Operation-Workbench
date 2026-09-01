@@ -87,6 +87,10 @@ async function render(entry: string) {
     root.render(
       <MemoryRouter initialEntries={[entry]}>
         <WorkbenchRouter
+          costsApi={{
+            get: async () => undefined,
+            save: async () => undefined as never,
+          }}
           factsApi={{
             confirm: async () => undefined as never,
             create: async () => undefined as never,
@@ -104,6 +108,10 @@ async function render(entry: string) {
             archive: async () => undefined,
             create: async () => undefined,
             list: async () => [product],
+          }}
+          pricingApi={{
+            calculate: async () => undefined as never,
+            history: async () => ({ items: [] }),
           }}
           skusApi={{
             configure: async () => ({ dimensions: [], skus: [] }),

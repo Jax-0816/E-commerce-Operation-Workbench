@@ -12,6 +12,8 @@ import { registerProductRoutes } from './routes/products.js';
 import { registerFactRoutes } from './routes/facts.js';
 import { registerSkuRoutes } from './routes/skus.js';
 import { registerPlatformProfileRoutes } from './routes/platform-profiles.js';
+import { registerCostRoutes } from './routes/costs.js';
+import { registerPricingRoutes } from './routes/pricing.js';
 
 export function buildApp(context: AppContext): FastifyInstance {
   const app = Fastify();
@@ -27,6 +29,8 @@ export function buildApp(context: AppContext): FastifyInstance {
   registerFactRoutes(app, context.facts);
   registerSkuRoutes(app, context.skus);
   registerPlatformProfileRoutes(app, context.platformProfiles);
+  registerCostRoutes(app, context.pricing);
+  registerPricingRoutes(app, context.pricing);
 
   if (context.webDistDir !== undefined && existsSync(context.webDistDir)) {
     app.register(fastifyStatic, {
@@ -43,6 +47,8 @@ function errorStatusCode(code: DomainError['code']): number {
   switch (code) {
     case 'VALIDATION_ERROR':
       return 400;
+    case 'CALCULATION_INVALID':
+      return 422;
     case 'NOT_FOUND':
       return 404;
     case 'CONFLICT':

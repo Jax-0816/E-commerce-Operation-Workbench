@@ -949,11 +949,200 @@ tbody small {
 
 .fact-status-table,
 .feature-page [aria-label='SKU 矩阵'],
-.feature-page [aria-label='平台档案'] {
+.feature-page [aria-label='平台档案'],
+.feature-page [aria-label='成本档案'],
+.feature-page [aria-label='价格实验室'] {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 20px;
   background: var(--surface);
+}
+
+.finance-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.finance-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+}
+
+.finance-toolbar label {
+  min-width: 220px;
+}
+
+.revision-badge,
+.pricing-status {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--ink-650);
+  background: #f4f1eb;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cost-item-list {
+  display: grid;
+  gap: 14px;
+}
+
+.cost-item-card {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.cost-item-card legend {
+  padding: 0 7px;
+  font-weight: 750;
+}
+
+.cost-item-card .wide-field {
+  grid-column: 1 / -1;
+}
+
+.checkbox-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+}
+
+.pricing-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.36fr) minmax(0, 0.64fr);
+  gap: 18px;
+}
+
+.pricing-controls,
+.pricing-output,
+.pricing-history {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  background: #fff;
+}
+
+.pricing-controls {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.pricing-controls h2,
+.pricing-output h2,
+.pricing-history h2 {
+  margin: 0 0 5px;
+  font-size: 17px;
+}
+
+.pricing-status {
+  display: inline-block;
+}
+
+.pricing-status-verified {
+  border-color: #9fcbb2;
+  color: #1f6841;
+  background: #e9f5ed;
+}
+
+.pricing-status-warning,
+.pricing-status-incomplete {
+  border-color: #dcc58d;
+  color: #6c4c11;
+  background: var(--warning-soft);
+}
+
+.pricing-status-invalid {
+  border-color: #ddb2b2;
+  color: #722126;
+  background: #fae9e7;
+}
+
+.price-hero {
+  margin: 14px 0;
+  padding: 18px;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  background: var(--ink-950);
+}
+
+.price-hero span {
+  display: block;
+  opacity: 0.72;
+  font-size: 12px;
+}
+
+.price-hero strong {
+  display: block;
+  margin-top: 3px;
+  font-size: clamp(30px, 4vw, 46px);
+}
+
+.financial-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.financial-metrics > div {
+  padding: 12px;
+  background: #fff;
+}
+
+.financial-metrics dt {
+  color: var(--ink-500);
+  font-size: 11px;
+}
+
+.financial-metrics dd {
+  margin: 4px 0 0;
+  font-weight: 750;
+}
+
+.calculation-trace {
+  margin-top: 16px;
+}
+
+.calculation-trace summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.calculation-trace li,
+.pricing-history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+
+.calculation-trace code,
+.pricing-history span {
+  color: var(--ink-650);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .pricing-layout,
+  .cost-item-card {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .finance-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 
 .fact-status-table table,
