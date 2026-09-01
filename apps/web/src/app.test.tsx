@@ -76,7 +76,11 @@ describe('workbench shell', () => {
             list: async () => [],
             update: async () => undefined as never,
           }}
-          platformProfilesApi={{ get: async () => undefined, save: async () => undefined as never }}
+          platformProfilesApi={{
+            get: async () => undefined,
+            getCapabilities: async () => capabilityResponse('pinduoduo'),
+            save: async () => undefined as never,
+          }}
           productsApi={{
             archive: async () => undefined,
             create: async () => undefined,
@@ -111,3 +115,24 @@ describe('workbench shell', () => {
     root.unmount();
   });
 });
+
+function capabilityResponse(platformId: 'pinduoduo' | 'taobao' | 'douyin') {
+  const state = { status: 'supported' as const, available: true, message: '已支持' };
+  return {
+    platformId:
+      platformId === 'taobao'
+        ? ('taobao_tmall' as const)
+        : platformId === 'douyin'
+          ? ('douyin_ecommerce' as const)
+          : ('pinduoduo' as const),
+    profilePlatformId: platformId,
+    displayName: '平台',
+    capabilities: {
+      content: state,
+      creative: state,
+      pricing: state,
+      promotion: state,
+      fee_model: state,
+    },
+  };
+}

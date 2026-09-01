@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 
 import {
   createFactsApplication,
+  createPlatformCapabilitiesApplication,
   createPlatformProfilesApplication,
   createPricingApplication,
   createProductsApplication,
@@ -75,6 +76,7 @@ export async function createProductionApp({
       repository: new DrizzlePlatformProfileRepository(database),
       products: productRepository,
     });
+    const platformCapabilities = createPlatformCapabilitiesApplication();
     const pricing = createPricingApplication({
       costs: new DrizzleCostProfileRepository(database),
       pricing: new DrizzlePricingRepository(database),
@@ -82,7 +84,15 @@ export async function createProductionApp({
       skus: skuRepository,
     });
     const app = buildApp(
-      createAppContext({ facts, platformProfiles, pricing, products, skus, webDistDir }),
+      createAppContext({
+        facts,
+        platformCapabilities,
+        platformProfiles,
+        pricing,
+        products,
+        skus,
+        webDistDir,
+      }),
     );
     app.addHook('onClose', cleanup);
     return app;

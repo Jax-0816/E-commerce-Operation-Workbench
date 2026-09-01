@@ -15,6 +15,7 @@ import {
 
 const expectedPackageNames = [
   '@eaw/calculation-engine',
+  '@eaw/platform-engine',
   '@eaw/pricing-engine',
   '@eaw/domain',
   '@eaw/shared',

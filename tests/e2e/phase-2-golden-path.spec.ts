@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 
 test('creates a product and completes the visible Phase 2 workflow', async ({ page }, testInfo) => {
   const errors: string[] = [];
+  const requests: string[] = [];
+  page.on('request', (request) => requests.push(request.url()));
   page.on('response', (response) => {
     const expectedMissingProfile =
       response.status() === 404 &&
@@ -45,6 +47,7 @@ test('creates a product and completes the visible Phase 2 workflow', async ({ pa
   await expect(page.getByRole('cell', { name: '500ml / 黑色' })).toBeVisible();
 
   await page.getByRole('link', { name: '平台档案' }).click();
+  await expect(page.getByRole('region', { name: '平台能力' })).toContainText('待规则验证');
   await page.getByLabel('类目编码').fill('pdd-100');
   await page.getByLabel('类目名称').fill('杯具');
   await page.getByLabel('平台标题').fill('拼多多保温杯标题');
@@ -52,6 +55,12 @@ test('creates a product and completes the visible Phase 2 workflow', async ({ pa
   await page.getByLabel('当前平台').selectOption('taobao');
   await expect(page).toHaveURL(/platform=taobao/u);
   await expect(page.getByLabel('平台标题')).toHaveValue('');
+  const capabilities = page.getByRole('region', { name: '平台能力' });
+  await expect(capabilities).toContainText('淘宝/天猫能力边界');
+  await expect(capabilities).toContainText('通用能力');
+  await expect(capabilities).toContainText('当前平台此能力尚未完整实现。');
+  await expect(capabilities).not.toContainText('利润');
+  expect(requests.some((url) => /\/api\/v1\/(?:ai|generations?)/u.test(url))).toBe(false);
 
   expect(errors).toEqual([]);
 });

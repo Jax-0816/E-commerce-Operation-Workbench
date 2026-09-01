@@ -19,41 +19,41 @@
 
 ## Test Results
 
-| Test | Input | Expected | Actual | Status |
-|---|---|---|---|---|
-| Web + calculation focused tests | Vitest, source paths | Pass | 14 files / 38 tests passed | ✓ |
-| Database workspace tests | Vitest from `packages/database` | Pass | 5 files / 20 tests passed | ✓ |
-| Workspace tests | Vitest from `packages/workspace` | Pass | 3 files / 52 tests passed | ✓ |
-| Domain tests | Vitest from `packages/domain` | Pass | 8 files / 28 tests passed | ✓ |
-| Application tests | Vitest from `packages/application` | Pass | 4 files / 10 tests passed | ✓ |
-| Server tests | Vitest from `apps/server` | Pass | 9 files / 19 tests passed | ✓ |
-| API health | `GET /api/v1/health` | status ok | `{status:"ok", appVersion:"0.1.0"}` | ✓ |
-| Web smoke | `GET http://127.0.0.1:5173/` | HTTP 200 | HTTP 200 | ✓ |
-| Full root quality gate | root `pnpm test` | Run under pinned toolchain | blocked by Node/pnpm mismatch before authoritative test run | blocked |
+| Test                            | Input                              | Expected                   | Actual                                                      | Status  |
+| ------------------------------- | ---------------------------------- | -------------------------- | ----------------------------------------------------------- | ------- |
+| Web + calculation focused tests | Vitest, source paths               | Pass                       | 14 files / 38 tests passed                                  | ✓       |
+| Database workspace tests        | Vitest from `packages/database`    | Pass                       | 5 files / 20 tests passed                                   | ✓       |
+| Workspace tests                 | Vitest from `packages/workspace`   | Pass                       | 3 files / 52 tests passed                                   | ✓       |
+| Domain tests                    | Vitest from `packages/domain`      | Pass                       | 8 files / 28 tests passed                                   | ✓       |
+| Application tests               | Vitest from `packages/application` | Pass                       | 4 files / 10 tests passed                                   | ✓       |
+| Server tests                    | Vitest from `apps/server`          | Pass                       | 9 files / 19 tests passed                                   | ✓       |
+| API health                      | `GET /api/v1/health`               | status ok                  | `{status:"ok", appVersion:"0.1.0"}`                         | ✓       |
+| Web smoke                       | `GET http://127.0.0.1:5173/`       | HTTP 200                   | HTTP 200                                                    | ✓       |
+| Full root quality gate          | root `pnpm test`                   | Run under pinned toolchain | blocked by Node/pnpm mismatch before authoritative test run | blocked |
 
 ## Error Log
 
-| Timestamp | Error | Attempt | Resolution |
-|---|---|---:|---|
-| 2026-08-31 | graphify current-progress query returned no matching nodes | 1 | Used code, commits and test evidence instead |
-| 2026-08-31 | root `pnpm test` attempted dependency preparation with unsupported local toolchain | 1 | Avoided dependency mutation; recorded environment prerequisite |
-| 2026-08-31 | root-level raw Vitest produced cwd/dist false failures | 1 | Re-ran key workspaces from correct directories; all passed |
-| 2026-08-31 | 精确 Node 可运行，但版本检查脚本在 PATH 中找不到临时 pnpm | 1 | 在 `/private/tmp/eaw-toolchain-bin` 创建仅本次任务使用的 pnpm wrapper |
-| 2026-08-31 | 锁文件供应链校验在沙箱内 DNS 失败 | 1 | 使用获批网络完成 `pnpm install --lockfile-only` |
-| 2026-08-31 | `pnpm install --offline` 缺少供应链元数据并中止重建 | 1 | 改用联网 `pnpm install --frozen-lockfile`，依赖目录恢复完成 |
-| 2026-08-31 | 单个 apply_patch 同时删除并新增同一路径被拒绝 | 1 | 分成删除与新增两个 apply_patch 调用，未丢失内容 |
-| 2026-08-31 | 更新长期记录时补丁上下文定位错误 | 1 | 重新读取文件并按实际段落位置更新 |
-| 2026-08-31 | calculation-engine typecheck 报 3 处 `unknown` 传入 `Set<string>.has` | 1 | 根因是 Record 属性窄化未跨别名保留；在验证函数入口将 `node.type` 收窄为局部 string |
-| 2026-08-31 | 新增公式文件未满足 Prettier 格式检查 | 1 | 对 4 个公式实现文件运行仓库 Prettier，随后根级 `format:check` 通过 |
-| 2026-08-31 | 一次聚焦测试误用了系统 pnpm 11.19.0，触发依赖状态检查 | 1 | 未允许其修改依赖；立即改用临时精确 Node 24.19.0 / pnpm 11.22.0 工具链 |
-| 2026-08-31 | GitHub HTTPS 推送两次收到空响应，随后 443 连接超时 | 2 | IPv4 探测成功；使用单次 `http.curloptResolve` 定向后成功推送，不改系统设置 |
-| 2026-08-31 | GitHub SSH 连接可达但无可用公钥，`gh` 旧令牌失效 | 1 | 未创建新凭据；改用已有 Git credential + IPv4 HTTPS 完成推送 |
-| 2026-08-31 | 新增 pricing-engine 后冻结锁文件因缺少 workspace importer 拒绝安装 | 1 | 先离线更新 lockfile-only，再恢复冻结安装 |
-| 2026-08-31 | 离线冻结安装缺少供应链元数据并中止 | 1 | 使用获批网络从本地内容仓恢复 299 个锁定包，未改变版本 |
-| 2026-08-31 | pricing-engine 测试 helper 返回宽泛联合导致 2 处 TS2322 | 1 | 将 helper 返回类型收窄为 `AmountCostItem`，实现代码无需修改 |
-| 2026-08-31 | Prettier 无法推断 SQL parser | 1 | 不用 Prettier 改写迁移；以真实 SQLite 迁移测试和 `git diff --check` 验证 |
-| 2026-08-31 | application 测试中的过期修订用例缺少 `now` 字段 | 1 | 修正测试输入后确认领域实现通过 |
-| 2026-08-31 | server 首轮 GREEN 暴露 fake 未保存状态及 prepare-internal 预期过期 | 1 | 修正有状态 fake，并把 calculation/pricing engine 加入依赖顺序契约 |
+| Timestamp  | Error                                                                              | Attempt | Resolution                                                                         |
+| ---------- | ---------------------------------------------------------------------------------- | ------: | ---------------------------------------------------------------------------------- |
+| 2026-08-31 | graphify current-progress query returned no matching nodes                         |       1 | Used code, commits and test evidence instead                                       |
+| 2026-08-31 | root `pnpm test` attempted dependency preparation with unsupported local toolchain |       1 | Avoided dependency mutation; recorded environment prerequisite                     |
+| 2026-08-31 | root-level raw Vitest produced cwd/dist false failures                             |       1 | Re-ran key workspaces from correct directories; all passed                         |
+| 2026-08-31 | 精确 Node 可运行，但版本检查脚本在 PATH 中找不到临时 pnpm                          |       1 | 在 `/private/tmp/eaw-toolchain-bin` 创建仅本次任务使用的 pnpm wrapper              |
+| 2026-08-31 | 锁文件供应链校验在沙箱内 DNS 失败                                                  |       1 | 使用获批网络完成 `pnpm install --lockfile-only`                                    |
+| 2026-08-31 | `pnpm install --offline` 缺少供应链元数据并中止重建                                |       1 | 改用联网 `pnpm install --frozen-lockfile`，依赖目录恢复完成                        |
+| 2026-08-31 | 单个 apply_patch 同时删除并新增同一路径被拒绝                                      |       1 | 分成删除与新增两个 apply_patch 调用，未丢失内容                                    |
+| 2026-08-31 | 更新长期记录时补丁上下文定位错误                                                   |       1 | 重新读取文件并按实际段落位置更新                                                   |
+| 2026-08-31 | calculation-engine typecheck 报 3 处 `unknown` 传入 `Set<string>.has`              |       1 | 根因是 Record 属性窄化未跨别名保留；在验证函数入口将 `node.type` 收窄为局部 string |
+| 2026-08-31 | 新增公式文件未满足 Prettier 格式检查                                               |       1 | 对 4 个公式实现文件运行仓库 Prettier，随后根级 `format:check` 通过                 |
+| 2026-08-31 | 一次聚焦测试误用了系统 pnpm 11.19.0，触发依赖状态检查                              |       1 | 未允许其修改依赖；立即改用临时精确 Node 24.19.0 / pnpm 11.22.0 工具链              |
+| 2026-08-31 | GitHub HTTPS 推送两次收到空响应，随后 443 连接超时                                 |       2 | IPv4 探测成功；使用单次 `http.curloptResolve` 定向后成功推送，不改系统设置         |
+| 2026-08-31 | GitHub SSH 连接可达但无可用公钥，`gh` 旧令牌失效                                   |       1 | 未创建新凭据；改用已有 Git credential + IPv4 HTTPS 完成推送                        |
+| 2026-08-31 | 新增 pricing-engine 后冻结锁文件因缺少 workspace importer 拒绝安装                 |       1 | 先离线更新 lockfile-only，再恢复冻结安装                                           |
+| 2026-08-31 | 离线冻结安装缺少供应链元数据并中止                                                 |       1 | 使用获批网络从本地内容仓恢复 299 个锁定包，未改变版本                              |
+| 2026-08-31 | pricing-engine 测试 helper 返回宽泛联合导致 2 处 TS2322                            |       1 | 将 helper 返回类型收窄为 `AmountCostItem`，实现代码无需修改                        |
+| 2026-08-31 | Prettier 无法推断 SQL parser                                                       |       1 | 不用 Prettier 改写迁移；以真实 SQLite 迁移测试和 `git diff --check` 验证           |
+| 2026-08-31 | application 测试中的过期修订用例缺少 `now` 字段                                    |       1 | 修正测试输入后确认领域实现通过                                                     |
+| 2026-08-31 | server 首轮 GREEN 暴露 fake 未保存状态及 prepare-internal 预期过期                 |       1 | 修正有状态 fake，并把 calculation/pricing engine 加入依赖顺序契约                  |
 
 ## Next Action
 
@@ -63,13 +63,13 @@
 
 ## 5-Question Reboot Check
 
-| Question | Answer |
-|---|---|
-| Where am I? | Wave 1 / Task 12 已完成，下一项是 Task 13 |
-| Where am I going? | 完成 master plan 的 Task 12–29 |
-| What's the goal? | 交付完整、可追踪、可恢复的本地电商 AI 运营工作台 v0.1 |
-| What have I learned? | 见 `findings.md` |
-| What have I done? | 已完成进度核验和长期计划落盘 |
+| Question             | Answer                                                |
+| -------------------- | ----------------------------------------------------- |
+| Where am I?          | Wave 1 / Task 12 已完成，下一项是 Task 13             |
+| Where am I going?    | 完成 master plan 的 Task 12–29                        |
+| What's the goal?     | 交付完整、可追踪、可恢复的本地电商 AI 运营工作台 v0.1 |
+| What have I learned? | 见 `findings.md`                                      |
+| What have I done?    | 已完成进度核验和长期计划落盘                          |
 
 ## Session: 2026-08-31 — Wave 1 / Task 12
 
@@ -136,17 +136,48 @@
 
 ### Fresh verification evidence
 
-| Gate | Result |
-|---|---|
+| Gate                        | Result               |
+| --------------------------- | -------------------- |
 | Root unit/integration tests | 289 passed, 0 failed |
-| Playwright E2E | 2 passed, 0 failed |
-| Root typecheck | passed |
-| Root lint | passed |
-| Root production build | passed |
-| Root format check | passed |
-| `git diff --check` | passed |
+| Playwright E2E              | 2 passed, 0 failed   |
+| Root typecheck              | passed               |
+| Root lint                   | passed               |
+| Root production build       | passed               |
+| Root format check           | passed               |
+| `git diff --check`          | passed               |
 
 ### Next action
 
 1. 提交并推送 Task 13：`feat: add traceable sku cost and pricing laboratory`。
 2. 进入 Wave 2 / Task 14：平台能力注册表。
+
+## Session: 2026-09-01 — Wave 2 / Task 14
+
+### Truthful platform capability registry
+
+- **Status:** complete
+- Actions taken:
+  - 新增 `@eaw/platform-engine`，实现三平台规范注册表、旧 profile ID 别名映射、纯 context builder、固定能力矩阵、`requireCapability` 和通用内容 adapter。
+  - 拼多多促销/费率在规则快照上线前固定为 `requires_rule_pack`；淘宝/抖音促销不可用、费率不完整，定价仅为通用能力。
+  - 新增 application use case、按平台判别的 Zod 合同和 `/api/v1/platforms/:platformId/capabilities`，规范 ID 与别名均可访问。
+  - 平台档案页增加真实能力卡，切换平台只加载档案与能力 API，不触发 AI，未支持能力不显示伪利润。
+  - 档案保存使用身份和 sequence 双重竞态保护，覆盖切走和 ABA 切回后的过期保存，身份变化时立即解锁新页面。
+  - 独立审查发现自证规则完整、合同可伪造、canonical API 不可访问和保存 ABA 问题；均补回归测试并修复，最终复核为无剩余问题、`Ready to merge: Yes`。
+  - GitHub 同步核对显示本地与 `origin/codex/phase-0` 为 0 ahead / 0 behind，`origin/main` 无新提交需合并。
+
+### Fresh verification evidence
+
+| Gate                        | Result               |
+| --------------------------- | -------------------- |
+| Root unit/integration tests | 306 passed, 0 failed |
+| Playwright E2E              | 2 passed, 0 failed   |
+| Root typecheck              | passed               |
+| Root lint                   | passed               |
+| Root production build       | passed               |
+| Root format check           | passed               |
+| `git diff --check`          | passed               |
+
+### Next action
+
+1. 提交并推送 Task 14：`feat: add truthful platform capability registry`。
+2. 进入 Wave 2 / Task 15：版本化规则包、冲突解析与不可变快照。

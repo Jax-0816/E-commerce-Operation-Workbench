@@ -27,6 +27,15 @@ export {
   UpdateFactInputSchema,
 } from './facts.js';
 export {
+  CapabilityStateSchema,
+  CapabilityStatusSchema,
+  PlatformCapabilitiesParamsSchema,
+  PlatformCapabilitiesQuerySchema,
+  PlatformCapabilitiesResponseSchema,
+  PlatformIdentifierSchema,
+} from './platform-capabilities.js';
+export type { PlatformCapabilitiesResponse } from './platform-capabilities.js';
+export {
   CalculatePricingInputSchema,
   CostPricingParamsSchema,
   CostProfileItemSchema,

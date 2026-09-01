@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import {
   PLATFORM_IDS,
   type PlatformId,
+  type PlatformCapabilitiesResponse,
   type PlatformProfileResponse,
   type PlatformProfilesApi,
   type SavePlatformProfileInput,
@@ -27,7 +28,18 @@ export function PlatformProfilePanel({
   const [profile, setProfile] = useState<PlatformProfileResponse>();
   const [fields, setFields] = useState<SavePlatformProfileInput>(emptyFields);
   const [loading, setLoading] = useState(true);
+  const [capabilities, setCapabilities] = useState<PlatformCapabilitiesResponse>();
+  const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const saveSequence = useRef(0);
+  const currentIdentity = useRef({ platformId, productId });
+  currentIdentity.current = { platformId, productId };
+
+  useEffect(() => {
+    saveSequence.current += 1;
+    setSaving(false);
+  }, [platformId, productId]);
 
   useEffect(() => {
     let active = true;
@@ -47,22 +59,46 @@ export function PlatformProfilePanel({
     };
   }, [api, platformId, productId]);
 
+  useEffect(() => {
+    let active = true;
+    setCapabilities(undefined);
+    setCapabilitiesLoading(true);
+    void api
+      .getCapabilities(platformId)
+      .then((loaded) => active && setCapabilities(loaded))
+      .catch((caught) => active && setError(errorMessage(caught)))
+      .finally(() => active && setCapabilitiesLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [api, platformId]);
+
   const switchPlatform = (next: PlatformId): void => {
     const nextParameters = new URLSearchParams(searchParameters);
     nextParameters.set('platform', next);
     setSearchParameters(nextParameters);
   };
   const save = async (): Promise<void> => {
+    const sequence = ++saveSequence.current;
+    const identity = { platformId, productId };
     try {
       setError('');
+      setSaving(true);
       const saved = await api.save(productId, platformId, {
         ...fields,
         ...(profile === undefined ? {} : { expectedUpdatedAt: profile.updatedAt }),
       });
+      if (!isCurrentSave(sequence, identity, saveSequence.current, currentIdentity.current)) return;
       setProfile(saved);
       setFields(fieldsFromProfile(saved));
     } catch (caught) {
-      setError(errorMessage(caught));
+      if (isCurrentSave(sequence, identity, saveSequence.current, currentIdentity.current)) {
+        setError(errorMessage(caught));
+      }
+    } finally {
+      if (isCurrentSave(sequence, identity, saveSequence.current, currentIdentity.current)) {
+        setSaving(false);
+      }
     }
   };
 
@@ -82,6 +118,7 @@ export function PlatformProfilePanel({
           ))}
         </select>
       </label>
+      <CapabilitySummary loading={capabilitiesLoading} response={capabilities} />
       {loading ? <p>正在加载平台档案…</p> : null}
       {error ? <p role="alert">{error}</p> : null}
       {!loading ? (
@@ -101,13 +138,78 @@ export function PlatformProfilePanel({
             value={fields.title}
             onChange={(title) => setFields({ ...fields, title })}
           />
-          <button aria-label="保存平台档案" type="button" onClick={() => void save()}>
-            保存平台档案
+          <button
+            aria-label="保存平台档案"
+            type="button"
+            disabled={saving}
+            onClick={() => void save()}
+          >
+            {saving ? '正在保存…' : '保存平台档案'}
           </button>
         </form>
       ) : null}
     </section>
   );
+}
+
+function isCurrentSave(
+  sequence: number,
+  identity: { readonly platformId: PlatformId; readonly productId: string },
+  currentSequence: number,
+  currentIdentity: { readonly platformId: PlatformId; readonly productId: string },
+): boolean {
+  return (
+    sequence === currentSequence &&
+    identity.platformId === currentIdentity.platformId &&
+    identity.productId === currentIdentity.productId
+  );
+}
+
+const CAPABILITY_NAMES = {
+  content: '内容',
+  creative: '创意',
+  pricing: '定价',
+  promotion: '促销',
+  fee_model: '费率模型',
+} as const;
+
+function CapabilitySummary({
+  loading,
+  response,
+}: {
+  readonly loading: boolean;
+  readonly response: PlatformCapabilitiesResponse | undefined;
+}): React.JSX.Element {
+  if (loading) return <p>正在核对平台能力…</p>;
+  if (!response) return <p role="status">平台能力状态暂时不可用。</p>;
+  return (
+    <section aria-label="平台能力" className="capability-summary">
+      <h2>{response.displayName}能力边界</h2>
+      <dl>
+        {Object.entries(response.capabilities).map(([capability, state]) => (
+          <div key={capability} data-available={state.available}>
+            <dt>{CAPABILITY_NAMES[capability as keyof typeof CAPABILITY_NAMES]}</dt>
+            <dd>
+              <strong>{capabilityStatusLabel(state.status)}</strong>
+              <span>{state.message}</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+function capabilityStatusLabel(
+  status: PlatformCapabilitiesResponse['capabilities']['content']['status'],
+): string {
+  return {
+    supported: '已支持',
+    generic: '通用能力',
+    requires_rule_pack: '待规则验证',
+    incomplete: '不完整',
+    unavailable: '不可用',
+  }[status];
 }
 
 function Field({

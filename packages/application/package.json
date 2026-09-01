@@ -12,17 +12,19 @@
   "scripts": {
     "prepare:domain": "pnpm --filter @eaw/domain run build",
     "prepare:pricing": "pnpm --filter @eaw/calculation-engine run build && pnpm --filter @eaw/pricing-engine run build",
-    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing",
+    "prepare:platform": "pnpm --filter @eaw/platform-engine run build",
+    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing",
+    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform",
     "test": "vitest run src",
-    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing",
+    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
   "dependencies": {
     "@eaw/calculation-engine": "workspace:*",
     "@eaw/domain": "workspace:*",
-    "@eaw/pricing-engine": "workspace:*"
+    "@eaw/pricing-engine": "workspace:*",
+    "@eaw/platform-engine": "workspace:*"
   }
 }

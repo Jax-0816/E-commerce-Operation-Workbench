@@ -102,6 +102,7 @@ async function render(entry: string) {
           }}
           platformProfilesApi={{
             get: async () => undefined,
+            getCapabilities: async () => capabilityResponse('douyin'),
             save: async () => undefined as never,
           }}
           productsApi={{
@@ -122,6 +123,27 @@ async function render(entry: string) {
       </MemoryRouter>,
     );
   });
+
+  function capabilityResponse(platformId: 'pinduoduo' | 'taobao' | 'douyin') {
+    const state = { status: 'supported' as const, available: true, message: '已支持' };
+    return {
+      platformId:
+        platformId === 'taobao'
+          ? ('taobao_tmall' as const)
+          : platformId === 'douyin'
+            ? ('douyin_ecommerce' as const)
+            : ('pinduoduo' as const),
+      profilePlatformId: platformId,
+      displayName: '平台',
+      capabilities: {
+        content: state,
+        creative: state,
+        pricing: state,
+        promotion: state,
+        fee_model: state,
+      },
+    };
+  }
   return { container, factProductIds, root };
 }
 

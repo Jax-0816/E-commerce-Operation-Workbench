@@ -24,18 +24,19 @@
 
 ## Current Baseline — 2026-08-31
 
-| 原计划任务 | 状态 | 当前证据 |
-|---|---|---|
-| Task 1–3：仓库、应用壳、质量基线 | complete | 工作区、Vite/Fastify、本地健康检查、CI/ADR 已存在 |
-| Task 4–6：ID/错误、工作区安全、SQLite | complete | 领域 ID、错误清洗、锁/密钥端口、迁移与集成测试已存在 |
-| Task 7–10：商品、事实、SKU、平台档案 | complete | 完整 API/UI 路由与 Phase 2 浏览器黄金路径已存在 |
-| Phase 2 usability closeout | complete | 总控台、四步建档、事实编辑确认、SKU/平台独立页面已存在 |
-| Task 11：精确金额、费率、舍入、追踪 | complete | `packages/calculation-engine` 已实现并有单元/性质测试 |
-| Task 12：安全公式 AST 与依赖 DAG | complete | 严格 Zod AST、精确求值、资源预算、稳定拓扑与完整循环诊断已通过审查和全仓门禁 |
-| Task 13：成本档案与定价实验室 | complete | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
-| Task 14–29 | pending | 下一项为平台能力注册表 |
+| 原计划任务                            | 状态     | 当前证据                                                                                  |
+| ------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
+| Task 1–3：仓库、应用壳、质量基线      | complete | 工作区、Vite/Fastify、本地健康检查、CI/ADR 已存在                                         |
+| Task 4–6：ID/错误、工作区安全、SQLite | complete | 领域 ID、错误清洗、锁/密钥端口、迁移与集成测试已存在                                      |
+| Task 7–10：商品、事实、SKU、平台档案  | complete | 完整 API/UI 路由与 Phase 2 浏览器黄金路径已存在                                           |
+| Phase 2 usability closeout            | complete | 总控台、四步建档、事实编辑确认、SKU/平台独立页面已存在                                    |
+| Task 11：精确金额、费率、舍入、追踪   | complete | `packages/calculation-engine` 已实现并有单元/性质测试                                     |
+| Task 12：安全公式 AST 与依赖 DAG      | complete | 严格 Zod AST、精确求值、资源预算、稳定拓扑与完整循环诊断已通过审查和全仓门禁              |
+| Task 13：成本档案与定价实验室         | complete | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
+| Task 14：平台能力注册表               | complete | 规范 ID/别名、不可伪造能力合同、通用 adapter、API/UI 和真实页面验收已完成                 |
+| Task 15–29                            | pending  | 下一项为版本化规则包与不可变快照                                                          |
 
-当前主线完成度按原计划 29 个任务计为 `13/29 ≈ 45%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `14/29 ≈ 48%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -75,6 +76,7 @@ pnpm exec playwright test
 ### Task 12: Safe formula AST and dependency DAG
 
 **Files:**
+
 - Create: `packages/calculation-engine/src/formula/ast.ts`
 - Create: `packages/calculation-engine/src/formula/schema.ts`
 - Create: `packages/calculation-engine/src/formula/evaluator.ts`
@@ -98,6 +100,7 @@ orderDependencies(definitions: readonly FormulaDefinition[]): readonly FormulaDe
 ### Task 13: Cost profiles and pricing laboratory
 
 **Files:**
+
 - Create: `packages/pricing-engine/src/{types,calculate,solver,index}.ts`
 - Create: cost profile domain/repository/application/contracts/database vertical slice
 - Create: 下一条不可变迁移 `migrations/0005_*.sql`
@@ -130,10 +133,10 @@ getCapabilities(context: PlatformContext): PlatformCapabilities
 requireCapability(context: PlatformContext, capability: Capability): void
 ```
 
-- [ ] 测试拼多多、淘宝、抖音能力矩阵和显式 unavailable 错误。
-- [ ] 实现注册表、上下文和通用内容适配器；切换平台不得触发 AI 调用。
-- [ ] 用真实页面验证能力提示、URL 状态和无伪结果行为。
-- [ ] 提交 `feat: add truthful platform capability registry`。
+- [x] 测试拼多多、淘宝、抖音能力矩阵和显式 unavailable 错误。
+- [x] 实现注册表、上下文和通用内容适配器；切换平台不得触发 AI 调用。
+- [x] 用真实页面验证能力提示、URL 状态和无伪结果行为。
+- [x] 提交 `feat: add truthful platform capability registry`。
 
 ### Task 15: Versioned rule packs and immutable snapshots
 

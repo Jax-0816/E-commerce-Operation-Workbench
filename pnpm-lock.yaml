@@ -118,6 +118,9 @@ importers:
       '@eaw/domain':
         specifier: workspace:*
         version: link:../domain
+      '@eaw/platform-engine':
+        specifier: workspace:*
+        version: link:../platform-engine
       '@eaw/pricing-engine':
         specifier: workspace:*
         version: link:../pricing-engine
@@ -154,6 +157,12 @@ importers:
         version: 0.31.10
 
   packages/domain: {}
+
+  packages/platform-engine:
+    dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
 
   packages/pricing-engine:
     dependencies:

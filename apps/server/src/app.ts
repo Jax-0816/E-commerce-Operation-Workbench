@@ -12,6 +12,7 @@ import { registerProductRoutes } from './routes/products.js';
 import { registerFactRoutes } from './routes/facts.js';
 import { registerSkuRoutes } from './routes/skus.js';
 import { registerPlatformProfileRoutes } from './routes/platform-profiles.js';
+import { registerPlatformCapabilitiesRoute } from './routes/platform-capabilities.js';
 import { registerCostRoutes } from './routes/costs.js';
 import { registerPricingRoutes } from './routes/pricing.js';
 
@@ -29,6 +30,7 @@ export function buildApp(context: AppContext): FastifyInstance {
   registerFactRoutes(app, context.facts);
   registerSkuRoutes(app, context.skus);
   registerPlatformProfileRoutes(app, context.platformProfiles);
+  registerPlatformCapabilitiesRoute(app, context.platformCapabilities);
   registerCostRoutes(app, context.pricing);
   registerPricingRoutes(app, context.pricing);
 

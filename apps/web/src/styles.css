@@ -779,6 +779,58 @@ tbody small {
   color: var(--warning);
 }
 
+.capability-summary {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper-warm);
+}
+
+.capability-summary h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.capability-summary dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.capability-summary dl > div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+}
+
+.capability-summary dt,
+.capability-summary dd,
+.capability-summary dd span {
+  display: block;
+}
+
+.capability-summary dd {
+  margin: 5px 0 0;
+}
+
+.capability-summary dd strong {
+  color: var(--success);
+  font-size: 12px;
+}
+
+.capability-summary [data-available='false'] dd strong {
+  color: var(--warning);
+}
+
+.capability-summary dd span {
+  margin-top: 4px;
+  color: var(--ink-650);
+  font-size: 11px;
+}
+
 .ledger-skeleton {
   display: grid;
   gap: 12px;
