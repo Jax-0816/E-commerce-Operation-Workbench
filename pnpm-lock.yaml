@@ -170,6 +170,15 @@ importers:
         specifier: workspace:*
         version: link:../calculation-engine
 
+  packages/rule-engine:
+    dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
   packages/shared: {}
 
   packages/workspace:

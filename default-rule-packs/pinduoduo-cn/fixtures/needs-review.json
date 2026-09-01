@@ -1,0 +1,8 @@
+{
+  "expectedStatus": "incomplete",
+  "expectedIssueKeys": [
+    "platform.commission_rate",
+    "platform.service_fee_rate",
+    "promotion.platform_subsidy_attribution"
+  ]
+}

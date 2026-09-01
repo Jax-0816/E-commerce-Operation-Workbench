@@ -1,0 +1,56 @@
+[
+  {
+    "key": "platform.commission_rate",
+    "type": "financial",
+    "scope": { "level": "platform" },
+    "provenance": {
+      "url": "https://www.yangkeduo.com/home/help/",
+      "title": "拼多多帮助中心与规则中心",
+      "type": "official"
+    },
+    "verifiedAt": "2026-09-01T00:00:00.000Z",
+    "effectiveFrom": "2026-09-01T00:00:00.000Z",
+    "expiresAt": null,
+    "status": "needs_review",
+    "summary": "平台通用佣金费率尚无可稳定应用于全类目的公开值。",
+    "implementationNote": "在商家后台或官方类目规则完成人工核验前，禁止确定性费率计算。",
+    "config": { "rateBasisPoints": null },
+    "impact": "financial"
+  },
+  {
+    "key": "platform.service_fee_rate",
+    "type": "financial",
+    "scope": { "level": "platform" },
+    "provenance": {
+      "url": "https://www.yangkeduo.com/home/help/",
+      "title": "拼多多帮助中心与规则中心",
+      "type": "official"
+    },
+    "verifiedAt": "2026-09-01T00:00:00.000Z",
+    "effectiveFrom": "2026-09-01T00:00:00.000Z",
+    "expiresAt": null,
+    "status": "needs_review",
+    "summary": "技术服务费可能随业务场景、活动和类目变化。",
+    "implementationNote": "仅保存待确认空值，不引用历史活动费率作为平台通用费率。",
+    "config": { "rateBasisPoints": null },
+    "impact": "financial"
+  },
+  {
+    "key": "promotion.platform_subsidy_attribution",
+    "type": "promotion",
+    "scope": { "level": "platform" },
+    "provenance": {
+      "url": "https://www.yangkeduo.com/home/help/",
+      "title": "拼多多帮助中心与规则中心",
+      "type": "official"
+    },
+    "verifiedAt": "2026-09-01T00:00:00.000Z",
+    "effectiveFrom": "2026-09-01T00:00:00.000Z",
+    "expiresAt": null,
+    "status": "needs_review",
+    "summary": "平台补贴与商家承担金额必须按具体活动规则分开归因。",
+    "implementationNote": "未绑定已验证活动规则时，促销结果必须为 incomplete。",
+    "config": { "defaultBearer": null },
+    "impact": "financial"
+  }
+]

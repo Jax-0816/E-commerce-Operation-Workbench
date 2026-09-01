@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1",
+  "platformId": "pinduoduo",
+  "region": "CN",
+  "version": "2026.9.0",
+  "publisher": "Ecommerce AI Workbench",
+  "verifiedAt": "2026-09-01T00:00:00.000Z",
+  "minimumAppVersion": "0.1.0",
+  "checksum": "ee3c8e79b4dbfc02852ef88d6f00773ed942df59ce92e216930d46e8dccc01ee",
+  "description": "拼多多中国大陆默认规则包；未能从公开权威来源稳定确认的财务费率均保持待审核。"
+}

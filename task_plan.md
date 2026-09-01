@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 2 — Task 15：版本化规则包与快照（next）
+Wave 2 — Task 15：版本化规则包与快照（in_progress）
 
 ## Phases
 
@@ -27,7 +27,7 @@ Wave 2 — Task 15：版本化规则包与快照（next）
 ### Wave 2: 平台规则与促销闭环
 
 - [x] Task 14：平台能力注册表（complete）
-- [ ] Task 15：版本化规则包与快照
+- [ ] Task 15：版本化规则包与快照（in_progress）
 - [ ] Task 16：确定性促销引擎
 - [ ] Task 17：拼多多模拟器与批算
 - **Status:** in_progress

@@ -44,6 +44,9 @@
 - Task 15 规则快照落地前，拼多多 `promotion` 和 `fee_model` 始终为 `requires_rule_pack`；平台 context 不接受调用方自证能力完整。
 - 能力响应合同必须按平台 ID 判别并锁定允许状态；仅校验 `status` 与 `available` 自洽不足以防止跨平台伪造支持。
 - 平台档案保存除身份校验外还需递增 sequence；身份 ABA 切换会让仅比较 product/platform 的旧请求重新匹配。
+- 规则包 checksum 覆盖排除 `manifest.checksum` 后的 manifest 与 rules 规范 JSON；对象键排序、数组顺序保留，从而让 JSON 文本排版不影响完整性校验。
+- ZIP 规则包在解压前校验中央目录、路径、扩展名、加密/压缩方法、条目数与解压大小，解压后再校验 CRC32；不接受可执行文件或 traversal 路径。
+- 拼多多公开帮助/规则入口无法支撑一个可稳定覆盖全类目与活动的通用费率；默认包仅保存官方来源和 `null + needs_review`，不把历史活动费率冒充当前通用规则。
 
 ## Technical Decisions
 

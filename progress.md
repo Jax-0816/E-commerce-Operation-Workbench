@@ -181,3 +181,30 @@
 
 1. 提交并推送 Task 14：`feat: add truthful platform capability registry`。
 2. 进入 Wave 2 / Task 15：版本化规则包、冲突解析与不可变快照。
+
+## Session: 2026-09-01 — Wave 2 / Task 15
+
+### Versioned inert rule packs
+
+- **Status:** in_progress
+- Actions taken:
+  - 将 Task 15 标记为 in_progress，重读规则系统设计、ADR 0006 与旧实施计划接口。
+  - 新增 `@eaw/rule-engine` 包与 RED→GREEN 测试，当前 10 项通过：JSON/ZIP 加载、checksum、应用版本兼容、可执行数据/文件拒绝、ZIP traversal、解析优先级、同级冲突、过期/待审核状态、不可变快照与 diff。
+  - 实现稳定 canonical JSON/SHA-256、有边界 ZIP 中央目录解析/CRC32 校验、惰性 Zod schema、规则 resolver、snapshot hash 和稳定 diff。
+  - 添加 `default-rule-packs/pinduoduo-cn` 的 manifest/rules/schema/fixture/changelog；佣金、技术服务费和补贴归因不猜值，全部为 `null + needs_review`。
+  - 将 `validate:rule-packs` 从占位命令替换为真实构建/校验脚本；当前输出 `validated pinduoduo-cn@2026.9.0 (incomplete)`。
+
+### Current verification evidence
+
+| Gate                       | Result              |
+| -------------------------- | ------------------- |
+| rule-engine tests          | 10 passed, 0 failed |
+| rule-engine typecheck      | passed              |
+| rule-engine lint           | passed              |
+| `pnpm validate:rule-packs` | passed              |
+
+### Next action
+
+1. 增加规则包/覆盖/快照 SQLite 迁移、仓储与真实数据库集成测试。
+2. 接入 application/contracts/routes 和规则包导入、激活、diff UI。
+3. 完成安全边界复核、全仓门禁、独立审查后再提交 Task 15。
