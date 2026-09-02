@@ -154,6 +154,9 @@ importers:
       '@eaw/domain':
         specifier: workspace:*
         version: link:../domain
+      '@eaw/prompt-engine':
+        specifier: workspace:*
+        version: link:../prompt-engine
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine
@@ -190,6 +193,12 @@ importers:
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine
+
+  packages/prompt-engine:
+    dependencies:
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
 
   packages/rule-engine:
     dependencies:

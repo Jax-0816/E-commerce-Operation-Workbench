@@ -16,7 +16,8 @@
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "pnpm -r --if-present run lint",
     "format:check": "prettier --check --ignore-unknown package.json pnpm-workspace.yaml tsconfig.base.json eslint.config.js .prettierrc.json .editorconfig .env.example packages",
-    "validate:rule-packs": "pnpm --filter @eaw/rule-engine run build && node scripts/validate-rule-packs.mjs"
+    "validate:rule-packs": "pnpm --filter @eaw/rule-engine run build && node scripts/validate-rule-packs.mjs",
+    "validate:prompts": "pnpm --filter @eaw/prompt-engine run build && node scripts/validate-prompts.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

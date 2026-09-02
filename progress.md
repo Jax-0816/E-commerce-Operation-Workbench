@@ -271,3 +271,34 @@
 
 1. 提交并推送 Task 17：`feat: add pinduoduo promotion simulator`。
 2. 进入 Wave 3 / Task 18：版本化、可防注入的提示词编译器。
+
+## Session: 2026-09-02 — Wave 3 / Task 18
+
+### Versioned injection-safe prompt compiler
+
+- **Status:** complete
+- Actions taken:
+  - 新增 `@eaw/prompt-engine`，实现严格版本化模板、JSON Schema 输出约束、规范 JSON 与 SHA-256 哈希。
+  - 按 `SYSTEM → RULE → CONFIRMED_FACT → APPROVED_AI_ASSET → EXTERNAL_UNTRUSTED` 稳定排序；SYSTEM 上下文进入 system message，其余上下文保持独立分段。
+  - 外部内容使用内容哈希派生的边界，并明确声明其仅为数据、不可覆盖任务/规则/输出格式；上下文 key 去重且受 32 层、10,000 节点和 200,000 字节预算保护。
+  - 模板哈希、依赖哈希和输入哈希分别计算，规则或事实 revision 变化不会改写模板版本，但一定改变依赖/输入身份。
+  - 新增首个竞品分析默认模板、`validate:prompts` 严格校验命令与稳定编译快照；扫描确认 route/UI 没有散落业务提示词。
+  - 新增 `0008_add-prompts.sql` 与真实 SQLite 仓储，模板版本不可更新/删除，启用指针独立切换，读取时复算哈希并 fail closed。
+
+### Fresh verification evidence
+
+| Gate                        | Result               |
+| --------------------------- | -------------------- |
+| Prompt engine tests         | 5 passed, 0 failed   |
+| Prompt repository tests     | 2 passed, 0 failed   |
+| Root unit/integration tests | 361 passed, 0 failed |
+| Root typecheck              | passed               |
+| Root lint                   | passed               |
+| Root production build       | passed               |
+| `pnpm validate:prompts`     | passed               |
+| `pnpm validate:rule-packs`  | passed               |
+
+### Next action
+
+1. 提交并推送 Task 18：`feat: add versioned injection-safe prompt compiler`。
+2. 进入 Wave 3 / Task 19：provider 抽象、DeepSeek、结构化验证、重试与脱敏不可变日志。

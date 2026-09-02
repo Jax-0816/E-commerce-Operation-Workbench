@@ -14,6 +14,10 @@ export { DrizzleCostProfileRepository } from './repositories/cost-profile-reposi
 export { DrizzlePricingRepository } from './repositories/pricing-repository.js';
 export { DrizzlePromotionRepository } from './repositories/promotion-repository.js';
 export {
+  DrizzlePromptRepository,
+  type StoredPromptTemplate,
+} from './repositories/prompt-repository.js';
+export {
   DrizzleRuleRepository,
   type StoredRuleOverride,
   type StoredRulePack,

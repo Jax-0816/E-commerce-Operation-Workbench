@@ -37,9 +37,10 @@
 | Task 15：版本化规则包与快照           | complete | 安全 JSON/ZIP 加载、优先级/冲突、SQLite 版本与不可变快照、API/UI 和真实门禁均已完成       |
 | Task 16：确定性促销引擎               | complete | 组件规范化、资金归因、解释轨迹、全局最低活动价求解与确定性不变量测试均已完成              |
 | Task 17：拼多多模拟器与批算           | complete | PDD adapter、规则/成本快照、批算仓储、API/UI 与真实运行时持久化验收均已完成               |
-| Task 18–29                            | pending  | 下一项为版本化提示词编译器                                                                |
+| Task 18：版本化提示词编译器           | complete | 五级信任分层、防注入边界、三类哈希、默认模板和不可变 SQLite 仓储均通过全仓门禁            |
+| Task 19–29                            | pending  | 下一项为 DeepSeek provider、结构化验证与脱敏日志                                          |
 
-当前主线完成度按原计划 29 个任务计为 `17/29 ≈ 59%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `18/29 ≈ 62%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -191,10 +192,10 @@ solveCampaignPrice(input: CampaignPriceInput): CampaignPriceResult
 compilePrompt(input: PromptCompileInput): CompiledPrompt
 ```
 
-- [ ] 测试确定性编译、五级信任边界、外部不可信内容分隔、规则与提示分离、依赖哈希变化。
-- [ ] 实现版本化模板和 JSON Schema 输出约束；禁止业务提示词散落在 route/UI。
-- [ ] 添加默认模板校验命令与快照测试。
-- [ ] 提交 `feat: add versioned injection-safe prompt compiler`。
+- [x] 测试确定性编译、五级信任边界、外部不可信内容分隔、规则与提示分离、依赖哈希变化。
+- [x] 实现版本化模板和 JSON Schema 输出约束；禁止业务提示词散落在 route/UI。
+- [x] 添加默认模板校验命令与快照测试。
+- [x] 提交 `feat: add versioned injection-safe prompt compiler`。
 
 ### Task 19: Provider abstraction, DeepSeek, validation and logs
 

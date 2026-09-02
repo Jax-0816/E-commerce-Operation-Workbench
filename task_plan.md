@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 3 — Task 18：版本化提示词编译器（in_progress）
+Wave 3 — Task 19：DeepSeek provider、结构化验证与日志（in_progress）
 
 ## Phases
 
@@ -34,9 +34,9 @@ Wave 3 — Task 18：版本化提示词编译器（in_progress）
 
 ### Wave 3: AI 安全基础设施
 
-- [ ] Task 18：版本化提示词编译器（in_progress）
-- [ ] Task 19：DeepSeek provider、结构化验证与日志
-- **Status:** pending
+- [x] Task 18：版本化提示词编译器（complete）
+- [ ] Task 19：DeepSeek provider、结构化验证与日志（in_progress）
+- **Status:** in_progress
 
 ### Wave 4: 竞品、策略与内容资产
 
