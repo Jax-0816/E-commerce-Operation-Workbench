@@ -27,6 +27,21 @@ export {
   UpdateFactInputSchema,
 } from './facts.js';
 export {
+  CalculatePromotionBatchInputSchema,
+  CreatePromotionScenarioInputSchema,
+  ProductPromotionParamsSchema,
+  PromotionBatchResponseSchema,
+  PromotionComponentSchema,
+  PromotionHistoryResponseSchema,
+  PromotionScenarioParamsSchema,
+  PromotionScenarioResponseSchema,
+} from './promotions.js';
+export type {
+  CreatePromotionScenarioInput,
+  PromotionBatchResponse,
+  PromotionHistoryResponse,
+} from './promotions.js';
+export {
   ImportRulePackInputSchema,
   RuleDefinitionResponseSchema,
   RulePackDiffQuerySchema,

@@ -91,6 +91,20 @@ export interface PricingResult {
   readonly trace: readonly PricingTraceStep[];
 }
 
+export interface PricingCashFlowInput {
+  readonly cashFlows: Readonly<Record<PercentageBase, Money>>;
+  readonly costs: readonly CostItem[];
+  readonly currency: string;
+  readonly rounding: RoundingPolicy;
+}
+
+export interface PricingCashFlowResult {
+  readonly inputSummary: PricingResult['inputSummary'];
+  readonly outcome: PricingOutcome;
+  readonly status: PricingResult['status'];
+  readonly trace: readonly PricingTraceStep[];
+}
+
 export interface BreakEvenResult {
   readonly outcome: PricingOutcome;
   readonly previousOutcome: PricingOutcome | null;

@@ -38,3 +38,10 @@ export type {
   RuleRepositoryPort,
   RuleSnapshotRecord,
 } from './rules/index.js';
+export { createPromotionApplication } from './promotions/index.js';
+export type {
+  CalculatePromotionRowInput,
+  CreatePromotionScenarioInput,
+  PromotionApplication,
+  PromotionBatchRow,
+} from './promotions/index.js';

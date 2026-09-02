@@ -241,3 +241,33 @@
 
 1. 提交并推送 Task 16：`feat: add deterministic promotion money flow`。
 2. 进入 Wave 2 / Task 17：拼多多模拟器、持久化批算与可解释 UI。
+
+## Session: 2026-09-02 — Wave 2 / Task 17
+
+### Pinduoduo simulator and immutable batch history
+
+- **Status:** complete
+- Actions taken:
+  - 增加拼多多规则 adapter，将活动价、消费者应付、确认收入、商家实收、平台承担和费用基数接入同一确定性资金流。
+  - 默认规则包仍为 `needs_review` 时保留可验证钱流，但明确返回不完整状态，利润、利润率和保本点均为 `null`，不猜佣金或技术服务费。
+  - 新增不可变促销场景/结果领域模型、SQLite 迁移与事务批量追加仓储；每条结果固定 SKU、成本 revision、规则快照/hash、引擎版本、输入和 trace。
+  - 新增 application use case、严格合同和创建场景/批算/历史 API，生产组合根使用真实成本、规则与促销仓储。
+  - 将促销占位页替换为两栏模拟器，支持多 SKU、商家/平台券、结果指标、风险状态、计算过程与不可变历史。
+  - 使用真实临时工作区完成生产运行时重启持久化验证，并在应用内打开实际促销页面完成 DOM 验收。
+
+### Fresh verification evidence
+
+| Gate                               | Result               |
+| ---------------------------------- | -------------------- |
+| Promotion/PDD focused tests        | 12 passed, 0 failed  |
+| Production runtime slice           | 6 passed, 0 failed   |
+| Root unit/integration tests        | 354 passed, 0 failed |
+| Root typecheck                     | passed               |
+| Root lint                          | passed               |
+| Root production build              | passed               |
+| Browser DOM/API/history acceptance | passed               |
+
+### Next action
+
+1. 提交并推送 Task 17：`feat: add pinduoduo promotion simulator`。
+2. 进入 Wave 3 / Task 18：版本化、可防注入的提示词编译器。

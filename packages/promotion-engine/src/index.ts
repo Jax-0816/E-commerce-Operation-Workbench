@@ -1,5 +1,11 @@
 export { calculatePromotion } from './calculate.js';
 export { MAX_CAMPAIGN_SEARCH_WIDTH, solveCampaignPrice } from './solver.js';
+export { simulatePinduoduo } from './pinduoduo.js';
+export type {
+  PinduoduoSimulationInput,
+  PinduoduoSimulationResult,
+  PinduoduoSimulationTraceStep,
+} from './pinduoduo.js';
 export type {
   CampaignPriceInput,
   CampaignPriceResult,

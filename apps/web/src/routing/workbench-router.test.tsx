@@ -84,6 +84,14 @@ describe('routed workbench', () => {
     expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
+
+  it('opens the implemented Pinduoduo promotion simulator', async () => {
+    const { container, root } = await render(`/products/${product.id}/promotion`);
+
+    expect(container.querySelector('h1')?.textContent).toBe('拼多多活动模拟');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
 });
 
 async function render(entry: string) {
@@ -121,6 +129,11 @@ async function render(entry: string) {
           }}
           pricingApi={{
             calculate: async () => undefined as never,
+            history: async () => ({ items: [] }),
+          }}
+          promotionApi={{
+            calculate: async () => undefined as never,
+            create: async () => undefined as never,
             history: async () => ({ items: [] }),
           }}
           rulesApi={{

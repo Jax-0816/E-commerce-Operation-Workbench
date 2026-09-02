@@ -41,6 +41,8 @@ import type { SkusApi } from '../features/skus/api.js';
 import { SkuMatrix } from '../features/skus/sku-matrix.js';
 import type { RulePacksApi } from '../features/rules/api.js';
 import { RulePackManager } from '../features/rules/rule-pack-manager.js';
+import type { PromotionApi } from '../features/promotion/api.js';
+import { PromotionSimulator } from '../features/promotion/promotion-simulator.js';
 
 export interface WorkbenchDependencies {
   readonly costsApi: CostsApi;
@@ -48,6 +50,7 @@ export interface WorkbenchDependencies {
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
   readonly pricingApi: PricingApi;
+  readonly promotionApi: PromotionApi;
   readonly rulesApi: RulePacksApi;
   readonly skusApi: SkusApi;
 }
@@ -150,7 +153,12 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
         />
         <Route
           path="products/:productId/promotion"
-          element={<Unavailable title="活动模拟" phase="Phase 5" />}
+          element={
+            <PromotionPage
+              promotionApi={dependencies.promotionApi}
+              skusApi={dependencies.skusApi}
+            />
+          }
         />
         <Route
           path="products/:productId/plans"
@@ -364,6 +372,24 @@ function PricingPage({
   return (
     <ProductFeature title="价格实验室">
       <PricingLaboratory pricingApi={pricingApi} productId={useProductId()} skusApi={skusApi} />
+    </ProductFeature>
+  );
+}
+
+function PromotionPage({
+  promotionApi,
+  skusApi,
+}: {
+  readonly promotionApi: PromotionApi;
+  readonly skusApi: SkusApi;
+}): React.JSX.Element {
+  return (
+    <ProductFeature title="拼多多活动模拟">
+      <PromotionSimulator
+        productId={useProductId()}
+        promotionApi={promotionApi}
+        skusApi={skusApi}
+      />
     </ProductFeature>
   );
 }

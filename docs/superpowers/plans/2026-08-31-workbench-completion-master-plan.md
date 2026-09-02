@@ -36,9 +36,10 @@
 | Task 14：平台能力注册表               | complete | 规范 ID/别名、不可伪造能力合同、通用 adapter、API/UI 和真实页面验收已完成                 |
 | Task 15：版本化规则包与快照           | complete | 安全 JSON/ZIP 加载、优先级/冲突、SQLite 版本与不可变快照、API/UI 和真实门禁均已完成       |
 | Task 16：确定性促销引擎               | complete | 组件规范化、资金归因、解释轨迹、全局最低活动价求解与确定性不变量测试均已完成              |
-| Task 17–29                            | pending  | 下一项为拼多多模拟器与批算                                                                |
+| Task 17：拼多多模拟器与批算           | complete | PDD adapter、规则/成本快照、批算仓储、API/UI 与真实运行时持久化验收均已完成               |
+| Task 18–29                            | pending  | 下一项为版本化提示词编译器                                                                |
 
-当前主线完成度按原计划 29 个任务计为 `16/29 ≈ 55%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `17/29 ≈ 59%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -174,11 +175,11 @@ solveCampaignPrice(input: CampaignPriceInput): CampaignPriceResult
 
 **Files:** 拼多多 adapter、promotion schema/repository/use cases/contracts/routes、`apps/web/src/features/promotion/*`。
 
-- [ ] 测试完整/不完整场景、多 SKU 批算、快照与追踪持久化。
-- [ ] 实现两栏模拟器、目标价求解、风险状态与可展开计算过程。
-- [ ] 明确回答到手价、商家实收、平台承担、利润、利润率和保本点。
-- [ ] 运行垂直切片、UI、批量与构建测试。
-- [ ] 提交 `feat: add pinduoduo promotion simulator`。
+- [x] 测试完整/不完整场景、多 SKU 批算、快照与追踪持久化。
+- [x] 实现两栏模拟器、目标价求解、风险状态与可展开计算过程。
+- [x] 明确回答到手价、商家实收、平台承担、利润、利润率和保本点。
+- [x] 运行垂直切片、UI、批量与构建测试。
+- [x] 提交 `feat: add pinduoduo promotion simulator`。
 
 ## Wave 3 — AI 安全基础设施
 

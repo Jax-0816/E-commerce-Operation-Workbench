@@ -5,6 +5,7 @@ import {
   createPlatformCapabilitiesApplication,
   createPlatformProfilesApplication,
   createPricingApplication,
+  createPromotionApplication,
   createProductsApplication,
   createRulePacksApplication,
   createSkusApplication,
@@ -13,6 +14,7 @@ import {
   DrizzleProductRepository,
   DrizzleCostProfileRepository,
   DrizzlePricingRepository,
+  DrizzlePromotionRepository,
   DrizzleProductFactRepository,
   DrizzlePlatformProfileRepository,
   DrizzleSkuMatrixRepository,
@@ -81,15 +83,25 @@ export async function createProductionApp({
       products: productRepository,
     });
     const platformCapabilities = createPlatformCapabilitiesApplication();
+    const costRepository = new DrizzleCostProfileRepository(database);
+    const ruleRepository = new DrizzleRuleRepository(database);
     const pricing = createPricingApplication({
-      costs: new DrizzleCostProfileRepository(database),
+      costs: costRepository,
       pricing: new DrizzlePricingRepository(database),
       products: productRepository,
       skus: skuRepository,
     });
     const rules = createRulePacksApplication({
-      repository: new DrizzleRuleRepository(database),
+      repository: ruleRepository,
       appVersion: APP_VERSION,
+      idFactory: createUuidV7,
+    });
+    const promotions = createPromotionApplication({
+      costs: costRepository,
+      promotions: new DrizzlePromotionRepository(database),
+      products: productRepository,
+      rules,
+      skus: skuRepository,
       idFactory: createUuidV7,
     });
     const app = buildApp(
@@ -98,6 +110,7 @@ export async function createProductionApp({
         platformCapabilities,
         platformProfiles,
         pricing,
+        promotions,
         products,
         rules,
         skus,

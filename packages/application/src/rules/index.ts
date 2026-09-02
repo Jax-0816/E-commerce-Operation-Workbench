@@ -62,6 +62,7 @@ export interface RulePacksApplication {
     readonly region: string;
     readonly categoryCode: string | null;
   }): Promise<RuleSnapshotRecord>;
+  getSnapshot(id: string): Promise<RuleSnapshotRecord>;
   diff(beforeId: string, afterId: string): Promise<RuleSnapshotDiff>;
 }
 
@@ -112,6 +113,13 @@ export function createRulePacksApplication({
         snapshot,
         createdAt: now(),
       });
+    },
+    async getSnapshot(id) {
+      const snapshot = await repository.findSnapshot(required(id));
+      if (snapshot === undefined) {
+        throw new DomainError('NOT_FOUND', 'Rule snapshot was not found.');
+      }
+      return snapshot;
     },
     async diff(beforeId, afterId) {
       const [before, after] = await Promise.all([

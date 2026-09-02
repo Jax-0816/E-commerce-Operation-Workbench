@@ -16,6 +16,8 @@ import type {
   CostItem,
   PercentageBase,
   PercentageCostItem,
+  PricingCashFlowInput,
+  PricingCashFlowResult,
   PricingInput,
   PricingOutcome,
   PricingResult,
@@ -24,11 +26,7 @@ import type {
 
 export function calculatePricing(input: PricingInput): PricingResult {
   validatePricingInput(input);
-  const inputSummary = {
-    confirmed: input.costs.filter(({ status }) => status === 'confirmed').map(({ key }) => key),
-    estimated: input.costs.filter(({ status }) => status === 'estimated').map(({ key }) => key),
-    missing: input.costs.filter(({ status }) => status === 'missing').map(({ key }) => key),
-  };
+  const inputSummary = summarizeInputs(input.costs);
   const hasCriticalMissing = input.costs.some(
     ({ critical, status }) => critical && status === 'missing',
   );
@@ -79,39 +77,87 @@ export function evaluatePricingCandidate(
     recognized_revenue: price,
     merchant_settlement: price,
   };
+  return evaluateCashFlows(input.costs, input.currency, input.rounding, cashFlows);
+}
+
+export function evaluatePricingCashFlows(input: PricingCashFlowInput): PricingCashFlowResult {
+  validatePricingInput({
+    costs: input.costs,
+    currency: input.currency,
+    goal: { type: 'break_even' },
+    rounding: input.rounding,
+    search: { minimumMinorUnits: 0n, maximumMinorUnits: 0n },
+  });
+  for (const money of Object.values(input.cashFlows)) {
+    if (money.currency !== input.currency) {
+      throw new TypeError('Pricing cash-flow currency is invalid.');
+    }
+  }
+  const inputSummary = summarizeInputs(input.costs);
+  const status =
+    inputSummary.missing.length > 0
+      ? 'incomplete'
+      : inputSummary.estimated.length > 0
+        ? 'warning'
+        : 'verified';
+  return {
+    status,
+    inputSummary,
+    ...evaluateCashFlows(input.costs, input.currency, input.rounding, input.cashFlows),
+  };
+}
+
+function evaluateCashFlows(
+  costs: readonly CostItem[],
+  currency: string,
+  rounding: RoundingPolicy,
+  cashFlows: CandidateCashFlows,
+): { readonly outcome: PricingOutcome; readonly trace: readonly PricingTraceStep[] } {
   let costOfGoods = 0n;
   let operatingCosts = 0n;
   const trace: PricingTraceStep[] = [];
   const evaluatedCosts: { readonly cost: CostItem; readonly amount: Money }[] = [];
 
-  for (const cost of input.costs) {
-    const amount = evaluateCost(cost, input, cashFlows);
+  const evaluationInput = {
+    costs,
+    currency,
+    goal: { type: 'break_even' },
+    rounding,
+    search: { minimumMinorUnits: 0n, maximumMinorUnits: 0n },
+  } as const;
+  for (const cost of costs) {
+    const amount = evaluateCost(cost, evaluationInput, cashFlows);
     evaluatedCosts.push({ cost, amount });
     if (cost.classification === 'cost_of_goods') costOfGoods += amount.minorUnits;
     else operatingCosts += amount.minorUnits;
     trace.push({
       operation: `cost:${cost.key}`,
-      inputs: costTraceInputs(cost, input, cashFlows),
+      inputs: costTraceInputs(cost, evaluationInput, cashFlows),
       outputMinorUnits: amount.minorUnits,
     });
   }
 
   const totalCosts = costOfGoods + operatingCosts;
-  const grossProfit = priceMinorUnits - costOfGoods;
-  const netProfit = priceMinorUnits - totalCosts;
+  const grossProfit = cashFlows.recognized_revenue.minorUnits - costOfGoods;
+  const netProfit = cashFlows.recognized_revenue.minorUnits - totalCosts;
   const outcome: PricingOutcome = {
     campaignPrice: cashFlows.campaign_price,
     consumerPayment: cashFlows.consumer_payment,
     recognizedRevenue: cashFlows.recognized_revenue,
     merchantSettlement: cashFlows.merchant_settlement,
-    costOfGoods: moneyFromMinorUnits(costOfGoods, input.currency),
-    operatingCosts: moneyFromMinorUnits(operatingCosts, input.currency),
-    totalCosts: moneyFromMinorUnits(totalCosts, input.currency),
-    grossProfit: { currency: input.currency, minorUnits: grossProfit },
-    netProfit: { currency: input.currency, minorUnits: netProfit },
+    costOfGoods: moneyFromMinorUnits(costOfGoods, currency),
+    operatingCosts: moneyFromMinorUnits(operatingCosts, currency),
+    totalCosts: moneyFromMinorUnits(totalCosts, currency),
+    grossProfit: { currency, minorUnits: grossProfit },
+    netProfit: { currency, minorUnits: netProfit },
     grossMarginBasisPoints:
-      priceMinorUnits === 0n ? null : (grossProfit * 10_000n) / priceMinorUnits,
-    netMarginBasisPoints: priceMinorUnits === 0n ? null : (netProfit * 10_000n) / priceMinorUnits,
+      cashFlows.recognized_revenue.minorUnits === 0n
+        ? null
+        : (grossProfit * 10_000n) / cashFlows.recognized_revenue.minorUnits,
+    netMarginBasisPoints:
+      cashFlows.recognized_revenue.minorUnits === 0n
+        ? null
+        : (netProfit * 10_000n) / cashFlows.recognized_revenue.minorUnits,
   };
   trace.push(
     {
@@ -127,7 +173,7 @@ export function evaluatePricingCandidate(
     {
       operation: 'pricing:gross-profit',
       inputs: {
-        recognizedRevenueMinorUnits: priceMinorUnits.toString(),
+        recognizedRevenueMinorUnits: cashFlows.recognized_revenue.minorUnits.toString(),
         costOfGoodsMinorUnits: costOfGoods.toString(),
       },
       outputMinorUnits: grossProfit,
@@ -136,7 +182,7 @@ export function evaluatePricingCandidate(
   trace.push({
     operation: 'pricing:net-profit',
     inputs: {
-      recognizedRevenueMinorUnits: String(priceMinorUnits),
+      recognizedRevenueMinorUnits: cashFlows.recognized_revenue.minorUnits.toString(),
       totalCostsMinorUnits: String(totalCosts),
     },
     outputMinorUnits: netProfit,
@@ -146,7 +192,7 @@ export function evaluatePricingCandidate(
       operation: 'pricing:gross-margin-basis-points',
       inputs: {
         grossProfitMinorUnits: grossProfit.toString(),
-        recognizedRevenueMinorUnits: priceMinorUnits.toString(),
+        recognizedRevenueMinorUnits: cashFlows.recognized_revenue.minorUnits.toString(),
       },
       outputMinorUnits: outcome.grossMarginBasisPoints ?? 0n,
     },
@@ -154,12 +200,20 @@ export function evaluatePricingCandidate(
       operation: 'pricing:net-margin-basis-points',
       inputs: {
         netProfitMinorUnits: netProfit.toString(),
-        recognizedRevenueMinorUnits: priceMinorUnits.toString(),
+        recognizedRevenueMinorUnits: cashFlows.recognized_revenue.minorUnits.toString(),
       },
       outputMinorUnits: outcome.netMarginBasisPoints ?? 0n,
     },
   );
   return { outcome, trace };
+}
+
+function summarizeInputs(costs: readonly CostItem[]): PricingResult['inputSummary'] {
+  return {
+    confirmed: costs.filter(({ status }) => status === 'confirmed').map(({ key }) => key),
+    estimated: costs.filter(({ status }) => status === 'estimated').map(({ key }) => key),
+    missing: costs.filter(({ status }) => status === 'missing').map(({ key }) => key),
+  };
 }
 
 export type CandidateCashFlows = Readonly<Record<PercentageBase, Money>>;

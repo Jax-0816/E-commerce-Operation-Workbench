@@ -10,16 +10,18 @@
     }
   },
   "scripts": {
-    "prepare:calculation": "pnpm --filter @eaw/calculation-engine run build",
-    "prebuild": "pnpm run prepare:calculation",
+    "prepare:dependencies": "pnpm --filter @eaw/calculation-engine run build && pnpm --filter @eaw/pricing-engine run build && pnpm --filter @eaw/rule-engine run build",
+    "prebuild": "pnpm run prepare:dependencies",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:calculation",
+    "pretest": "pnpm run prepare:dependencies",
     "test": "vitest run src",
-    "pretypecheck": "pnpm run prepare:calculation",
+    "pretypecheck": "pnpm run prepare:dependencies",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
   "dependencies": {
-    "@eaw/calculation-engine": "workspace:*"
+    "@eaw/calculation-engine": "workspace:*",
+    "@eaw/pricing-engine": "workspace:*",
+    "@eaw/rule-engine": "workspace:*"
   }
 }

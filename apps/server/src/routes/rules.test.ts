@@ -32,6 +32,9 @@ describe('rule pack HTTP contract', () => {
       async createSnapshot() {
         throw new Error('not used');
       },
+      async getSnapshot() {
+        throw new Error('not used');
+      },
     };
     const app = buildApp(createAppContext({ rules: application }));
 
@@ -79,6 +82,9 @@ describe('rule pack HTTP contract', () => {
       list: async () => [],
       diff: async () => ({ added: [], removed: [], changed: [] }),
       createSnapshot: async () => {
+        throw new Error('not used');
+      },
+      getSnapshot: async () => {
         throw new Error('not used');
       },
     } satisfies RulePacksApplication;

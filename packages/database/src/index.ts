@@ -12,6 +12,7 @@ export { DrizzleSkuMatrixRepository } from './repositories/sku-matrix-repository
 export { DrizzlePlatformProfileRepository } from './repositories/platform-profile-repository.js';
 export { DrizzleCostProfileRepository } from './repositories/cost-profile-repository.js';
 export { DrizzlePricingRepository } from './repositories/pricing-repository.js';
+export { DrizzlePromotionRepository } from './repositories/promotion-repository.js';
 export {
   DrizzleRuleRepository,
   type StoredRuleOverride,

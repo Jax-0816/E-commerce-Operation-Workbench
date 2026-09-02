@@ -4,6 +4,7 @@ import type {
   PlatformCapabilitiesApplication,
   PlatformProfilesApplication,
   PricingApplication,
+  PromotionApplication,
   ProductsApplication,
   RulePacksApplication,
   SkusApplication,
@@ -17,6 +18,7 @@ export interface AppContextOptions {
   readonly platformProfiles?: PlatformProfilesApplication;
   readonly platformCapabilities?: PlatformCapabilitiesApplication;
   readonly pricing?: PricingApplication;
+  readonly promotions?: PromotionApplication;
   readonly rules?: RulePacksApplication;
 }
 
@@ -29,6 +31,7 @@ export interface AppContext {
   readonly platformProfiles?: PlatformProfilesApplication;
   readonly platformCapabilities?: PlatformCapabilitiesApplication;
   readonly pricing?: PricingApplication;
+  readonly promotions?: PromotionApplication;
   readonly rules?: RulePacksApplication;
 }
 
@@ -42,6 +45,7 @@ export function createAppContext(options: AppContextOptions): AppContext {
     platformProfiles: options.platformProfiles,
     platformCapabilities: options.platformCapabilities,
     pricing: options.pricing,
+    promotions: options.promotions,
     rules: options.rules,
   };
 }

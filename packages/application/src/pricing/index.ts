@@ -130,7 +130,7 @@ export function createPricingApplication(dependencies: {
       if (!profile) throw new DomainError('VALIDATION_ERROR', 'SKU cost profile is missing.');
       const pricingInput = {
         currency: profile.currency,
-        costs: profile.items.map((item) => toEngineCost(item, profile.currency)),
+        costs: profileToEngineCosts(profile),
         goal: input.goal,
         rounding: roundingPolicy('half-up'),
         search: input.search,
@@ -170,6 +170,10 @@ export function createPricingApplication(dependencies: {
       );
     },
   };
+}
+
+export function profileToEngineCosts(profile: CostProfile): readonly CostItem[] {
+  return profile.items.map((item) => toEngineCost(item, profile.currency));
 }
 
 function toEngineCost(item: CostProfileItem, currency: string): CostItem {

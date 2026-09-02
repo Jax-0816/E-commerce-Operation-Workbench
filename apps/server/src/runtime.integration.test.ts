@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -210,6 +210,125 @@ describe('production app composition', () => {
       items: [
         { platformId: 'pinduoduo', categoryCode: 'pdd-100', title: '拼多多标题' },
         { platformId: 'taobao', categoryCode: 'tb-200', title: '淘宝标题' },
+      ],
+    });
+    await restarted.close();
+  });
+
+  it('persists a truthful Pinduoduo batch against the exact active rule snapshot', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-promotion-')));
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const product = await first.inject({
+      method: 'POST',
+      url: '/api/v1/products',
+      payload: { name: '活动模拟保温杯' },
+    });
+    const productId = product.json().id as string;
+    const configured = await first.inject({
+      method: 'PUT',
+      url: `/api/v1/products/${productId}/skus`,
+      payload: { dimensions: [{ name: '颜色', values: ['红'] }] },
+    });
+    const skuId = configured.json().skus[0].id as string;
+    expect(
+      (
+        await first.inject({
+          method: 'PUT',
+          url: `/api/v1/products/${productId}/skus/${skuId}/cost-profile`,
+          payload: {
+            currency: 'CNY',
+            items: [
+              {
+                key: 'materials',
+                label: '材料',
+                kind: 'per_unit',
+                classification: 'cost_of_goods',
+                critical: true,
+                status: 'confirmed',
+                amountMinorUnits: '5000',
+                allocationUnits: null,
+                unitsPerOrder: null,
+                rateBasisPoints: null,
+                percentageBase: null,
+                formula: null,
+              },
+            ],
+          },
+        })
+      ).statusCode,
+    ).toBe(200);
+    const packDirectory = fileURLToPath(
+      new URL('../../../default-rule-packs/pinduoduo-cn/', import.meta.url),
+    );
+    const manifest = JSON.parse(await readFile(join(packDirectory, 'manifest.json'), 'utf8'));
+    const rules = JSON.parse(await readFile(join(packDirectory, 'rules.json'), 'utf8'));
+    const imported = await first.inject({
+      method: 'POST',
+      url: '/api/v1/rule-packs/import',
+      payload: { format: 'json', contents: JSON.stringify({ manifest, rules }) },
+    });
+    expect(imported.statusCode).toBe(201);
+    expect(
+      (
+        await first.inject({
+          method: 'POST',
+          url: `/api/v1/rule-packs/${imported.json().id as string}/activate`,
+        })
+      ).statusCode,
+    ).toBe(200);
+    const scenario = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/promotion-scenarios`,
+      payload: {
+        name: '默认规则真实性检查',
+        region: 'CN',
+        categoryCode: null,
+        minimumMinorUnits: '5000',
+        maximumMinorUnits: '12000',
+        components: [
+          {
+            key: 'merchant-coupon',
+            kind: 'coupon',
+            funder: 'merchant',
+            priority: 1,
+            threshold: { currency: 'CNY', minorUnits: '0' },
+            amount: { currency: 'CNY', minorUnits: '1000' },
+          },
+        ],
+      },
+    });
+    expect(scenario.statusCode).toBe(200);
+    const calculated = await first.inject({
+      method: 'POST',
+      url: `/api/v1/promotion-scenarios/${scenario.json().id as string}/calculate`,
+      payload: {
+        rows: [{ skuId, campaignPrice: { currency: 'CNY', minorUnits: '10000' } }],
+      },
+    });
+    expect(calculated.statusCode).toBe(200);
+    expect(calculated.json()).toMatchObject({
+      rows: [
+        {
+          skuId,
+          status: 'incomplete',
+          simulation: { financial: null, breakEvenCampaignPrice: null },
+        },
+      ],
+    });
+    const snapshotHash = calculated.json().scenario.ruleSnapshotHash as string;
+    expect(calculated.json().rows[0].simulation.ruleSnapshotHash).toBe(snapshotHash);
+    await first.close();
+
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const history = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/products/${productId}/promotion-scenarios`,
+    });
+    expect(history.statusCode).toBe(200);
+    expect(history.json()).toMatchObject({
+      items: [
+        { scenario: { ruleSnapshotHash: snapshotHash }, results: [{ status: 'incomplete' }] },
       ],
     });
     await restarted.close();

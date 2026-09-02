@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { moneyFromMinorUnits, roundingPolicy, type FormulaNode } from '@eaw/calculation-engine';
 
-import { calculatePricing, evaluatePercentageCost } from './calculate.js';
+import { calculatePricing, evaluatePercentageCost, evaluatePricingCashFlows } from './calculate.js';
 import type {
   AmountCostItem,
   CostItem,
@@ -211,6 +211,29 @@ describe('calculatePricing', () => {
         expected[base],
       );
     }
+  });
+
+  it('evaluates costs and profit from promotion cash flows without collapsing platform subsidy', () => {
+    const result = evaluatePricingCashFlows({
+      costs: [
+        amountCost('materials', 'per_unit', 5_000, 'cost_of_goods'),
+        percentageCost('commission', 1_000, 'merchant_settlement', 'operating'),
+      ],
+      currency: 'CNY',
+      rounding: roundingPolicy('half-up'),
+      cashFlows: {
+        campaign_price: moneyFromMinorUnits(10_000n),
+        consumer_payment: moneyFromMinorUnits(8_000n),
+        recognized_revenue: moneyFromMinorUnits(10_000n),
+        merchant_settlement: moneyFromMinorUnits(10_000n),
+      },
+    });
+
+    expect(result.outcome.consumerPayment.minorUnits).toBe(8_000n);
+    expect(result.outcome.merchantSettlement.minorUnits).toBe(10_000n);
+    expect(result.outcome.operatingCosts.minorUnits).toBe(1_000n);
+    expect(result.outcome.netProfit.minorUnits).toBe(4_000n);
+    expect(result.outcome.netMarginBasisPoints).toBe(4_000n);
   });
 
   it('rejects a maximum-range complex formula before synchronous work can exhaust the server', () => {

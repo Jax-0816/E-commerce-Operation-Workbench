@@ -124,6 +124,9 @@ importers:
       '@eaw/pricing-engine':
         specifier: workspace:*
         version: link:../pricing-engine
+      '@eaw/promotion-engine':
+        specifier: workspace:*
+        version: link:../promotion-engine
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine
@@ -181,6 +184,12 @@ importers:
       '@eaw/calculation-engine':
         specifier: workspace:*
         version: link:../calculation-engine
+      '@eaw/pricing-engine':
+        specifier: workspace:*
+        version: link:../pricing-engine
+      '@eaw/rule-engine':
+        specifier: workspace:*
+        version: link:../rule-engine
 
   packages/rule-engine:
     dependencies:
