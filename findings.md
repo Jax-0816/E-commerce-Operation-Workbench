@@ -47,6 +47,10 @@
 - 规则包 checksum 覆盖排除 `manifest.checksum` 后的 manifest 与 rules 规范 JSON；对象键排序、数组顺序保留，从而让 JSON 文本排版不影响完整性校验。
 - ZIP 规则包在解压前校验中央目录、路径、扩展名、加密/压缩方法、条目数与解压大小，解压后再校验 CRC32；不接受可执行文件或 traversal 路径。
 - 拼多多公开帮助/规则入口无法支撑一个可稳定覆盖全类目与活动的通用费率；默认包仅保存官方来源和 `null + needs_review`，不把历史活动费率冒充当前通用规则。
+- SQLite 通过 partial unique index 保证每个平台/区域只能有一个 active 规则包；激活操作在 `BEGIN IMMEDIATE` 内先停用旧版本再启用目标版本。
+- 用户覆盖以平台/区域/规则 key 唯一并递增 revision；规则快照同时由 SQLite trigger 禁止更新/删除，并在读取时复算 hash 与校验完整结构。
+- 加载器返回的 `sourceFormat` 只用于导入诊断；仓储明确挑选 `manifest`/`rules` 后再严格解析，既不误拒绝已验证输入，也不持久化额外字段。
+- 浏览器规则管理页只显示服务端真实安装状态；导入支持受限 JSON/ZIP，差异结果只展示规则 key 和结构化变更，不执行或渲染规则内容。
 
 ## Technical Decisions
 

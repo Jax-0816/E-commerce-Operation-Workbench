@@ -6,6 +6,7 @@ import {
   createPlatformProfilesApplication,
   createPricingApplication,
   createProductsApplication,
+  createRulePacksApplication,
   createSkusApplication,
 } from '@eaw/application';
 import {
@@ -15,10 +16,13 @@ import {
   DrizzleProductFactRepository,
   DrizzlePlatformProfileRepository,
   DrizzleSkuMatrixRepository,
+  DrizzleRuleRepository,
   migrateDatabase,
   openDatabase,
   type OpenDatabase,
 } from '@eaw/database';
+import { createUuidV7 } from '@eaw/domain';
+import { APP_VERSION } from '@eaw/shared';
 import {
   acquireWorkspaceLock,
   initializeWorkspace,
@@ -83,6 +87,11 @@ export async function createProductionApp({
       products: productRepository,
       skus: skuRepository,
     });
+    const rules = createRulePacksApplication({
+      repository: new DrizzleRuleRepository(database),
+      appVersion: APP_VERSION,
+      idFactory: createUuidV7,
+    });
     const app = buildApp(
       createAppContext({
         facts,
@@ -90,6 +99,7 @@ export async function createProductionApp({
         platformProfiles,
         pricing,
         products,
+        rules,
         skus,
         webDistDir,
       }),

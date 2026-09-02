@@ -34,9 +34,10 @@
 | Task 12：安全公式 AST 与依赖 DAG      | complete | 严格 Zod AST、精确求值、资源预算、稳定拓扑与完整循环诊断已通过审查和全仓门禁              |
 | Task 13：成本档案与定价实验室         | complete | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
 | Task 14：平台能力注册表               | complete | 规范 ID/别名、不可伪造能力合同、通用 adapter、API/UI 和真实页面验收已完成                 |
-| Task 15–29                            | pending  | 下一项为版本化规则包与不可变快照                                                          |
+| Task 15：版本化规则包与快照           | complete | 安全 JSON/ZIP 加载、优先级/冲突、SQLite 版本与不可变快照、API/UI 和真实门禁均已完成       |
+| Task 16–29                            | pending  | 下一项为确定性促销引擎                                                                    |
 
-当前主线完成度按原计划 29 个任务计为 `14/29 ≈ 48%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `15/29 ≈ 52%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -148,11 +149,11 @@ resolveRules(input: RuleResolutionInput): ResolvedRules
 createRuleSnapshot(input: ResolvedRules): RuleSnapshot
 ```
 
-- [ ] 测试优先级、同级冲突、过期、兼容性、checksum、ZIP traversal 与可执行文件拒绝。
-- [ ] 实现只含数据的规则包、解析/冲突报告、不可变快照和差异查看。
-- [ ] 添加带来源的拼多多默认包；不确定财务规则必须标记 `needs_review`。
-- [ ] 将 `validate:rule-packs` 从占位脚本替换为真实校验并通过。
-- [ ] 提交 `feat: add versioned inert platform rule packs`。
+- [x] 测试优先级、同级冲突、过期、兼容性、checksum、ZIP traversal 与可执行文件拒绝。
+- [x] 实现只含数据的规则包、解析/冲突报告、不可变快照和差异查看。
+- [x] 添加带来源的拼多多默认包；不确定财务规则必须标记 `needs_review`。
+- [x] 将 `validate:rule-packs` 从占位脚本替换为真实校验并通过。
+- [x] 提交 `feat: add versioned inert platform rule packs`。
 
 ### Task 16: Deterministic promotion engine
 

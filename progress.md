@@ -103,7 +103,7 @@
 
 ### Cost profiles and pricing laboratory
 
-- **Status:** in_progress
+- **Status:** complete
 - Actions taken:
   - 将 Task 12 提交 `c1511e7` 推送到 GitHub `codex/phase-0` 分支并建立远端跟踪。
   - 重新读取 master plan、task plan、findings、progress，并确认继续在独立 worktree 分支执行。
@@ -186,25 +186,29 @@
 
 ### Versioned inert rule packs
 
-- **Status:** in_progress
+- **Status:** complete
 - Actions taken:
   - 将 Task 15 标记为 in_progress，重读规则系统设计、ADR 0006 与旧实施计划接口。
   - 新增 `@eaw/rule-engine` 包与 RED→GREEN 测试，当前 10 项通过：JSON/ZIP 加载、checksum、应用版本兼容、可执行数据/文件拒绝、ZIP traversal、解析优先级、同级冲突、过期/待审核状态、不可变快照与 diff。
   - 实现稳定 canonical JSON/SHA-256、有边界 ZIP 中央目录解析/CRC32 校验、惰性 Zod schema、规则 resolver、snapshot hash 和稳定 diff。
   - 添加 `default-rule-packs/pinduoduo-cn` 的 manifest/rules/schema/fixture/changelog；佣金、技术服务费和补贴归因不猜值，全部为 `null + needs_review`。
   - 将 `validate:rule-packs` 从占位命令替换为真实构建/校验脚本；当前输出 `validated pinduoduo-cn@2026.9.0 (incomplete)`。
+  - 新增 `0006_add-rule-packs.sql`、真实 SQLite 仓储和集成测试：唯一 active 版本、覆盖 revision、不可变快照 trigger、读取时结构/hash fail-closed。
+  - 新增 application use case、严格 HTTP 合同和 `/api/v1/rule-packs` 导入/列表/激活/diff API；生产运行时使用 UUIDv7 与真实仓储组合。
+  - 将“平台与规则”从占位页升级为可操作页面，支持 JSON/ZIP 文件、粘贴导入、启用版本、显示 `needs_review` 数量和比较规则差异。
+  - 收口复核发现加载器的 `sourceFormat` 与仓储 strict schema 边界不兼容；新增真实回归测试并改为只持久化 manifest/rules。
 
 ### Current verification evidence
 
-| Gate                       | Result              |
-| -------------------------- | ------------------- |
-| rule-engine tests          | 10 passed, 0 failed |
-| rule-engine typecheck      | passed              |
-| rule-engine lint           | passed              |
-| `pnpm validate:rule-packs` | passed              |
+| Gate                        | Result               |
+| --------------------------- | -------------------- |
+| Root unit/integration tests | 331 passed, 0 failed |
+| Root typecheck              | passed               |
+| Root lint                   | passed               |
+| Root production build       | passed               |
+| `pnpm validate:rule-packs`  | passed               |
 
 ### Next action
 
-1. 增加规则包/覆盖/快照 SQLite 迁移、仓储与真实数据库集成测试。
-2. 接入 application/contracts/routes 和规则包导入、激活、diff UI。
-3. 完成安全边界复核、全仓门禁、独立审查后再提交 Task 15。
+1. 提交并推送 Task 15：`feat: add versioned inert platform rule packs`。
+2. 进入 Wave 2 / Task 16：确定性促销金额流、组件规范化、求解与 trace。

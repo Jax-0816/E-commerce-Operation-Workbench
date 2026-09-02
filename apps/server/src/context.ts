@@ -5,6 +5,7 @@ import type {
   PlatformProfilesApplication,
   PricingApplication,
   ProductsApplication,
+  RulePacksApplication,
   SkusApplication,
 } from '@eaw/application';
 
@@ -16,6 +17,7 @@ export interface AppContextOptions {
   readonly platformProfiles?: PlatformProfilesApplication;
   readonly platformCapabilities?: PlatformCapabilitiesApplication;
   readonly pricing?: PricingApplication;
+  readonly rules?: RulePacksApplication;
 }
 
 export interface AppContext {
@@ -27,6 +29,7 @@ export interface AppContext {
   readonly platformProfiles?: PlatformProfilesApplication;
   readonly platformCapabilities?: PlatformCapabilitiesApplication;
   readonly pricing?: PricingApplication;
+  readonly rules?: RulePacksApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -39,5 +42,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     platformProfiles: options.platformProfiles,
     platformCapabilities: options.platformCapabilities,
     pricing: options.pricing,
+    rules: options.rules,
   };
 }

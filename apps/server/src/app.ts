@@ -15,6 +15,7 @@ import { registerPlatformProfileRoutes } from './routes/platform-profiles.js';
 import { registerPlatformCapabilitiesRoute } from './routes/platform-capabilities.js';
 import { registerCostRoutes } from './routes/costs.js';
 import { registerPricingRoutes } from './routes/pricing.js';
+import { registerRuleRoutes } from './routes/rules.js';
 
 export function buildApp(context: AppContext): FastifyInstance {
   const app = Fastify();
@@ -33,6 +34,7 @@ export function buildApp(context: AppContext): FastifyInstance {
   registerPlatformCapabilitiesRoute(app, context.platformCapabilities);
   registerCostRoutes(app, context.pricing);
   registerPricingRoutes(app, context.pricing);
+  registerRuleRoutes(app, context.rules);
 
   if (context.webDistDir !== undefined && existsSync(context.webDistDir)) {
     app.register(fastifyStatic, {

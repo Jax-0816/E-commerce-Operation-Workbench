@@ -39,6 +39,8 @@ import {
 } from '../features/products/product-library.js';
 import type { SkusApi } from '../features/skus/api.js';
 import { SkuMatrix } from '../features/skus/sku-matrix.js';
+import type { RulePacksApi } from '../features/rules/api.js';
+import { RulePackManager } from '../features/rules/rule-pack-manager.js';
 
 export interface WorkbenchDependencies {
   readonly costsApi: CostsApi;
@@ -46,6 +48,7 @@ export interface WorkbenchDependencies {
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
   readonly pricingApi: PricingApi;
+  readonly rulesApi: RulePacksApi;
   readonly skusApi: SkusApi;
 }
 
@@ -156,6 +159,14 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
         <Route
           path="products/:productId/history"
           element={<Unavailable title="历史版本" phase="Phase 12" />}
+        />
+        <Route
+          path="capabilities/rules"
+          element={
+            <ProductFeature title="平台与规则">
+              <RulePackManager api={dependencies.rulesApi} />
+            </ProductFeature>
+          }
         />
         <Route
           path="capabilities/:capability"

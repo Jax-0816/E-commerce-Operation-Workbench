@@ -124,6 +124,9 @@ importers:
       '@eaw/pricing-engine':
         specifier: workspace:*
         version: link:../pricing-engine
+      '@eaw/rule-engine':
+        specifier: workspace:*
+        version: link:../rule-engine
 
   packages/calculation-engine:
     dependencies:
@@ -148,6 +151,9 @@ importers:
       '@eaw/domain':
         specifier: workspace:*
         version: link:../domain
+      '@eaw/rule-engine':
+        specifier: workspace:*
+        version: link:../rule-engine
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2

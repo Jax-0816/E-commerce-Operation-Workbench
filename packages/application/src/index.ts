@@ -30,3 +30,11 @@ export type {
   PricingCalculation,
   SaveCostProfileInput,
 } from './pricing/index.js';
+export { createRulePacksApplication } from './rules/index.js';
+export type {
+  RuleOverrideRecord,
+  RulePackRecord,
+  RulePacksApplication,
+  RuleRepositoryPort,
+  RuleSnapshotRecord,
+} from './rules/index.js';

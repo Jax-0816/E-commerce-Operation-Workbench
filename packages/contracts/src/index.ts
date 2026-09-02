@@ -27,6 +27,17 @@ export {
   UpdateFactInputSchema,
 } from './facts.js';
 export {
+  ImportRulePackInputSchema,
+  RuleDefinitionResponseSchema,
+  RulePackDiffQuerySchema,
+  RulePackDiffResponseSchema,
+  RulePackListQuerySchema,
+  RulePackListResponseSchema,
+  RulePackParamsSchema,
+  RulePackRecordResponseSchema,
+} from './rules.js';
+export type { RulePackDiffResponse, RulePackRecordResponse } from './rules.js';
+export {
   CapabilityStateSchema,
   CapabilityStatusSchema,
   PlatformCapabilitiesParamsSchema,

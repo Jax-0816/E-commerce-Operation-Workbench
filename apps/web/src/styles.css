@@ -862,6 +862,108 @@ tbody small {
   }
 }
 
+.rule-pack-manager {
+  display: grid;
+  gap: 18px;
+}
+
+.rule-toolbar,
+.rule-diff-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 260px));
+  gap: 14px;
+}
+
+.rule-import-panel,
+.rule-pack-list,
+.rule-diff-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  background: var(--surface);
+}
+
+.rule-import-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(260px, 1fr);
+  gap: 14px 18px;
+}
+
+.rule-import-panel > button {
+  justify-self: start;
+}
+
+.rule-pack-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.rule-pack-list > h2,
+.rule-pack-list > p {
+  grid-column: 1 / -1;
+}
+
+.rule-pack-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  background: var(--paper-warm);
+}
+
+.rule-pack-card header,
+.rule-pack-card header > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.rule-pack-card header span {
+  border-radius: 99px;
+  padding: 2px 8px;
+  color: var(--warning);
+  background: var(--warning-soft);
+  font-size: 12px;
+}
+
+.rule-pack-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 12px 0 0;
+}
+
+.rule-pack-card dl > div {
+  display: grid;
+  gap: 3px;
+}
+
+.rule-pack-card dt {
+  color: var(--ink-650);
+  font-size: 11px;
+}
+
+.rule-pack-card dd {
+  margin: 0;
+  font-weight: 680;
+}
+
+.rule-diff-controls {
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) auto;
+  align-items: end;
+}
+
+.rule-diff-result {
+  margin-top: 14px;
+  border-left: 3px solid var(--primary);
+  padding: 10px 14px;
+  background: var(--primary-soft);
+}
+
+.error-message {
+  color: var(--danger);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1363,6 +1465,12 @@ tbody small {
 }
 
 @media (max-width: 620px) {
+  .rule-toolbar,
+  .rule-import-panel,
+  .rule-diff-controls {
+    grid-template-columns: 1fr;
+  }
+
   .context-bar {
     align-items: stretch;
     flex-direction: column;

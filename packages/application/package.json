@@ -13,11 +13,12 @@
     "prepare:domain": "pnpm --filter @eaw/domain run build",
     "prepare:pricing": "pnpm --filter @eaw/calculation-engine run build && pnpm --filter @eaw/pricing-engine run build",
     "prepare:platform": "pnpm --filter @eaw/platform-engine run build",
-    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform",
+    "prepare:rules": "pnpm --filter @eaw/rule-engine run build",
+    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform",
+    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules",
     "test": "vitest run src",
-    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform",
+    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
@@ -25,6 +26,7 @@
     "@eaw/calculation-engine": "workspace:*",
     "@eaw/domain": "workspace:*",
     "@eaw/pricing-engine": "workspace:*",
-    "@eaw/platform-engine": "workspace:*"
+    "@eaw/platform-engine": "workspace:*",
+    "@eaw/rule-engine": "workspace:*"
   }
 }

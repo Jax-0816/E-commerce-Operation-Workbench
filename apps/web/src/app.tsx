@@ -12,6 +12,7 @@ import type { ProductsApi } from './features/products/product-library.js';
 import { createBrowserSkusApi, type SkusApi } from './features/skus/api.js';
 import { createBrowserPricingApi, type PricingApi } from './features/pricing/api.js';
 import { WorkbenchRouter } from './routing/workbench-router.js';
+import { createBrowserRulePacksApi, type RulePacksApi } from './features/rules/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -19,6 +20,7 @@ const browserSkusApi = createBrowserSkusApi();
 const browserPlatformProfilesApi = createBrowserPlatformProfilesApi();
 const browserCostsApi = createBrowserCostsApi();
 const browserPricingApi = createBrowserPricingApi();
+const browserRulePacksApi = createBrowserRulePacksApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -26,6 +28,7 @@ export function App({
   platformProfilesApi = browserPlatformProfilesApi,
   productsApi = browserProductsApi,
   pricingApi = browserPricingApi,
+  rulesApi = browserRulePacksApi,
   skusApi = browserSkusApi,
 }: {
   readonly costsApi?: CostsApi;
@@ -33,6 +36,7 @@ export function App({
   readonly platformProfilesApi?: PlatformProfilesApi;
   readonly productsApi?: ProductsApi;
   readonly pricingApi?: PricingApi;
+  readonly rulesApi?: RulePacksApi;
   readonly skusApi?: SkusApi;
 } = {}): React.JSX.Element {
   return (
@@ -43,6 +47,7 @@ export function App({
         platformProfilesApi={platformProfilesApi}
         productsApi={productsApi}
         pricingApi={pricingApi}
+        rulesApi={rulesApi}
         skusApi={skusApi}
       />
     </BrowserRouter>

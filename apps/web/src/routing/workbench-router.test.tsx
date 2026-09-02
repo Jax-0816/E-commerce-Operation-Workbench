@@ -75,6 +75,15 @@ describe('routed workbench', () => {
     expect(container.querySelector('[aria-label="运营上下文"]')?.textContent).toContain('淘宝');
     root.unmount();
   });
+
+  it('opens the implemented platform rule manager from global navigation', async () => {
+    const { container, root } = await render('/capabilities/rules');
+
+    expect(container.querySelector('h1')?.textContent).toBe('平台与规则');
+    expect(container.querySelector('[aria-label="规则包上下文"]')).not.toBeNull();
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
 });
 
 async function render(entry: string) {
@@ -113,6 +122,12 @@ async function render(entry: string) {
           pricingApi={{
             calculate: async () => undefined as never,
             history: async () => ({ items: [] }),
+          }}
+          rulesApi={{
+            activate: async () => undefined as never,
+            diff: async () => ({ added: [], removed: [], changed: [] }),
+            importJson: async () => undefined as never,
+            list: async () => [],
           }}
           skusApi={{
             configure: async () => ({ dimensions: [], skus: [] }),
