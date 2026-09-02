@@ -139,7 +139,7 @@ async function runWithOwner<T>(
   return result as T;
 }
 
-async function readState(lockPath: string): Promise<LockState> {
+async function readState(lockPath: string, transientRetries = 4): Promise<LockState> {
   const directory = await lstat(lockPath);
   if (directory.isSymbolicLink() || !directory.isDirectory()) {
     throw new TypeError('Secret mutation lock must be a real directory.');
@@ -154,19 +154,26 @@ async function readState(lockPath: string): Promise<LockState> {
   }
   if (!entry.isFile()) return { kind: 'foreign' };
   const path = join(lockPath, entry.name);
-  const metadata = await lstat(path);
-  if (metadata.isSymbolicLink()) {
-    throw new TypeError('Secret mutation owner must not be a symbolic link.');
-  }
-  if (!metadata.isFile()) return { kind: 'foreign' };
-  const owner = parseOwner(await readFile(path, 'utf8'));
-  if (owner === undefined) return { kind: 'foreign' };
-  if (entry.name === ownerFileName) return { kind: 'owned', owner };
+  try {
+    const metadata = await lstat(path);
+    if (metadata.isSymbolicLink()) {
+      throw new TypeError('Secret mutation owner must not be a symbolic link.');
+    }
+    if (!metadata.isFile()) return { kind: 'foreign' };
+    const owner = parseOwner(await readFile(path, 'utf8'));
+    if (owner === undefined) return { kind: 'foreign' };
+    if (entry.name === ownerFileName) return { kind: 'owned', owner };
 
-  const claim = parseClaimName(entry.name);
-  return claim !== undefined && claim.ownerToken === owner.token
-    ? { kind: 'claim', owner, claimedAt: claim.claimedAt, fileName: entry.name }
-    : { kind: 'foreign' };
+    const claim = parseClaimName(entry.name);
+    return claim !== undefined && claim.ownerToken === owner.token
+      ? { kind: 'claim', owner, claimedAt: claim.claimedAt, fileName: entry.name }
+      : { kind: 'foreign' };
+  } catch (error: unknown) {
+    if (isMissing(error) && transientRetries > 0) {
+      return readState(lockPath, transientRetries - 1);
+    }
+    throw error;
+  }
 }
 
 async function claimOwner(
