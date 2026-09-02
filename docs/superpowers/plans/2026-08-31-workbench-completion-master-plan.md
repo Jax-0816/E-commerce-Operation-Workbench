@@ -35,9 +35,10 @@
 | Task 13：成本档案与定价实验室         | complete | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
 | Task 14：平台能力注册表               | complete | 规范 ID/别名、不可伪造能力合同、通用 adapter、API/UI 和真实页面验收已完成                 |
 | Task 15：版本化规则包与快照           | complete | 安全 JSON/ZIP 加载、优先级/冲突、SQLite 版本与不可变快照、API/UI 和真实门禁均已完成       |
-| Task 16–29                            | pending  | 下一项为确定性促销引擎                                                                    |
+| Task 16：确定性促销引擎               | complete | 组件规范化、资金归因、解释轨迹、全局最低活动价求解与确定性不变量测试均已完成              |
+| Task 17–29                            | pending  | 下一项为拼多多模拟器与批算                                                                |
 
-当前主线完成度按原计划 29 个任务计为 `15/29 ≈ 52%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `16/29 ≈ 55%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -164,10 +165,10 @@ calculatePromotion(input: PromotionInput): PromotionResult
 solveCampaignPrice(input: CampaignPriceInput): CampaignPriceResult
 ```
 
-- [ ] 测试满减、折扣、券、平台/商家承担、封顶、门槛、非负支付和禁止重复扣减。
-- [ ] 实现规范化、钱流归因、断点求解和逐步 trace。
-- [ ] 验证相同输入与规则快照始终得到相同结果。
-- [ ] 提交 `feat: add deterministic promotion money flow`。
+- [x] 测试满减、折扣、券、平台/商家承担、封顶、门槛、非负支付和禁止重复扣减。
+- [x] 实现规范化、钱流归因、有界全局最低价求解和逐步 trace。
+- [x] 验证相同输入与规则快照始终得到相同结果。
+- [x] 提交 `feat: add deterministic promotion money flow`。
 
 ### Task 17: Pinduoduo simulator and batch calculation
 

@@ -212,3 +212,32 @@
 
 1. 提交并推送 Task 15：`feat: add versioned inert platform rule packs`。
 2. 进入 Wave 2 / Task 16：确定性促销金额流、组件规范化、求解与 trace。
+
+## Session: 2026-09-02 — Wave 2 / Task 16
+
+### Deterministic promotion money flow
+
+- **Status:** complete
+- Actions taken:
+  - 提交并推送 Task 15；同步核对 `codex/phase-0` 与远端分支为 0 ahead / 0 behind。
+  - 新增 `@eaw/promotion-engine`，按 RED→GREEN 实现固定满减、券、百分比折扣、门槛、封顶、优先级和资方归因。
+  - 组件按 `priority + key` 稳定规范化；逐步 trace 保存每一步请求优惠、实际优惠、消费者应付和商家实收前后值。
+  - 平台承担优惠保留商家实收，商家承担优惠同时降低应付与实收，并在运行时强制验证钱流恒等式、非负金额和确认收入。
+  - 实现最多 100,000 分搜索窗的升序求解器，保证在门槛、封顶和舍入跳变下仍返回满足最低商家实收的全局最低活动价，并明确返回无解状态。
+  - 添加 9 项单元、求解和确定性性质测试，覆盖相同输入重复计算、全价格窗不变量、资金归因和边界拒绝。
+  - 全仓测试偶发暴露持久密钥锁的正常原子抢占竞态：扫描后 `owner.json` 已被另一进程改名。读取逻辑对瞬时 `ENOENT` 重新扫描；workspace 测试连续三轮 52/52 通过。
+
+### Fresh verification evidence
+
+| Gate                        | Result               |
+| --------------------------- | -------------------- |
+| Promotion engine tests      | 9 passed, 0 failed   |
+| Root unit/integration tests | 340 passed, 0 failed |
+| Root typecheck              | passed               |
+| Root lint                   | passed               |
+| Root production build       | passed               |
+
+### Next action
+
+1. 提交并推送 Task 16：`feat: add deterministic promotion money flow`。
+2. 进入 Wave 2 / Task 17：拼多多模拟器、持久化批算与可解释 UI。

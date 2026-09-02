@@ -176,6 +176,12 @@ importers:
         specifier: workspace:*
         version: link:../calculation-engine
 
+  packages/promotion-engine:
+    dependencies:
+      '@eaw/calculation-engine':
+        specifier: workspace:*
+        version: link:../calculation-engine
+
   packages/rule-engine:
     dependencies:
       '@eaw/domain':

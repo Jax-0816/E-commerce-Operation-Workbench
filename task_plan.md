@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 2 — Task 16：确定性促销引擎（in_progress）
+Wave 2 — Task 17：拼多多模拟器与批算（in_progress）
 
 ## Phases
 
@@ -28,8 +28,8 @@ Wave 2 — Task 16：确定性促销引擎（in_progress）
 
 - [x] Task 14：平台能力注册表（complete）
 - [x] Task 15：版本化规则包与快照（complete）
-- [ ] Task 16：确定性促销引擎（in_progress）
-- [ ] Task 17：拼多多模拟器与批算
+- [x] Task 16：确定性促销引擎（complete）
+- [ ] Task 17：拼多多模拟器与批算（in_progress）
 - **Status:** in_progress
 
 ### Wave 3: AI 安全基础设施
@@ -92,6 +92,7 @@ Wave 2 — Task 16：确定性促销引擎（in_progress）
 | GitHub HTTPS 默认路由连续空响应/超时                      |       2 | 诊断为 IPv6 路由异常；仅对本次 Git 命令绑定 GitHub IPv4 后推送成功                               |
 | Phase 3 E2E 的“已验证”同时命中结果和历史                  |       1 | 按结果面板与指标语义收紧定位器；Phase 2/3 E2E 共同通过                                           |
 | 初版定价 solver 对公式分段作单调性假设                    |       1 | 独立审查复现漏选全局最低价；改为有复合工作预算的有界穷举，并覆盖六种比较符、有理阈值和非单调窗口 |
+| 全仓并发密钥测试偶发读取已原子改名的 owner 文件           |       1 | 锁状态读取遇到瞬时 `ENOENT` 时重新扫描目录；连续三轮 workspace 测试及全仓测试通过                |
 
 ## Notes
 
