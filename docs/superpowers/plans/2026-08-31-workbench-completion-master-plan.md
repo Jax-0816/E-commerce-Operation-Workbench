@@ -38,9 +38,10 @@
 | Task 16：确定性促销引擎               | complete | 组件规范化、资金归因、解释轨迹、全局最低活动价求解与确定性不变量测试均已完成              |
 | Task 17：拼多多模拟器与批算           | complete | PDD adapter、规则/成本快照、批算仓储、API/UI 与真实运行时持久化验收均已完成               |
 | Task 18：版本化提示词编译器           | complete | 五级信任分层、防注入边界、三类哈希、默认模板和不可变 SQLite 仓储均通过全仓门禁            |
-| Task 19–29                            | pending  | 下一项为 DeepSeek provider、结构化验证与脱敏日志                                          |
+| Task 19：DeepSeek 生成管线            | complete | provider 抽象、有界重试、结构修复、证据校验、脱敏不可变日志和本地密钥设置已通过门禁       |
+| Task 20–29                            | pending  | 下一项为可审计竞品快照与 preview → validation → confirm 导入                              |
 
-当前主线完成度按原计划 29 个任务计为 `18/29 ≈ 62%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `19/29 ≈ 66%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
 
 ## Dependency Order
 
@@ -206,11 +207,11 @@ interface AIProvider { generate(request: ProviderRequest): Promise<ProviderRespo
 generateValidated<T>(input: StructuredGenerationInput<T>): Promise<ValidatedGeneration<T>>
 ```
 
-- [ ] 用 fake HTTP 测试超时、429/5xx 有界重试、一次结构修复和不可修复失败。
-- [ ] 测试 JSON/字段/枚举/证据/跨商品引用/无支持卖点的验证拒绝。
-- [ ] 实现 provider registry、DeepSeek adapter、结构化管线和脱敏不可变日志。
-- [ ] 证明密钥不出现在数据库、响应、日志与测试快照中；测试不得产生真实付费调用。
-- [ ] 提交 `feat: add guarded deepseek generation pipeline`。
+- [x] 用 fake HTTP 测试超时、429/5xx 有界重试、一次结构修复和不可修复失败。
+- [x] 测试 JSON/字段/枚举/证据/跨商品引用/无支持卖点的验证拒绝。
+- [x] 实现 provider registry、DeepSeek adapter、结构化管线和脱敏不可变日志。
+- [x] 证明密钥不出现在数据库、响应、日志与测试快照中；测试不得产生真实付费调用。
+- [x] 提交 `feat: add guarded deepseek generation pipeline`。
 
 ## Wave 4 — 竞品、策略与内容资产
 

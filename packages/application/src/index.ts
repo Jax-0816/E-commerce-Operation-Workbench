@@ -45,3 +45,5 @@ export type {
   PromotionApplication,
   PromotionBatchRow,
 } from './promotions/index.js';
+export { createAISettingsApplication } from './ai-settings/index.js';
+export type { AISettingsApplication, AISettingsStatus } from './ai-settings/index.js';

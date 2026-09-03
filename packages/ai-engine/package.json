@@ -1,5 +1,5 @@
 {
-  "name": "@eaw/database",
+  "name": "@eaw/ai-engine",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     }
   },
   "scripts": {
-    "prepare:dependencies": "pnpm --filter @eaw/domain run build && pnpm --filter @eaw/rule-engine run build && pnpm --filter @eaw/prompt-engine run build && pnpm --filter @eaw/ai-engine run build",
+    "prepare:dependencies": "pnpm --filter @eaw/domain run build && pnpm --filter @eaw/prompt-engine run build",
     "prebuild": "pnpm run prepare:dependencies",
     "build": "tsc -p tsconfig.json",
     "pretest": "pnpm run prepare:dependencies",
@@ -20,13 +20,8 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@eaw/ai-engine": "workspace:*",
     "@eaw/domain": "workspace:*",
     "@eaw/prompt-engine": "workspace:*",
-    "@eaw/rule-engine": "workspace:*",
-    "drizzle-orm": "0.45.2"
-  },
-  "devDependencies": {
-    "drizzle-kit": "0.31.10"
+    "zod": "4.4.3"
   }
 }

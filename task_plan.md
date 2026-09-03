@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 3 — Task 19：DeepSeek provider、结构化验证与日志（in_progress）
+Wave 4 — Task 20：可审计竞品快照与导入（in_progress）
 
 ## Phases
 
@@ -35,16 +35,16 @@ Wave 3 — Task 19：DeepSeek provider、结构化验证与日志（in_progress�
 ### Wave 3: AI 安全基础设施
 
 - [x] Task 18：版本化提示词编译器（complete）
-- [ ] Task 19：DeepSeek provider、结构化验证与日志（in_progress）
-- **Status:** in_progress
+- [x] Task 19：DeepSeek provider、结构化验证与日志（complete）
+- **Status:** complete
 
 ### Wave 4: 竞品、策略与内容资产
 
-- [ ] Task 20：竞品快照与导入
+- [ ] Task 20：竞品快照与导入（in_progress）
 - [ ] Task 21：竞品分析、市场洞察与卖点
 - [ ] Task 22：版本化标题工作室
 - [ ] Task 23：创意和详情页构建器
-- **Status:** pending
+- **Status:** in_progress
 
 ### Wave 5: 工作流与运营方案
 

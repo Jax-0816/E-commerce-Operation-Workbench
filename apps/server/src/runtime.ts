@@ -9,7 +9,9 @@ import {
   createProductsApplication,
   createRulePacksApplication,
   createSkusApplication,
+  createAISettingsApplication,
 } from '@eaw/application';
+import { DeepSeekProvider } from '@eaw/ai-engine';
 import {
   DrizzleProductRepository,
   DrizzleCostProfileRepository,
@@ -30,6 +32,7 @@ import {
   initializeWorkspace,
   resolveWorkspacePath,
   type WorkspaceLock,
+  FileSecretStore,
 } from '@eaw/workspace';
 
 import { buildApp } from './app.js';
@@ -104,8 +107,13 @@ export async function createProductionApp({
       skus: skuRepository,
       idFactory: createUuidV7,
     });
+    const aiSettings = createAISettingsApplication({
+      secrets: new FileSecretStore(workspace.path),
+      providerFactory: (apiKey) => new DeepSeekProvider({ apiKey }),
+    });
     const app = buildApp(
       createAppContext({
+        aiSettings,
         facts,
         platformCapabilities,
         platformProfiles,

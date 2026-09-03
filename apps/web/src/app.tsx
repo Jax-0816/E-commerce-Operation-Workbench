@@ -14,6 +14,7 @@ import { createBrowserPricingApi, type PricingApi } from './features/pricing/api
 import { WorkbenchRouter } from './routing/workbench-router.js';
 import { createBrowserRulePacksApi, type RulePacksApi } from './features/rules/api.js';
 import { createBrowserPromotionApi, type PromotionApi } from './features/promotion/api.js';
+import { createBrowserAISettingsApi, type AISettingsApi } from './features/ai-settings/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -23,6 +24,7 @@ const browserCostsApi = createBrowserCostsApi();
 const browserPricingApi = createBrowserPricingApi();
 const browserRulePacksApi = createBrowserRulePacksApi();
 const browserPromotionApi = createBrowserPromotionApi();
+const browserAISettingsApi = createBrowserAISettingsApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -33,6 +35,7 @@ export function App({
   promotionApi = browserPromotionApi,
   rulesApi = browserRulePacksApi,
   skusApi = browserSkusApi,
+  aiSettingsApi = browserAISettingsApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -42,6 +45,7 @@ export function App({
   readonly promotionApi?: PromotionApi;
   readonly rulesApi?: RulePacksApi;
   readonly skusApi?: SkusApi;
+  readonly aiSettingsApi?: AISettingsApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -54,6 +58,7 @@ export function App({
         promotionApi={promotionApi}
         rulesApi={rulesApi}
         skusApi={skusApi}
+        aiSettingsApi={aiSettingsApi}
       />
     </BrowserRouter>
   );

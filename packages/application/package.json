@@ -15,20 +15,23 @@
     "prepare:platform": "pnpm --filter @eaw/platform-engine run build",
     "prepare:rules": "pnpm --filter @eaw/rule-engine run build",
     "prepare:promotion": "pnpm --filter @eaw/promotion-engine run build",
-    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion",
+    "prepare:ai": "pnpm --filter @eaw/ai-engine run build && pnpm --filter @eaw/workspace run build",
+    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion",
+    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai",
     "test": "vitest run src",
-    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion",
+    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
   "dependencies": {
+    "@eaw/ai-engine": "workspace:*",
     "@eaw/calculation-engine": "workspace:*",
     "@eaw/domain": "workspace:*",
     "@eaw/pricing-engine": "workspace:*",
     "@eaw/promotion-engine": "workspace:*",
     "@eaw/platform-engine": "workspace:*",
-    "@eaw/rule-engine": "workspace:*"
+    "@eaw/rule-engine": "workspace:*",
+    "@eaw/workspace": "workspace:*"
   }
 }

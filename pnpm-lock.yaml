@@ -41,6 +41,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@eaw/ai-engine':
+        specifier: workspace:*
+        version: link:../../packages/ai-engine
       '@eaw/application':
         specifier: workspace:*
         version: link:../../packages/application
@@ -110,8 +113,23 @@ importers:
         specifier: 8.2.1
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.27.7)(tsx@4.21.0)
 
+  packages/ai-engine:
+    dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@eaw/prompt-engine':
+        specifier: workspace:*
+        version: link:../prompt-engine
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
   packages/application:
     dependencies:
+      '@eaw/ai-engine':
+        specifier: workspace:*
+        version: link:../ai-engine
       '@eaw/calculation-engine':
         specifier: workspace:*
         version: link:../calculation-engine
@@ -130,6 +148,9 @@ importers:
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine
+      '@eaw/workspace':
+        specifier: workspace:*
+        version: link:../workspace
 
   packages/calculation-engine:
     dependencies:
@@ -151,6 +172,9 @@ importers:
 
   packages/database:
     dependencies:
+      '@eaw/ai-engine':
+        specifier: workspace:*
+        version: link:../ai-engine
       '@eaw/domain':
         specifier: workspace:*
         version: link:../domain

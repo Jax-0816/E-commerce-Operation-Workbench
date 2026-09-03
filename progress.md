@@ -302,3 +302,38 @@
 
 1. 提交并推送 Task 18：`feat: add versioned injection-safe prompt compiler`。
 2. 进入 Wave 3 / Task 19：provider 抽象、DeepSeek、结构化验证、重试与脱敏不可变日志。
+
+## Session: 2026-09-03 — Wave 3 / Task 19
+
+### Guarded DeepSeek generation pipeline
+
+- **Status:** complete
+- Actions taken:
+  - 新增 `@eaw/ai-engine`，实现 provider 接口、稳定注册表、DeepSeek adapter 和可注入 fake HTTP 边界。
+  - 对超时、HTTP 429、5xx 和网络异常执行最多 5 次的有界指数重试；对外只返回不含上游响应和密钥的安全错误。
+  - 实现严格 JSON/Zod 结构化生成，首次无效时只允许一次修复；枚举、字段、证据归属、跨商品引用和无支持主张均会拒绝或降级为 `needs_review`。
+  - 生成成功、审核降级和失败均通过统一入口追加脱敏日志，保存 provider/model、prompt 版本、输入哈希、token 和时间。
+  - 新增 `0009_add-ai-generations.sql`和真实 SQLite 仓储；日志绑定精确提示词版本，通过外键、update/delete trigger 和读取复验 fail closed。
+  - 完成本地 DeepSeek 设置用例、严格 API 合同、Fastify 路由和 React 设置页；密钥只进入 `FileSecretStore`，保存后不在响应或页面回显。
+  - 真实运行时重启测试确认密钥可持续识别为“已配置”，同时 SQLite 二进制中不含密钥文本。
+  - 所有 AI 测试使用 fake provider/fetch，未调用真实 DeepSeek 付费接口。
+
+### Fresh verification evidence
+
+| Gate                             | Result               |
+| -------------------------------- | -------------------- |
+| Root unit/integration tests      | 379 passed, 0 failed |
+| AI engine tests                  | 11 passed, 0 failed  |
+| Database tests                   | 34 passed, 0 failed  |
+| Root typecheck                   | passed               |
+| Root lint                        | passed               |
+| Root production build            | passed               |
+| Frozen lockfile install          | passed               |
+| Prompt/rule-pack validation      | passed               |
+| Root format check / diff check   | passed               |
+| Runtime secret isolation/restart | passed               |
+
+### Next action
+
+1. 提交并推送 Task 19：`feat: add guarded deepseek generation pipeline`。
+2. 进入 Wave 4 / Task 20：可审计竞品快照、CSV/XLSX/粘贴预览与确认导入。

@@ -43,8 +43,11 @@ import type { RulePacksApi } from '../features/rules/api.js';
 import { RulePackManager } from '../features/rules/rule-pack-manager.js';
 import type { PromotionApi } from '../features/promotion/api.js';
 import { PromotionSimulator } from '../features/promotion/promotion-simulator.js';
+import type { AISettingsApi } from '../features/ai-settings/api.js';
+import { AISettingsPanel } from '../features/ai-settings/ai-settings-panel.js';
 
 export interface WorkbenchDependencies {
+  readonly aiSettingsApi: AISettingsApi;
   readonly costsApi: CostsApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
@@ -173,6 +176,14 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           element={
             <ProductFeature title="平台与规则">
               <RulePackManager api={dependencies.rulesApi} />
+            </ProductFeature>
+          }
+        />
+        <Route
+          path="capabilities/ai"
+          element={
+            <ProductFeature title="AI 设置">
+              <AISettingsPanel api={dependencies.aiSettingsApi} />
             </ProductFeature>
           }
         />

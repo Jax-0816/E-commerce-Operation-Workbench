@@ -17,6 +17,35 @@ afterEach(async () => {
 });
 
 describe('production app composition', () => {
+  it('keeps the DeepSeek key outside SQLite and reports only configured after restart', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-ai-settings-')));
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const secret = 'sk-production-secret';
+    const configured = await first.inject({
+      method: 'PUT',
+      url: '/api/v1/ai/settings',
+      payload: { apiKey: secret },
+    });
+    expect(configured.statusCode).toBe(200);
+    expect(configured.body).not.toContain(secret);
+    await first.close();
+
+    expect(await readFile(join(workspacePath, '.secrets.json'), 'utf8')).toContain(secret);
+    expect(
+      (await readFile(join(workspacePath, 'database/workbench.sqlite'))).includes(secret),
+    ).toBe(false);
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const status = await restarted.inject({ method: 'GET', url: '/api/v1/ai/settings' });
+    expect(status.json()).toEqual({
+      provider: 'deepseek',
+      configured: true,
+      model: 'deepseek-chat',
+    });
+    expect(status.body).not.toContain(secret);
+    await restarted.close();
+  });
+
   it('serves products from a migrated workspace and releases resources for restart', async () => {
     const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-runtime-')));
     directories.push(workspacePath);

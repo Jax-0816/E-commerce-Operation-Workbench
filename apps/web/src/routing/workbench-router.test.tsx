@@ -92,6 +92,15 @@ describe('routed workbench', () => {
     expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
+
+  it('opens the implemented local AI settings page', async () => {
+    const { container, root } = await render('/capabilities/ai');
+
+    expect(container.querySelector('h1')?.textContent).toBe('AI 设置');
+    expect(container.textContent).toContain('DeepSeek');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
 });
 
 async function render(entry: string) {
@@ -104,6 +113,20 @@ async function render(entry: string) {
     root.render(
       <MemoryRouter initialEntries={[entry]}>
         <WorkbenchRouter
+          aiSettingsApi={{
+            clear: async () => ({
+              provider: 'deepseek',
+              configured: false,
+              model: 'deepseek-chat',
+            }),
+            configure: async () => ({
+              provider: 'deepseek',
+              configured: true,
+              model: 'deepseek-chat',
+            }),
+            get: async () => ({ provider: 'deepseek', configured: false, model: 'deepseek-chat' }),
+            testConnection: async () => ({ ok: true }),
+          }}
           costsApi={{
             get: async () => undefined,
             save: async () => undefined as never,

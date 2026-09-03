@@ -8,6 +8,7 @@ import type {
   ProductsApplication,
   RulePacksApplication,
   SkusApplication,
+  AISettingsApplication,
 } from '@eaw/application';
 
 export interface AppContextOptions {
@@ -20,6 +21,7 @@ export interface AppContextOptions {
   readonly pricing?: PricingApplication;
   readonly promotions?: PromotionApplication;
   readonly rules?: RulePacksApplication;
+  readonly aiSettings?: AISettingsApplication;
 }
 
 export interface AppContext {
@@ -33,6 +35,7 @@ export interface AppContext {
   readonly pricing?: PricingApplication;
   readonly promotions?: PromotionApplication;
   readonly rules?: RulePacksApplication;
+  readonly aiSettings?: AISettingsApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -47,5 +50,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     pricing: options.pricing,
     promotions: options.promotions,
     rules: options.rules,
+    aiSettings: options.aiSettings,
   };
 }

@@ -1,5 +1,11 @@
 export { ErrorResponseSchema, toErrorResponse } from './errors.js';
 export type { ErrorResponse } from './errors.js';
+export {
+  AISettingsResponseSchema,
+  ConfigureAISettingsInputSchema,
+  TestAIConnectionResponseSchema,
+} from './ai-settings.js';
+export type { AISettingsResponse } from './ai-settings.js';
 export { HealthResponseSchema } from './health.js';
 export type { HealthResponse } from './health.js';
 export {

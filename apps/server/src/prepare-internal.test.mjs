@@ -18,6 +18,8 @@ const expectedPackageNames = [
   '@eaw/platform-engine',
   '@eaw/rule-engine',
   '@eaw/promotion-engine',
+  '@eaw/prompt-engine',
+  '@eaw/ai-engine',
   '@eaw/pricing-engine',
   '@eaw/domain',
   '@eaw/shared',
