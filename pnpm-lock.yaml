@@ -59,6 +59,9 @@ importers:
       '@eaw/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@eaw/prompt-engine':
+        specifier: workspace:*
+        version: link:../../packages/prompt-engine
       '@eaw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -148,6 +151,9 @@ importers:
       '@eaw/promotion-engine':
         specifier: workspace:*
         version: link:../promotion-engine
+      '@eaw/prompt-engine':
+        specifier: workspace:*
+        version: link:../prompt-engine
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine

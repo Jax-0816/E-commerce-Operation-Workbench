@@ -40,9 +40,10 @@
 | Task 18：版本化提示词编译器           | complete | 五级信任分层、防注入边界、三类哈希、默认模板和不可变 SQLite 仓储均通过全仓门禁            |
 | Task 19：DeepSeek 生成管线            | complete | provider 抽象、有界重试、结构修复、证据校验、脱敏不可变日志和本地密钥设置已通过门禁       |
 | Task 20：可审计竞品快照与导入         | complete | provider port、CSV/XLSX/粘贴预览确认、不可变 SQLite、API/UI 与重启持久化测试已完成        |
-| Task 21–29                            | pending  | 下周从证据驱动的竞品分析、市场洞察与卖点三条垂直链路继续                                  |
+| Task 21                               | complete | 三类结构化提示词、证据审查、不可变修订、API/UI 与 fake-provider 重启测试已完成            |
+| Task 22–29                            | pending  | Task 21 完成后进入版本化标题工作室                                                        |
 
-当前主线完成度按原计划 29 个任务计为 `20/29 ≈ 69%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。项目在 Task 20 完成后按用户要求暂停，未启动 Task 21。
+当前主线完成度按原计划 29 个任务计为 `21/29 ≈ 72%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 21 已完成，下一项为 Task 22。
 
 ## Dependency Order
 
@@ -229,10 +230,10 @@ generateValidated<T>(input: StructuredGenerationInput<T>): Promise<ValidatedGene
 
 **Files:** 三类 AI task contract/template/validator、insight/selling-point domain/schema/repository/use cases/routes/UI。
 
-- [ ] 测试结构化输出、证据归属、数据限制、修订和不支持主张降级为 suggested fact。
-- [ ] 实现竞品分析、市场洞察、卖点三条独立垂直链路。
-- [ ] UI 必须展示证据和限制，不得把建议显示成已确认事实。
-- [ ] 提交 `feat: add evidence-backed market strategy`。
+- [x] 测试结构化输出、证据归属、数据限制、修订和不支持主张降级为 suggested fact。
+- [x] 实现竞品分析、市场洞察、卖点三条独立垂直链路。
+- [x] UI 必须展示证据和限制，不得把建议显示成已确认事实。
+- [x] 提交 `feat: add evidence-backed market strategy`。
 
 ### Task 22: Versioned title studio
 

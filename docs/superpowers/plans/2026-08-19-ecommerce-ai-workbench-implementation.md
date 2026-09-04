@@ -445,11 +445,11 @@ docs/adr/                     architecture decisions
 - Produces: structured competitor analysis, market insight, selling-point set/evidence.
 - Consumes: AI generation pipeline, snapshots, allowed facts, platform context.
 
-- [ ] **Step 1: Test each task schema, evidence links, data limitations, unsupported idea→suggested fact, and regeneration revisions**.
-- [ ] **Step 2: Confirm failure**.
-- [ ] **Step 3: Implement three vertical AI nodes and evidence-explaining UI**.
-- [ ] **Step 4: Run fake-provider vertical tests and build**.
-- [ ] **Step 5: Commit** `feat: add evidence-backed market strategy`.
+- [x] **Step 1: Test each task schema, evidence links, data limitations, unsupported idea→suggested fact, and regeneration revisions**.
+- [x] **Step 2: Confirm failure**.
+- [x] **Step 3: Implement three vertical AI nodes and evidence-explaining UI**.
+- [x] **Step 4: Run fake-provider vertical tests and build**.
+- [x] **Step 5: Commit** `feat: add evidence-backed market strategy`.
 
 ### Task 22: Versioned title studio
 

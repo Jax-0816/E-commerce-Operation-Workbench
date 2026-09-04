@@ -5,3 +5,4 @@ export * from './structured.js';
 export * from './registry.js';
 export * from './validators.js';
 export * from './generation-log.js';
+export * from './strategy.js';

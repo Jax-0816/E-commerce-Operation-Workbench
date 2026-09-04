@@ -367,3 +367,33 @@
 1. Task 20 已完成；不要重复实现或重新设计竞品导入。
 2. 下周先读取 `docs/superpowers/handoffs/2026-09-04-after-task-20.md`，确认分支与质量门禁后，从 Task 21 的失败测试开始。
 3. Task 21 目标是竞品分析、市场洞察、卖点三条独立 AI 垂直链路；必须绑定本商品证据， unsupported idea 降级为 suggested fact，UI 展示证据和限制。
+
+## Session: 2026-09-04 — Wave 4 / Task 21
+
+### Evidence-backed market strategy
+
+- **Status:** complete
+- Actions taken:
+  - 新增竞品分析、市场洞察和卖点集三类严格结构化输出 schema、独立默认提示词及启动时安装/激活逻辑。
+  - 只把已确认、允许且非敏感的商品事实，以及当前商品竞品快照按信任级别送入提示词；AI 输出证据逐条校验类型、ID 和商品归属。
+  - 无证据或只有外部证据的商品卖点自动移入 `suggestedFacts` 并标记 `needs_review`，避免把建议展示成已确认事实。
+  - 新增 `0011_add-strategy-assets.sql` 与不可变修订仓储；每次重新生成绑定精确 AI generation log、revision 和上一个资产 ID。
+  - 新增应用用例、严格合同、Fastify 路由及市场分析/卖点页面，展示证据、数据限制、审核状态和修订历史。
+  - 使用 fake provider 完成生产运行时生成与重启持久化测试，未产生真实付费 AI 请求。
+
+### Fresh verification evidence
+
+| Gate                              | Result               |
+| --------------------------------- | -------------------- |
+| Root unit/integration tests       | 403 passed, 0 failed |
+| Root typecheck                    | passed               |
+| Root lint                         | passed               |
+| Root production build             | passed               |
+| Frozen lockfile install           | passed               |
+| Prompt/rule-pack validation       | passed               |
+| Fake-provider restart persistence | passed               |
+
+### Next action
+
+1. 提交并推送 Task 21：`feat: add evidence-backed market strategy`。
+2. 进入 Wave 4 / Task 22：版本化标题工作室、不可变修订、锁定与上游变化 stale 原因。

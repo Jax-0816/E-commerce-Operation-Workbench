@@ -1,7 +1,11 @@
 import type { z } from 'zod';
 
 import type { AIProvider, ProviderRequest } from './provider.js';
-import { generateValidated, type ValidatedGeneration } from './structured.js';
+import {
+  generateValidated,
+  type GenerationReview,
+  type ValidatedGeneration,
+} from './structured.js';
 
 export type GenerationStatus = 'verified' | 'needs_review' | 'failed';
 
@@ -38,6 +42,7 @@ export interface GenerateAndLogInput<T> {
   readonly request: ProviderRequest;
   readonly schema: z.ZodType<T>;
   readonly validate?: (value: T) => readonly string[];
+  readonly review?: (value: T) => GenerationReview<T>;
   readonly task: string;
   readonly promptTemplateId: string;
   readonly promptVersion: string;
@@ -108,6 +113,7 @@ export async function generateAndLog<T>(
       request: input.request,
       schema: input.schema,
       validate: input.validate,
+      review: input.review,
     });
   } catch (error) {
     await input.logs.append(

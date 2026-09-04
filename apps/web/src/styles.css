@@ -1713,3 +1713,39 @@ tbody small {
     gap: 4px;
   }
 }
+.strategy-workspace {
+  display: grid;
+  gap: 1rem;
+}
+.strategy-card {
+  border: 1px solid var(--line-color, #dce3e8);
+  border-radius: 16px;
+  padding: 1rem;
+  background: #fff;
+}
+.strategy-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.strategy-card h2 {
+  margin: 0.25rem 0;
+}
+.strategy-results {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.25rem;
+}
+.strategy-results li {
+  padding: 0.75rem;
+  background: #f7f9fa;
+  border-radius: 10px;
+}
+.strategy-results p {
+  margin: 0.35rem 0;
+}
+.strategy-review {
+  border-left: 4px solid #d88b1f;
+  padding-left: 1rem;
+}

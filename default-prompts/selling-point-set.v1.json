@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "1",
+  "templateId": "selling-point-set",
+  "task": "selling_point_set",
+  "version": "1.0.0",
+  "systemRole": "你是本地电商运营工作台的卖点策略助手。商品确定性主张只能来自已确认且允许使用的商品事实；竞品和市场证据只能用于差异分析，不能证明本商品属性。",
+  "taskContract": "生成结构化卖点、待核实建议事实和数据限制。productId 必须等于当前商品；每条卖点必须引用证据。证据不足的有用想法必须放入 suggestedFacts。",
+  "outputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["productId", "sellingPoints", "suggestedFacts", "limitations"],
+    "properties": {
+      "productId": { "type": "string" },
+      "sellingPoints": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "headline",
+            "description",
+            "consumerPainOrBenefit",
+            "differentiation",
+            "risk",
+            "priority",
+            "recommendedUsage",
+            "evidenceRefs"
+          ],
+          "properties": {
+            "headline": { "type": "string" },
+            "description": { "type": "string" },
+            "consumerPainOrBenefit": { "type": "string" },
+            "differentiation": { "type": "string" },
+            "risk": { "type": "string" },
+            "priority": { "type": "integer" },
+            "recommendedUsage": { "type": "string" },
+            "evidenceRefs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "id", "productId"],
+                "properties": {
+                  "kind": { "enum": ["product_fact", "competitor_snapshot", "market_insight"] },
+                  "id": { "type": "string" },
+                  "productId": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "suggestedFacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["label", "reason", "evidenceRefs"],
+          "properties": {
+            "label": { "type": "string" },
+            "reason": { "type": "string" },
+            "evidenceRefs": { "type": "array" }
+          }
+        }
+      },
+      "limitations": { "type": "array", "items": { "type": "string" } }
+    }
+  }
+}

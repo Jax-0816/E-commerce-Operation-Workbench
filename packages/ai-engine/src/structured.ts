@@ -11,11 +11,17 @@ export interface ValidatedGeneration<T> {
   readonly repairAttempted: boolean;
 }
 
+export interface GenerationReview<T> {
+  readonly value: T;
+  readonly issues: readonly string[];
+}
+
 export async function generateValidated<T>(input: {
   readonly provider: AIProvider;
   readonly request: ProviderRequest;
   readonly schema: z.ZodType<T>;
   readonly validate?: (value: T) => readonly string[];
+  readonly review?: (value: T) => GenerationReview<T>;
 }): Promise<ValidatedGeneration<T>> {
   let response = await input.provider.generate({ ...input.request, responseFormat: 'json' });
   let parsed = parseStructured(response.content, input.schema);
@@ -28,11 +34,19 @@ export async function generateValidated<T>(input: {
   if (!parsed.success) {
     throw new DomainError('AI_OUTPUT_INVALID', 'AI output remained invalid after one repair.');
   }
-  const issues = [...(input.validate?.(parsed.value) ?? [])];
+  const reviewed = input.review?.(parsed.value);
+  const value = reviewed?.value ?? parsed.value;
+  const issues = [...(reviewed?.issues ?? input.validate?.(value) ?? [])];
   if (issues.length > 0) {
-    return { status: 'needs_review', value: null, issues, response, repairAttempted };
+    return {
+      status: 'needs_review',
+      value: reviewed === undefined ? null : value,
+      issues,
+      response,
+      repairAttempted,
+    };
   }
-  return { status: 'verified', value: parsed.value, issues: [], response, repairAttempted };
+  return { status: 'verified', value, issues: [], response, repairAttempted };
 }
 
 function parseStructured<T>(content: string, schema: z.ZodType<T>) {

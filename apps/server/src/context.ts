@@ -10,6 +10,7 @@ import type {
   SkusApplication,
   AISettingsApplication,
   CompetitorsApplication,
+  StrategyApplication,
 } from '@eaw/application';
 
 export interface AppContextOptions {
@@ -24,6 +25,7 @@ export interface AppContextOptions {
   readonly rules?: RulePacksApplication;
   readonly aiSettings?: AISettingsApplication;
   readonly competitors?: CompetitorsApplication;
+  readonly strategy?: StrategyApplication;
 }
 
 export interface AppContext {
@@ -39,6 +41,7 @@ export interface AppContext {
   readonly rules?: RulePacksApplication;
   readonly aiSettings?: AISettingsApplication;
   readonly competitors?: CompetitorsApplication;
+  readonly strategy?: StrategyApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -55,5 +58,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     rules: options.rules,
     aiSettings: options.aiSettings,
     competitors: options.competitors,
+    strategy: options.strategy,
   };
 }

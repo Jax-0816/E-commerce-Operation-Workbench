@@ -16,6 +16,7 @@ import { createBrowserRulePacksApi, type RulePacksApi } from './features/rules/a
 import { createBrowserPromotionApi, type PromotionApi } from './features/promotion/api.js';
 import { createBrowserAISettingsApi, type AISettingsApi } from './features/ai-settings/api.js';
 import { createBrowserCompetitorsApi, type CompetitorsApi } from './features/competitors/api.js';
+import { createBrowserStrategyApi, type StrategyApi } from './features/strategy/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -27,6 +28,7 @@ const browserRulePacksApi = createBrowserRulePacksApi();
 const browserPromotionApi = createBrowserPromotionApi();
 const browserAISettingsApi = createBrowserAISettingsApi();
 const browserCompetitorsApi = createBrowserCompetitorsApi();
+const browserStrategyApi = createBrowserStrategyApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -39,6 +41,7 @@ export function App({
   skusApi = browserSkusApi,
   aiSettingsApi = browserAISettingsApi,
   competitorsApi = browserCompetitorsApi,
+  strategyApi = browserStrategyApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -50,6 +53,7 @@ export function App({
   readonly skusApi?: SkusApi;
   readonly aiSettingsApi?: AISettingsApi;
   readonly competitorsApi?: CompetitorsApi;
+  readonly strategyApi?: StrategyApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -64,6 +68,7 @@ export function App({
         skusApi={skusApi}
         aiSettingsApi={aiSettingsApi}
         competitorsApi={competitorsApi}
+        strategyApi={strategyApi}
       />
     </BrowserRouter>
   );

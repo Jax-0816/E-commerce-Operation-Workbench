@@ -33,6 +33,7 @@
     "@eaw/pricing-engine": "workspace:*",
     "@eaw/promotion-engine": "workspace:*",
     "@eaw/platform-engine": "workspace:*",
+    "@eaw/prompt-engine": "workspace:*",
     "@eaw/rule-engine": "workspace:*",
     "@eaw/workspace": "workspace:*"
   }

@@ -54,3 +54,5 @@ export type {
   ConfirmCompetitorImportInput,
   ProductCompetitorImportPreview,
 } from './competitors/index.js';
+export { createStrategyApplication } from './strategy/index.js';
+export type { ActivePrompt, ActivePromptPort, StrategyApplication } from './strategy/index.js';

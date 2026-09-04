@@ -59,8 +59,9 @@ describe('routed workbench', () => {
     expect(container.querySelector('h1')?.textContent).toBe('SKU 与规格');
 
     await click(container, '市场分析');
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('Phase 7');
-    expect(container.textContent).toContain('当前能力尚未实现');
+    expect(container.querySelector('h1')?.textContent).toBe('市场分析');
+    expect(container.textContent).toContain('竞品分析');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
 
@@ -178,6 +179,10 @@ async function render(entry: string) {
             activate: async () => undefined as never,
             diff: async () => ({ added: [], removed: [], changed: [] }),
             importJson: async () => undefined as never,
+            list: async () => [],
+          }}
+          strategyApi={{
+            generate: async () => undefined as never,
             list: async () => [],
           }}
           skusApi={{

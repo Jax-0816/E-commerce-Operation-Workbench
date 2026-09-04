@@ -47,11 +47,14 @@ import type { AISettingsApi } from '../features/ai-settings/api.js';
 import { AISettingsPanel } from '../features/ai-settings/ai-settings-panel.js';
 import type { CompetitorsApi } from '../features/competitors/api.js';
 import { CompetitorImportPanel } from '../features/competitors/competitor-import-panel.js';
+import type { StrategyApi } from '../features/strategy/api.js';
+import { StrategyPanel } from '../features/strategy/strategy-panel.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
   readonly costsApi: CostsApi;
   readonly competitorsApi: CompetitorsApi;
+  readonly strategyApi: StrategyApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
@@ -105,6 +108,9 @@ const productNavigation = [
   ['历史', 'history'],
 ] as const;
 
+const marketStrategyKinds = ['competitor_analysis', 'market_insight'] as const;
+const sellingPointKinds = ['selling_point_set'] as const;
+
 export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.Element {
   return (
     <Routes>
@@ -130,13 +136,14 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           path="products/:productId/competitors"
           element={<CompetitorsPage api={dependencies.competitorsApi} />}
         />
-        {['market', 'selling-points'].map((section) => (
-          <Route
-            key={section}
-            path={`products/:productId/${section}`}
-            element={<Unavailable title={sectionTitle(section)} phase="Phase 7" />}
-          />
-        ))}
+        <Route
+          path="products/:productId/market"
+          element={<MarketPage api={dependencies.strategyApi} />}
+        />
+        <Route
+          path="products/:productId/selling-points"
+          element={<SellingPointsPage api={dependencies.strategyApi} />}
+        />
         {['titles'].map((section) => (
           <Route
             key={section}
@@ -370,6 +377,22 @@ function CompetitorsPage({ api }: { readonly api: CompetitorsApi }): React.JSX.E
   return (
     <ProductFeature title="竞品快照">
       <CompetitorImportPanel api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function MarketPage({ api }: { readonly api: StrategyApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="市场分析">
+      <StrategyPanel api={api} productId={useProductId()} kinds={marketStrategyKinds} />
+    </ProductFeature>
+  );
+}
+
+function SellingPointsPage({ api }: { readonly api: StrategyApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="卖点">
+      <StrategyPanel api={api} productId={useProductId()} kinds={sellingPointKinds} />
     </ProductFeature>
   );
 }

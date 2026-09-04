@@ -11,3 +11,4 @@ export * from './platform-profiles/index.js';
 export * from './costs/index.js';
 export * from './promotions/index.js';
 export * from './competitors/index.js';
+export * from './strategy/index.js';

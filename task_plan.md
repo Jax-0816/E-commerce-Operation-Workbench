@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-暂停点 — Task 20 已完成；下周从 Task 21「竞品分析、市场洞察与卖点」继续
+Wave 4 — Task 21：竞品分析、市场洞察与卖点（complete；准备提交）
 
 ## Phases
 
@@ -41,10 +41,10 @@
 ### Wave 4: 竞品、策略与内容资产
 
 - [x] Task 20：竞品快照与导入（complete）
-- [ ] Task 21：竞品分析、市场洞察与卖点
+- [x] Task 21：竞品分析、市场洞察与卖点（complete）
 - [ ] Task 22：版本化标题工作室
 - [ ] Task 23：创意和详情页构建器
-- **Status:** paused（Task 20 complete，Task 21 pending）
+- **Status:** in_progress（Task 21 complete，Task 22 pending）
 
 ### Wave 5: 工作流与运营方案
 

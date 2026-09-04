@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
+import type { AIProvider } from '@eaw/ai-engine';
 
 import { createProductionApp } from './runtime.js';
 
@@ -17,6 +18,95 @@ afterEach(async () => {
 });
 
 describe('production app composition', () => {
+  it('generates and persists evidence-backed strategy revisions with a fake provider', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-strategy-')));
+    directories.push(workspacePath);
+    let productId = '';
+    let snapshotId = '';
+    const providerFactory = (): AIProvider => ({
+      id: 'fake',
+      async generate() {
+        return {
+          provider: 'fake',
+          responseId: 'fake-response',
+          model: 'fake',
+          content: JSON.stringify({
+            productId,
+            conclusions: [
+              {
+                summary: '竞品销量展示为下界',
+                evidenceRefs: [{ kind: 'competitor_snapshot', id: snapshotId, productId }],
+              },
+            ],
+            limitations: ['仅基于导入快照'],
+          }),
+          usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+        };
+      },
+      async testConnection() {
+        return true;
+      },
+      getCapabilities() {
+        return { text: true, structured: true };
+      },
+    });
+    const first = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
+    productId = (
+      await first.inject({
+        method: 'POST',
+        url: '/api/v1/products',
+        payload: { name: '策略保温杯' },
+      })
+    ).json().id as string;
+    await first.inject({
+      method: 'PUT',
+      url: '/api/v1/ai/settings',
+      payload: { apiKey: 'fake-secret' },
+    });
+    const preview = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/competitors/import/preview`,
+      payload: { format: 'paste', sourceName: 'paste', content: 'name\tsales\n竞品 A\t10万+' },
+    });
+    const imported = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/competitors/import/confirm`,
+      payload: {
+        previewProductId: productId,
+        format: 'paste',
+        sourceName: 'paste',
+        rows: preview.json().rows,
+      },
+    });
+    snapshotId = imported.json().items[0].snapshot.id as string;
+    const generated = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/strategy/competitor_analysis/generate`,
+    });
+    expect(generated.statusCode).toBe(200);
+    expect(generated.json()).toMatchObject({
+      status: 'verified',
+      revisionNo: 1,
+      payload: { conclusions: [{ evidenceRefs: [{ id: snapshotId }] }] },
+    });
+    await first.close();
+
+    const restarted = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
+    const history = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/products/${productId}/strategy/competitor_analysis`,
+    });
+    expect(history.json().items).toHaveLength(1);
+    await restarted.close();
+  });
   it('previews, confirms and persists source-preserving competitor imports across restart', async () => {
     const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-competitors-')));
     directories.push(workspacePath);

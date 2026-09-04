@@ -11,11 +11,13 @@ import {
   createSkusApplication,
   createAISettingsApplication,
   createCompetitorsApplication,
+  createStrategyApplication,
 } from '@eaw/application';
-import { DeepSeekProvider } from '@eaw/ai-engine';
+import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
   DrizzleProductRepository,
   DrizzleCompetitorRepository,
+  DrizzleAIGenerationRepository,
   DrizzleCostProfileRepository,
   DrizzlePricingRepository,
   DrizzlePromotionRepository,
@@ -23,6 +25,8 @@ import {
   DrizzlePlatformProfileRepository,
   DrizzleSkuMatrixRepository,
   DrizzleRuleRepository,
+  DrizzlePromptRepository,
+  DrizzleStrategyRepository,
   migrateDatabase,
   openDatabase,
   type OpenDatabase,
@@ -39,17 +43,20 @@ import {
 
 import { buildApp } from './app.js';
 import { createAppContext } from './context.js';
+import { ensureStrategyPrompts } from './strategy-prompts.js';
 
 export interface CreateProductionAppOptions {
   readonly migrationsDirectory: string;
   readonly webDistDir?: string;
   readonly workspacePath: string;
+  readonly providerFactory?: (apiKey: string) => AIProvider;
 }
 
 export async function createProductionApp({
   migrationsDirectory,
   webDistDir,
   workspacePath,
+  providerFactory: providerFactoryOverride,
 }: CreateProductionAppOptions): Promise<FastifyInstance> {
   const workspace = await initializeWorkspace(workspacePath);
   let lock: WorkspaceLock | undefined;
@@ -109,18 +116,35 @@ export async function createProductionApp({
       skus: skuRepository,
       idFactory: createUuidV7,
     });
+    const secretStore = new FileSecretStore(workspace.path);
+    const providerFactory =
+      providerFactoryOverride ?? ((apiKey: string) => new DeepSeekProvider({ apiKey }));
     const aiSettings = createAISettingsApplication({
-      secrets: new FileSecretStore(workspace.path),
-      providerFactory: (apiKey) => new DeepSeekProvider({ apiKey }),
+      secrets: secretStore,
+      providerFactory,
     });
+    const competitorRepository = new DrizzleCompetitorRepository(database);
     const competitors = createCompetitorsApplication({
       products: productRepository,
-      repository: new DrizzleCompetitorRepository(database),
+      repository: competitorRepository,
+    });
+    const promptRepository = new DrizzlePromptRepository(database);
+    await ensureStrategyPrompts(promptRepository);
+    const strategy = createStrategyApplication({
+      products: productRepository,
+      facts: new DrizzleProductFactRepository(database),
+      competitors: competitorRepository,
+      repository: new DrizzleStrategyRepository(database),
+      prompts: promptRepository,
+      logs: new DrizzleAIGenerationRepository(database),
+      secrets: secretStore,
+      providerFactory,
     });
     const app = buildApp(
       createAppContext({
         aiSettings,
         competitors,
+        strategy,
         facts,
         platformCapabilities,
         platformProfiles,

@@ -20,6 +20,12 @@ export {
   ProductCompetitorParamsSchema,
 } from './competitors.js';
 export type { CompetitorImportPreviewResponse, CompetitorListResponse } from './competitors.js';
+export {
+  StrategyAssetListResponseSchema,
+  StrategyAssetResponseSchema,
+  StrategyKindSchema,
+  StrategyParamsSchema,
+} from './strategy.js';
 export { HealthResponseSchema } from './health.js';
 export type { HealthResponse } from './health.js';
 export {
