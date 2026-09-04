@@ -12,3 +12,4 @@ export * from './costs/index.js';
 export * from './promotions/index.js';
 export * from './competitors/index.js';
 export * from './strategy/index.js';
+export * from './content-assets/index.js';

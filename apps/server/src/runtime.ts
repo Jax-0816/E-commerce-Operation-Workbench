@@ -12,6 +12,7 @@ import {
   createAISettingsApplication,
   createCompetitorsApplication,
   createStrategyApplication,
+  createTitlesApplication,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
@@ -27,6 +28,7 @@ import {
   DrizzleRuleRepository,
   DrizzlePromptRepository,
   DrizzleStrategyRepository,
+  DrizzleTitleAssetRepository,
   migrateDatabase,
   openDatabase,
   type OpenDatabase,
@@ -81,8 +83,9 @@ export async function createProductionApp({
 
     const productRepository = new DrizzleProductRepository(database.drizzle);
     const products = createProductsApplication({ repository: productRepository });
+    const factRepository = new DrizzleProductFactRepository(database);
     const facts = createFactsApplication({
-      repository: new DrizzleProductFactRepository(database),
+      repository: factRepository,
       products: productRepository,
     });
     const skuRepository = new DrizzleSkuMatrixRepository(database);
@@ -90,8 +93,9 @@ export async function createProductionApp({
       repository: skuRepository,
       products: productRepository,
     });
+    const platformProfileRepository = new DrizzlePlatformProfileRepository(database);
     const platformProfiles = createPlatformProfilesApplication({
-      repository: new DrizzlePlatformProfileRepository(database),
+      repository: platformProfileRepository,
       products: productRepository,
     });
     const platformCapabilities = createPlatformCapabilitiesApplication();
@@ -130,13 +134,26 @@ export async function createProductionApp({
     });
     const promptRepository = new DrizzlePromptRepository(database);
     await ensureStrategyPrompts(promptRepository);
+    const strategyRepository = new DrizzleStrategyRepository(database);
+    const generationLogs = new DrizzleAIGenerationRepository(database);
     const strategy = createStrategyApplication({
       products: productRepository,
-      facts: new DrizzleProductFactRepository(database),
+      facts: factRepository,
       competitors: competitorRepository,
-      repository: new DrizzleStrategyRepository(database),
+      repository: strategyRepository,
       prompts: promptRepository,
-      logs: new DrizzleAIGenerationRepository(database),
+      logs: generationLogs,
+      secrets: secretStore,
+      providerFactory,
+    });
+    const titles = createTitlesApplication({
+      products: productRepository,
+      facts: factRepository,
+      strategies: strategyRepository,
+      platformProfiles: platformProfileRepository,
+      repository: new DrizzleTitleAssetRepository(database),
+      prompts: promptRepository,
+      logs: generationLogs,
       secrets: secretStore,
       providerFactory,
     });
@@ -145,6 +162,7 @@ export async function createProductionApp({
         aiSettings,
         competitors,
         strategy,
+        titles,
         facts,
         platformCapabilities,
         platformProfiles,

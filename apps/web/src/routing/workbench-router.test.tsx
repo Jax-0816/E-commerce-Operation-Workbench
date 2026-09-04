@@ -185,6 +185,12 @@ async function render(entry: string) {
             generate: async () => undefined as never,
             list: async () => [],
           }}
+          titlesApi={{
+            generate: async () => undefined as never,
+            edit: async () => undefined as never,
+            lock: async () => undefined as never,
+            list: async () => [],
+          }}
           skusApi={{
             configure: async () => ({ dimensions: [], skus: [] }),
             get: async () => ({ dimensions: [], skus: [] }),

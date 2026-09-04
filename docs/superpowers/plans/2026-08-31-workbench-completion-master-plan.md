@@ -24,26 +24,28 @@
 
 ## Current Baseline — 2026-08-31
 
-| 原计划任务                            | 状态     | 当前证据                                                                                  |
-| ------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| Task 1–3：仓库、应用壳、质量基线      | complete | 工作区、Vite/Fastify、本地健康检查、CI/ADR 已存在                                         |
-| Task 4–6：ID/错误、工作区安全、SQLite | complete | 领域 ID、错误清洗、锁/密钥端口、迁移与集成测试已存在                                      |
-| Task 7–10：商品、事实、SKU、平台档案  | complete | 完整 API/UI 路由与 Phase 2 浏览器黄金路径已存在                                           |
-| Phase 2 usability closeout            | complete | 总控台、四步建档、事实编辑确认、SKU/平台独立页面已存在                                    |
-| Task 11：精确金额、费率、舍入、追踪   | complete | `packages/calculation-engine` 已实现并有单元/性质测试                                     |
-| Task 12：安全公式 AST 与依赖 DAG      | complete | 严格 Zod AST、精确求值、资源预算、稳定拓扑与完整循环诊断已通过审查和全仓门禁              |
-| Task 13：成本档案与定价实验室         | complete | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
-| Task 14：平台能力注册表               | complete | 规范 ID/别名、不可伪造能力合同、通用 adapter、API/UI 和真实页面验收已完成                 |
-| Task 15：版本化规则包与快照           | complete | 安全 JSON/ZIP 加载、优先级/冲突、SQLite 版本与不可变快照、API/UI 和真实门禁均已完成       |
-| Task 16：确定性促销引擎               | complete | 组件规范化、资金归因、解释轨迹、全局最低活动价求解与确定性不变量测试均已完成              |
-| Task 17：拼多多模拟器与批算           | complete | PDD adapter、规则/成本快照、批算仓储、API/UI 与真实运行时持久化验收均已完成               |
-| Task 18：版本化提示词编译器           | complete | 五级信任分层、防注入边界、三类哈希、默认模板和不可变 SQLite 仓储均通过全仓门禁            |
-| Task 19：DeepSeek 生成管线            | complete | provider 抽象、有界重试、结构修复、证据校验、脱敏不可变日志和本地密钥设置已通过门禁       |
-| Task 20：可审计竞品快照与导入         | complete | provider port、CSV/XLSX/粘贴预览确认、不可变 SQLite、API/UI 与重启持久化测试已完成        |
-| Task 21                               | complete | 三类结构化提示词、证据审查、不可变修订、API/UI 与 fake-provider 重启测试已完成            |
-| Task 22–29                            | pending  | Task 21 完成后进入版本化标题工作室                                                        |
+| 原计划任务                            | 状态        | 当前证据                                                                                  |
+| ------------------------------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| Task 1–3：仓库、应用壳、质量基线      | complete    | 工作区、Vite/Fastify、本地健康检查、CI/ADR 已存在                                         |
+| Task 4–6：ID/错误、工作区安全、SQLite | complete    | 领域 ID、错误清洗、锁/密钥端口、迁移与集成测试已存在                                      |
+| Task 7–10：商品、事实、SKU、平台档案  | complete    | 完整 API/UI 路由与 Phase 2 浏览器黄金路径已存在                                           |
+| Phase 2 usability closeout            | complete    | 总控台、四步建档、事实编辑确认、SKU/平台独立页面已存在                                    |
+| Task 11：精确金额、费率、舍入、追踪   | complete    | `packages/calculation-engine` 已实现并有单元/性质测试                                     |
+| Task 12：安全公式 AST 与依赖 DAG      | complete    | 严格 Zod AST、精确求值、资源预算、稳定拓扑与完整循环诊断已通过审查和全仓门禁              |
+| Task 13：成本档案与定价实验室         | complete    | 纯定价引擎、SKU 成本 revision、不可变历史、API/UI 与 Phase 3 E2E 已通过独立审查和全仓门禁 |
+| Task 14：平台能力注册表               | complete    | 规范 ID/别名、不可伪造能力合同、通用 adapter、API/UI 和真实页面验收已完成                 |
+| Task 15：版本化规则包与快照           | complete    | 安全 JSON/ZIP 加载、优先级/冲突、SQLite 版本与不可变快照、API/UI 和真实门禁均已完成       |
+| Task 16：确定性促销引擎               | complete    | 组件规范化、资金归因、解释轨迹、全局最低活动价求解与确定性不变量测试均已完成              |
+| Task 17：拼多多模拟器与批算           | complete    | PDD adapter、规则/成本快照、批算仓储、API/UI 与真实运行时持久化验收均已完成               |
+| Task 18：版本化提示词编译器           | complete    | 五级信任分层、防注入边界、三类哈希、默认模板和不可变 SQLite 仓储均通过全仓门禁            |
+| Task 19：DeepSeek 生成管线            | complete    | provider 抽象、有界重试、结构修复、证据校验、脱敏不可变日志和本地密钥设置已通过门禁       |
+| Task 20：可审计竞品快照与导入         | complete    | provider port、CSV/XLSX/粘贴预览确认、不可变 SQLite、API/UI 与重启持久化测试已完成        |
+| Task 21                               | complete    | 三类结构化提示词、证据审查、不可变修订、API/UI 与 fake-provider 重启测试已完成            |
+| Task 22                               | complete    | 四类标题、事实守卫、本地规则、不可变修订、锁定、stale 原因和真实运行时持久化均已完成       |
+| Task 23                               | in_progress | 正在实现结构化创意方案、详情页架构、单项重生成、锁定与稳定重排                            |
+| Task 24–29                            | pending     | Task 23 完成后进入可恢复工作流和运营方案                                                  |
 
-当前主线完成度按原计划 29 个任务计为 `21/29 ≈ 72%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 21 已完成，下一项为 Task 22。
+当前主线完成度按原计划 29 个任务计为 `22/29 ≈ 76%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 22 已完成，下一项为 Task 23。
 
 ## Dependency Order
 
@@ -239,10 +241,10 @@ generateValidated<T>(input: StructuredGenerationInput<T>): Promise<ValidatedGene
 
 **Files:** content asset/version/stale 服务、title use cases/contracts/routes/UI。
 
-- [ ] 测试编辑/重生成产生新修订、锁定保留、依赖变更过期原因和平台本地规则。
-- [ ] 实现推荐型、搜索型、卖点型、场景型标题及确定性本地校验。
-- [ ] 所有无事实支撑的词语进入 review，不得静默通过。
-- [ ] 提交 `feat: add guarded versioned title studio`。
+- [x] 测试编辑/重生成产生新修订、锁定保留、依赖变更过期原因和平台本地规则。
+- [x] 实现推荐型、搜索型、卖点型、场景型标题及确定性本地校验。
+- [x] 所有无事实支撑的词语进入 review，不得静默通过。
+- [x] 提交 `feat: add guarded versioned title studio`。
 
 ### Task 23: Creative and detail-page builders
 

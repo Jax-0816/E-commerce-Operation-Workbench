@@ -26,6 +26,14 @@ export {
   StrategyKindSchema,
   StrategyParamsSchema,
 } from './strategy.js';
+export {
+  EditTitlesInputSchema,
+  TitleAssetListResponseSchema,
+  TitleAssetViewResponseSchema,
+  TitleCandidateSchema,
+  TitleParamsSchema,
+  TitleQuerySchema,
+} from './titles.js';
 export { HealthResponseSchema } from './health.js';
 export type { HealthResponse } from './health.js';
 export {

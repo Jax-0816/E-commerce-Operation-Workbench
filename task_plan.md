@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 4 — Task 21：竞品分析、市场洞察与卖点（complete；准备提交）
+Wave 4 — Task 23：创意和详情页构建器（in_progress）
 
 ## Phases
 
@@ -42,9 +42,9 @@ Wave 4 — Task 21：竞品分析、市场洞察与卖点（complete；准备提
 
 - [x] Task 20：竞品快照与导入（complete）
 - [x] Task 21：竞品分析、市场洞察与卖点（complete）
-- [ ] Task 22：版本化标题工作室
-- [ ] Task 23：创意和详情页构建器
-- **Status:** in_progress（Task 21 complete，Task 22 pending）
+- [x] Task 22：版本化标题工作室（complete）
+- [ ] Task 23：创意和详情页构建器（in_progress）
+- **Status:** in_progress
 
 ### Wave 5: 工作流与运营方案
 

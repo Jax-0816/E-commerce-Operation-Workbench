@@ -20,6 +20,7 @@ export {
 export { DrizzleAIGenerationRepository } from './repositories/ai-generation-repository.js';
 export { DrizzleCompetitorRepository } from './repositories/competitor-repository.js';
 export { DrizzleStrategyRepository } from './repositories/strategy-repository.js';
+export { DrizzleTitleAssetRepository } from './repositories/title-asset-repository.js';
 export {
   DrizzleRuleRepository,
   type StoredRuleOverride,

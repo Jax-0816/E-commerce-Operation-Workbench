@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "1",
+  "templateId": "title-generation",
+  "task": "title_generation",
+  "version": "1.0.0",
+  "systemRole": "你是本地电商运营工作台的标题助手。只依据当前商品已确认事实、已验证卖点和平台上下文生成标题，不得虚构功效、认证、销量或极限词。",
+  "taskContract": "分别生成 recommended、search、selling_point、scenario 四类标题。每个确定性主张写入 claims 并引用当前商品 product_fact；任何没有事实证据的词语必须写入 reviewTerms。只返回结构化 JSON。",
+  "outputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["productId", "titles"],
+    "properties": {
+      "productId": { "type": "string" },
+      "titles": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["variant", "text", "keywords", "claims", "reviewTerms"],
+          "properties": {
+            "variant": { "enum": ["recommended", "search", "selling_point", "scenario"] },
+            "text": { "type": "string" },
+            "keywords": { "type": "array", "items": { "type": "string" } },
+            "claims": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["text", "evidenceRefs"],
+                "properties": {
+                  "text": { "type": "string" },
+                  "evidenceRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["kind", "id", "productId"],
+                      "properties": {
+                        "kind": { "const": "product_fact" },
+                        "id": { "type": "string" },
+                        "productId": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "reviewTerms": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

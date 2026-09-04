@@ -49,12 +49,15 @@ import type { CompetitorsApi } from '../features/competitors/api.js';
 import { CompetitorImportPanel } from '../features/competitors/competitor-import-panel.js';
 import type { StrategyApi } from '../features/strategy/api.js';
 import { StrategyPanel } from '../features/strategy/strategy-panel.js';
+import type { TitlesApi } from '../features/titles/api.js';
+import { TitleStudio } from '../features/titles/title-studio.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
   readonly costsApi: CostsApi;
   readonly competitorsApi: CompetitorsApi;
   readonly strategyApi: StrategyApi;
+  readonly titlesApi: TitlesApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
@@ -144,13 +147,10 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           path="products/:productId/selling-points"
           element={<SellingPointsPage api={dependencies.strategyApi} />}
         />
-        {['titles'].map((section) => (
-          <Route
-            key={section}
-            path={`products/:productId/${section}`}
-            element={<Unavailable title={sectionTitle(section)} phase="Phase 8" />}
-          />
-        ))}
+        <Route
+          path="products/:productId/titles"
+          element={<TitlesPage api={dependencies.titlesApi} />}
+        />
         {['creative', 'detail'].map((section) => (
           <Route
             key={section}
@@ -393,6 +393,14 @@ function SellingPointsPage({ api }: { readonly api: StrategyApi }): React.JSX.El
   return (
     <ProductFeature title="卖点">
       <StrategyPanel api={api} productId={useProductId()} kinds={sellingPointKinds} />
+    </ProductFeature>
+  );
+}
+
+function TitlesPage({ api }: { readonly api: TitlesApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="标题 Studio">
+      <TitleStudio api={api} productId={useProductId()} />
     </ProductFeature>
   );
 }

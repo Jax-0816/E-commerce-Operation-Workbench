@@ -25,21 +25,35 @@ describe('production app composition', () => {
     let snapshotId = '';
     const providerFactory = (): AIProvider => ({
       id: 'fake',
-      async generate() {
+      async generate(request) {
+        const titleRequest = request.messages.some(({ content }) => content.includes('四类标题'));
         return {
           provider: 'fake',
           responseId: 'fake-response',
           model: 'fake',
-          content: JSON.stringify({
-            productId,
-            conclusions: [
-              {
-                summary: '竞品销量展示为下界',
-                evidenceRefs: [{ kind: 'competitor_snapshot', id: snapshotId, productId }],
-              },
-            ],
-            limitations: ['仅基于导入快照'],
-          }),
+          content: JSON.stringify(
+            titleRequest
+              ? {
+                  productId,
+                  titles: ['recommended', 'search', 'selling_point', 'scenario'].map((variant) => ({
+                    variant,
+                    text: `${variant} 保温杯`,
+                    keywords: ['保温杯'],
+                    claims: [],
+                    reviewTerms: [],
+                  })),
+                }
+              : {
+                  productId,
+                  conclusions: [
+                    {
+                      summary: '竞品销量展示为下界',
+                      evidenceRefs: [{ kind: 'competitor_snapshot', id: snapshotId, productId }],
+                    },
+                  ],
+                  limitations: ['仅基于导入快照'],
+                },
+          ),
           usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
         };
       },
@@ -93,6 +107,26 @@ describe('production app composition', () => {
       revisionNo: 1,
       payload: { conclusions: [{ evidenceRefs: [{ id: snapshotId }] }] },
     });
+    const title = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/titles/generate?platformId=pinduoduo`,
+    });
+    expect(title.statusCode, title.body).toBe(200);
+    expect(title.json()).toMatchObject({
+      revision: {
+        revisionNo: 1,
+        status: 'verified',
+      },
+    });
+    expect(title.json().revision.titles[0]).toMatchObject({ variant: 'recommended' });
+    const regenerated = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/titles/generate?platformId=pinduoduo`,
+    });
+    expect(regenerated.statusCode, regenerated.body).toBe(200);
+    expect(regenerated.json()).toMatchObject({
+      revision: { revisionNo: 2, supersedesRevisionId: title.json().revision.id },
+    });
     await first.close();
 
     const restarted = await createProductionApp({
@@ -105,6 +139,11 @@ describe('production app composition', () => {
       url: `/api/v1/products/${productId}/strategy/competitor_analysis`,
     });
     expect(history.json().items).toHaveLength(1);
+    const titleHistory = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/products/${productId}/titles?platformId=pinduoduo`,
+    });
+    expect(titleHistory.json().items).toHaveLength(2);
     await restarted.close();
   });
   it('previews, confirms and persists source-preserving competitor imports across restart', async () => {

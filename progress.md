@@ -397,3 +397,34 @@
 
 1. 提交并推送 Task 21：`feat: add evidence-backed market strategy`。
 2. 进入 Wave 4 / Task 22：版本化标题工作室、不可变修订、锁定与上游变化 stale 原因。
+
+## Session: 2026-09-04 — Wave 4 / Task 22
+
+### Guarded versioned title studio
+
+- **Status:** complete
+- Actions taken:
+  - 新增推荐型、搜索型、卖点型和场景型四类严格标题输出，并按拼多多、淘宝/天猫、抖音执行确定性长度、重复和禁用词校验。
+  - 标题主张只能引用当前商品已确认、允许且非敏感的事实；无证据主张和模型声明的待核实词语统一标记 `needs_review`。
+  - 新增 `0012_add-title-assets.sql` 和不可变修订仓储；生成、编辑与锁定只追加版本，数据库 trigger 禁止历史更新和删除。
+  - 依赖哈希覆盖商品事实、卖点、平台本地规则和提示词；上游变化只返回明确 stale 原因，不覆盖锁定版本。
+  - 新增严格合同、Fastify 路由和标题工作室页面，支持平台切换、四类编辑、重新生成、锁定、校验问题与历史展示。
+  - 使用 fake provider 完成生产运行时生成及重启后历史读取，未发起真实付费 AI 请求。
+
+### Fresh verification evidence
+
+| Gate                              | Result               |
+| --------------------------------- | -------------------- |
+| Root unit/integration tests       | 408 passed, 0 failed |
+| Playwright golden paths           | 2 passed, 0 failed   |
+| Root typecheck                    | passed               |
+| Root lint                         | passed               |
+| Root production build             | passed               |
+| Frozen lockfile install           | passed               |
+| Prompt/rule-pack validation       | passed               |
+| Fake-provider restart persistence | passed               |
+
+### Next action
+
+1. 提交并推送 Task 22：`feat: add guarded versioned title studio`。
+2. 进入 Wave 4 / Task 23：结构化创意方案与详情页构建器、单项重生成、锁定和稳定重排。

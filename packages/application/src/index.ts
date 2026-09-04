@@ -56,3 +56,5 @@ export type {
 } from './competitors/index.js';
 export { createStrategyApplication } from './strategy/index.js';
 export type { ActivePrompt, ActivePromptPort, StrategyApplication } from './strategy/index.js';
+export { createTitlesApplication } from './titles/index.js';
+export type { TitlesApplication } from './titles/index.js';
