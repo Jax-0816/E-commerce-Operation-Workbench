@@ -18,6 +18,7 @@ import { registerPricingRoutes } from './routes/pricing.js';
 import { registerRuleRoutes } from './routes/rules.js';
 import { registerPromotionRoutes } from './routes/promotions.js';
 import { registerAISettingsRoutes } from './routes/ai-settings.js';
+import { registerCompetitorRoutes } from './routes/competitors.js';
 
 export function buildApp(context: AppContext): FastifyInstance {
   const app = Fastify();
@@ -39,6 +40,7 @@ export function buildApp(context: AppContext): FastifyInstance {
   registerRuleRoutes(app, context.rules);
   registerPromotionRoutes(app, context.promotions);
   registerAISettingsRoutes(app, context.aiSettings);
+  registerCompetitorRoutes(app, context.competitors);
 
   if (context.webDistDir !== undefined && existsSync(context.webDistDir)) {
     app.register(fastifyStatic, {

@@ -17,6 +17,66 @@ afterEach(async () => {
 });
 
 describe('production app composition', () => {
+  it('previews, confirms and persists source-preserving competitor imports across restart', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-competitors-')));
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const product = await first.inject({
+      method: 'POST',
+      url: '/api/v1/products',
+      payload: { name: '竞品导入保温杯' },
+    });
+    const productId = product.json().id as string;
+    const preview = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/competitors/import/preview`,
+      payload: {
+        format: 'csv',
+        sourceName: 'competitors.csv',
+        content: 'name,url,price,sales\n竞品 A,https://example.com/a,¥99,10万+',
+      },
+    });
+    expect(preview.statusCode).toBe(200);
+    expect(preview.json()).toMatchObject({
+      productId,
+      valid: true,
+      rows: [{ displayedSalesText: '10万+', normalizedSales: { value: '100000' } }],
+    });
+    const confirmed = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/competitors/import/confirm`,
+      payload: {
+        previewProductId: productId,
+        format: 'csv',
+        sourceName: 'competitors.csv',
+        rows: preview.json().rows,
+      },
+    });
+    expect(confirmed.statusCode).toBe(200);
+    const competitorId = confirmed.json().items[0].competitor.id as string;
+    await first.close();
+
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const listed = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/products/${productId}/competitors`,
+    });
+    expect(listed.json()).toMatchObject({
+      items: [
+        { competitor: { id: competitorId }, latestSnapshot: { displayedSalesText: '10万+' } },
+      ],
+    });
+    expect(
+      (
+        await restarted.inject({
+          method: 'GET',
+          url: `/api/v1/products/${productId}/competitors/${competitorId}/snapshots`,
+        })
+      ).json(),
+    ).toMatchObject({ items: [{ normalizedSales: { kind: 'lower_bound', value: '100000' } }] });
+    await restarted.close();
+  });
+
   it('keeps the DeepSeek key outside SQLite and reports only configured after restart', async () => {
     const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-ai-settings-')));
     directories.push(workspacePath);

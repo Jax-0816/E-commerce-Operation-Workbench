@@ -6,6 +6,20 @@ export {
   TestAIConnectionResponseSchema,
 } from './ai-settings.js';
 export type { AISettingsResponse } from './ai-settings.js';
+export {
+  CompetitorImportIssueSchema,
+  CompetitorImportPreviewResponseSchema,
+  CompetitorImportRowSchema,
+  CompetitorListResponseSchema,
+  CompetitorParamsSchema,
+  CompetitorSnapshotResponseSchema,
+  CompetitorSnapshotsResponseSchema,
+  ConfirmCompetitorImportInputSchema,
+  ConfirmCompetitorImportResponseSchema,
+  PreviewCompetitorImportInputSchema,
+  ProductCompetitorParamsSchema,
+} from './competitors.js';
+export type { CompetitorImportPreviewResponse, CompetitorListResponse } from './competitors.js';
 export { HealthResponseSchema } from './health.js';
 export type { HealthResponse } from './health.js';
 export {

@@ -18,6 +18,7 @@ export {
   type StoredPromptTemplate,
 } from './repositories/prompt-repository.js';
 export { DrizzleAIGenerationRepository } from './repositories/ai-generation-repository.js';
+export { DrizzleCompetitorRepository } from './repositories/competitor-repository.js';
 export {
   DrizzleRuleRepository,
   type StoredRuleOverride,

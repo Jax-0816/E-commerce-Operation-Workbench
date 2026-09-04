@@ -337,3 +337,33 @@
 
 1. 提交并推送 Task 19：`feat: add guarded deepseek generation pipeline`。
 2. 进入 Wave 4 / Task 20：可审计竞品快照、CSV/XLSX/粘贴预览与确认导入。
+
+## Session: 2026-09-04 — Wave 4 / Task 20
+
+### Auditable competitor snapshots and imports
+
+- **Status:** complete；按用户要求在此暂停，Task 21 尚未启动
+- Actions taken:
+  - 新增竞品身份、导入批次和不可变捕获快照领域模型；展示价格/销量/评价与标准化值并存，`10万+` 原文完整保留且只标记为下界。
+  - 新增可替换 `CompetitorDataProvider` 端口及 CSV、XLSX、粘贴本地 adapter；执行大小、行列、表头、URL、时间和工作区资产路径校验，不实现抓取器。
+  - 新增 preview → validation → confirm 应用流程、严格 Zod 合同、Fastify 路由和 React 竞品页，支持文件预览、确认导入及审计台账。
+  - 新增 `0010_add-competitors.sql` 和真实 SQLite 仓储；同商品复合外键阻止跨商品引用，批次原子导入，快照与批次禁止更新/删除。
+  - 生产运行时重启集成测试确认竞品快照可持久化，UI/API 测试确认预览、确认和重新加载仍保留展示原文。
+
+### Fresh verification evidence
+
+| Gate                           | Result               |
+| ------------------------------ | -------------------- |
+| Root unit/integration tests    | 396 passed, 0 failed |
+| Competitor engine tests        | 7 passed, 0 failed   |
+| Root typecheck                 | passed               |
+| Root lint                      | passed               |
+| Root production build          | passed               |
+| Runtime persistence/restart    | passed               |
+| Real paid AI / crawler request | not used             |
+
+### Pause / resume point
+
+1. Task 20 已完成；不要重复实现或重新设计竞品导入。
+2. 下周先读取 `docs/superpowers/handoffs/2026-09-04-after-task-20.md`，确认分支与质量门禁后，从 Task 21 的失败测试开始。
+3. Task 21 目标是竞品分析、市场洞察、卖点三条独立 AI 垂直链路；必须绑定本商品证据， unsupported idea 降级为 suggested fact，UI 展示证据和限制。

@@ -58,7 +58,7 @@ describe('routed workbench', () => {
     await click(container, 'SKU');
     expect(container.querySelector('h1')?.textContent).toBe('SKU 与规格');
 
-    await click(container, '竞品');
+    await click(container, '市场分析');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('Phase 7');
     expect(container.textContent).toContain('当前能力尚未实现');
     root.unmount();
@@ -101,6 +101,15 @@ describe('routed workbench', () => {
     expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
+
+  it('opens the implemented competitor import workspace', async () => {
+    const { container, root } = await render(`/products/${product.id}/competitors`);
+
+    expect(container.querySelector('h1')?.textContent).toBe('竞品快照');
+    expect(container.textContent).toContain('CSV 和 XLSX');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
 });
 
 async function render(entry: string) {
@@ -130,6 +139,12 @@ async function render(entry: string) {
           costsApi={{
             get: async () => undefined,
             save: async () => undefined as never,
+          }}
+          competitorsApi={{
+            previewText: async () => undefined as never,
+            previewFile: async () => undefined as never,
+            confirm: async () => [],
+            list: async () => [],
           }}
           factsApi={{
             confirm: async () => undefined as never,

@@ -10,10 +10,12 @@ import {
   createRulePacksApplication,
   createSkusApplication,
   createAISettingsApplication,
+  createCompetitorsApplication,
 } from '@eaw/application';
 import { DeepSeekProvider } from '@eaw/ai-engine';
 import {
   DrizzleProductRepository,
+  DrizzleCompetitorRepository,
   DrizzleCostProfileRepository,
   DrizzlePricingRepository,
   DrizzlePromotionRepository,
@@ -111,9 +113,14 @@ export async function createProductionApp({
       secrets: new FileSecretStore(workspace.path),
       providerFactory: (apiKey) => new DeepSeekProvider({ apiKey }),
     });
+    const competitors = createCompetitorsApplication({
+      products: productRepository,
+      repository: new DrizzleCompetitorRepository(database),
+    });
     const app = buildApp(
       createAppContext({
         aiSettings,
+        competitors,
         facts,
         platformCapabilities,
         platformProfiles,

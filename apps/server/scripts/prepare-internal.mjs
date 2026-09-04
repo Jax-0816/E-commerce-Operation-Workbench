@@ -11,6 +11,7 @@ export const internalPackages = Object.freeze([
   Object.freeze({ name: '@eaw/promotion-engine', command: Object.freeze(['run', 'build']) }),
   Object.freeze({ name: '@eaw/prompt-engine', command: Object.freeze(['run', 'build']) }),
   Object.freeze({ name: '@eaw/ai-engine', command: Object.freeze(['run', 'build']) }),
+  Object.freeze({ name: '@eaw/competitor-engine', command: Object.freeze(['run', 'build']) }),
   Object.freeze({
     name: '@eaw/pricing-engine',
     command: Object.freeze(['exec', 'tsc', '-p', 'tsconfig.json']),

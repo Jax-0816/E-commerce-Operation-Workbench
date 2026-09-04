@@ -45,10 +45,13 @@ import type { PromotionApi } from '../features/promotion/api.js';
 import { PromotionSimulator } from '../features/promotion/promotion-simulator.js';
 import type { AISettingsApi } from '../features/ai-settings/api.js';
 import { AISettingsPanel } from '../features/ai-settings/ai-settings-panel.js';
+import type { CompetitorsApi } from '../features/competitors/api.js';
+import { CompetitorImportPanel } from '../features/competitors/competitor-import-panel.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
   readonly costsApi: CostsApi;
+  readonly competitorsApi: CompetitorsApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
@@ -123,7 +126,11 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           path="products/:productId/platforms"
           element={<PlatformsPage api={dependencies.platformProfilesApi} />}
         />
-        {['competitors', 'market', 'selling-points'].map((section) => (
+        <Route
+          path="products/:productId/competitors"
+          element={<CompetitorsPage api={dependencies.competitorsApi} />}
+        />
+        {['market', 'selling-points'].map((section) => (
           <Route
             key={section}
             path={`products/:productId/${section}`}
@@ -355,6 +362,14 @@ function PlatformsPage({ api }: { readonly api: PlatformProfilesApi }): React.JS
   return (
     <ProductFeature title="平台档案">
       <PlatformProfilePanel api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function CompetitorsPage({ api }: { readonly api: CompetitorsApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="竞品快照">
+      <CompetitorImportPanel api={api} productId={useProductId()} />
     </ProductFeature>
   );
 }

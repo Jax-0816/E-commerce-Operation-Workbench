@@ -67,6 +67,10 @@
 - 结构化 AI 输出只允许一次修复；语法/Zod 失败抛出 `AI_OUTPUT_INVALID`，业务证据失败则保留问题码并降级为 `needs_review`，不返回可被误用的结果值。
 - AI 生成日志在持久化前同时按敏感字段名、Bearer 模式和已知密钥值深度脱敏；SQLite 只保存脱敏副本，密钥进入独立本地 `FileSecretStore`。
 - `ai_generations` 使用复合外键绑定精确 prompt template/version，并用 trigger 禁止更新和删除；不存在的 prompt 版本无法产生孤立调用记录。
+- 竞品身份、导入批次与捕获快照必须分离；快照同时保留页面展示原文和可计算标准化值，`10万+` 只能标准化为带 `lower_bound` 语义的下界，不能伪造成精确销量。
+- `CompetitorDataProvider` 作为应用层依赖端口隔离来源获取；v0.1 本地实现只处理 CSV、XLSX 和粘贴内容，来源 URL 作为证据保存，不实现抓取器。
+- 竞品批次、身份和快照使用同商品复合外键并在一个 `BEGIN IMMEDIATE` 事务内追加；跨商品数据会整批回滚，快照和批次由 SQLite trigger 禁止更新/删除。
+- 竞品导入采用 preview → validation → confirm：文本最多 1 MB、XLSX 压缩文件最多 5 MB，均限制 1,000 数据行和 20 列；确认阶段重新绑定路由商品身份并重建领域对象。
 
 ## Technical Decisions
 
@@ -93,6 +97,8 @@
 | 提示词模板与启用指针分表                        | 模板可由 SQLite trigger 保证不可变，同时仍允许安全切换当前版本                                            |
 | AI 密钥与业务库分离                             | 只在本地 SecretStore 保存真实密钥，API、React 状态、生成日志和备份边界只暴露 `configured`                 |
 | AI 生成通过 `generateAndLog` 统一入口           | 成功、审核降级和失败路径均先构造脱敏不可变记录，减少后续业务功能绕过审计的可能                            |
+| 竞品导入通过 `CompetitorDataProvider` 端口      | CSV/XLSX/粘贴只是 v0.1 本地 adapter，未来接入采集来源时无需改变应用用例与不可变快照模型                   |
+| 展示原文与标准化竞品指标同时保存                | 保留审计证据和“10万+”等不确定性语义，同时允许后续分析显式区分精确值、近似值和下界                         |
 
 ## Issues Encountered
 

@@ -39,9 +39,10 @@
 | Task 17：拼多多模拟器与批算           | complete | PDD adapter、规则/成本快照、批算仓储、API/UI 与真实运行时持久化验收均已完成               |
 | Task 18：版本化提示词编译器           | complete | 五级信任分层、防注入边界、三类哈希、默认模板和不可变 SQLite 仓储均通过全仓门禁            |
 | Task 19：DeepSeek 生成管线            | complete | provider 抽象、有界重试、结构修复、证据校验、脱敏不可变日志和本地密钥设置已通过门禁       |
-| Task 20–29                            | pending  | 下一项为可审计竞品快照与 preview → validation → confirm 导入                              |
+| Task 20：可审计竞品快照与导入         | complete | provider port、CSV/XLSX/粘贴预览确认、不可变 SQLite、API/UI 与重启持久化测试已完成        |
+| Task 21–29                            | pending  | 下周从证据驱动的竞品分析、市场洞察与卖点三条垂直链路继续                                  |
 
-当前主线完成度按原计划 29 个任务计为 `19/29 ≈ 66%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。
+当前主线完成度按原计划 29 个任务计为 `20/29 ≈ 69%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。项目在 Task 20 完成后按用户要求暂停，未启动 Task 21。
 
 ## Dependency Order
 
@@ -219,10 +220,10 @@ generateValidated<T>(input: StructuredGenerationInput<T>): Promise<ValidatedGene
 
 **Files:** competitor domain/schema/repository/use cases/contracts/routes/UI，以及 CSV/XLSX/粘贴导入 adapter。
 
-- [ ] 测试“10万+”保持原始文本、快照不可变、跨商品/畸形导入拒绝。
-- [ ] 实现 preview → validation → confirm 导入，不实现抓取器。
-- [ ] 保留原值、标准化值、来源、导入批次和时间戳。
-- [ ] 提交 `feat: add auditable competitor snapshots and imports`。
+- [x] 测试“10万+”保持原始文本、快照不可变、跨商品/畸形导入拒绝。
+- [x] 实现 preview → validation → confirm 导入，不实现抓取器。
+- [x] 保留原值、标准化值、来源、导入批次和时间戳。
+- [x] 提交 `feat: add auditable competitor snapshots and imports`。
 
 ### Task 21: Evidence-backed analysis, insight and selling points
 

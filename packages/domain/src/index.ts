@@ -10,3 +10,4 @@ export * from './specifications/index.js';
 export * from './platform-profiles/index.js';
 export * from './costs/index.js';
 export * from './promotions/index.js';
+export * from './competitors/index.js';

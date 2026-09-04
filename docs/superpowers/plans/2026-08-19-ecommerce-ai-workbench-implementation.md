@@ -45,11 +45,13 @@ docs/adr/                     architecture decisions
 ### Task 1: Workspace and quality baseline
 
 **Files:**
+
 - Create: `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`, `eslint.config.js`, `.prettierrc.json`, `.editorconfig`, `.gitignore`, `.env.example`
 - Create: `packages/shared/package.json`, `packages/shared/tsconfig.json`, `packages/shared/src/index.ts`, `packages/shared/src/version.ts`
 - Test: `packages/shared/src/version.test.ts`
 
 **Interfaces:**
+
 - Produces: `APP_VERSION: "0.1.0"`, `AppVersion`.
 - Consumes: no project interface.
 
@@ -62,10 +64,12 @@ docs/adr/                     architecture decisions
 ### Task 2: Runnable server and web shell
 
 **Files:**
+
 - Create: `apps/server/package.json`, `apps/server/tsconfig.json`, `apps/server/src/app.ts`, `apps/server/src/context.ts`, `apps/server/src/index.ts`, `apps/server/src/routes/health.ts`, `apps/server/src/app.test.ts`
 - Create: `apps/web/package.json`, `apps/web/tsconfig.json`, `apps/web/index.html`, `apps/web/vite.config.ts`, `apps/web/src/main.tsx`, `apps/web/src/app.tsx`, `apps/web/src/styles.css`, `apps/web/src/app.test.tsx`
 
 **Interfaces:**
+
 - Produces: `buildApp(context): FastifyInstance`, `createAppContext(options): AppContext`, `GET /api/v1/health -> {status:"ok", appVersion}`.
 - Consumes: `APP_VERSION`.
 
@@ -78,11 +82,13 @@ docs/adr/                     architecture decisions
 ### Task 3: CI, community files, and architecture records
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`, `README.md`, `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `RULE_PACK_CONTRIBUTING.md`
 - Create: `docs/adr/0001-react-vite.md` through `docs/adr/0007-deterministic-finance.md`
 - Create: `scripts/check-versions.mjs`, `scripts/check-versions.test.ts`
 
 **Interfaces:**
+
 - Produces: `checkRuntimeVersions({node,pnpm}): VersionCheckResult`.
 - Consumes: root `engines` and `packageManager`.
 
@@ -99,10 +105,12 @@ docs/adr/                     architecture decisions
 ### Task 4: Contracts, errors, and identifiers
 
 **Files:**
+
 - Create: `packages/domain/src/ids.ts`, `packages/domain/src/errors.ts`, `packages/contracts/src/errors.ts`, `packages/contracts/src/health.ts`, `packages/contracts/src/index.ts`
 - Test: `packages/domain/src/ids.test.ts`, `packages/contracts/src/errors.test.ts`
 
 **Interfaces:**
+
 - Produces: branded UUID-v7 IDs, `DomainError`, `ErrorResponseSchema`, `toErrorResponse(error, traceId)`.
 - Consumes: Zod.
 
@@ -115,10 +123,12 @@ docs/adr/                     architecture decisions
 ### Task 5: Workspace bootstrap, lock, and secret port
 
 **Files:**
+
 - Create: `packages/workspace/src/paths.ts`, `bootstrap.ts`, `lock.ts`, `secrets.ts`, `index.ts`
 - Test: `packages/workspace/src/bootstrap.integration.test.ts`, `lock.integration.test.ts`, `secrets.test.ts`
 
 **Interfaces:**
+
 - Produces: `resolveDefaultWorkspace(platform, env)`, `initializeWorkspace(path)`, `acquireWorkspaceLock(path)`, `SecretStore {get,set,delete,isConfigured}`.
 - Consumes: filesystem only; never domain database.
 
@@ -131,11 +141,13 @@ docs/adr/                     architecture decisions
 ### Task 6: Drizzle database and migration runner
 
 **Files:**
+
 - Create: `packages/database/src/schema/core.ts`, `client.ts`, `migrate.ts`, `health.ts`, `index.ts`, `drizzle.config.ts`
 - Create: `migrations/0000_foundation.sql`, `migrations/meta/_journal.json`
 - Test: `packages/database/src/migrate.integration.test.ts`
 
 **Interfaces:**
+
 - Produces: `openDatabase(path)`, `migrateDatabase(db, migrationsDir)`, `checkIntegrity(db)`, tables `app_metadata`, `workspace_settings`.
 - Consumes: workspace-resolved database path.
 
@@ -152,10 +164,12 @@ docs/adr/                     architecture decisions
 ### Task 7: Product vertical slice
 
 **Files:**
+
 - Create: `packages/domain/src/product/product.ts`, `product-repository.ts`; `packages/database/src/schema/products.ts`, `repositories/product-repository.ts`; `packages/application/src/products/*.ts`; `packages/contracts/src/products.ts`; `apps/server/src/routes/products.ts`; `apps/web/src/features/products/*`
 - Test: matching `*.test.ts`, repository integration test, route contract test, React feature test.
 
 **Interfaces:**
+
 - Produces: `Product`, `ProductRepository`, `CreateProduct`, `ListProducts`, `GetProduct`, `ArchiveProduct`, `/api/v1/products` contracts.
 - Consumes: UUID-v7 IDs and error mapping.
 
@@ -168,10 +182,12 @@ docs/adr/                     architecture decisions
 ### Task 8: Product facts and double guard
 
 **Files:**
+
 - Create: `packages/domain/src/facts/product-fact.ts`, `fact-guard.ts`, `claim-guard.ts`; database schema/repository; application use cases; contracts/routes; `apps/web/src/features/facts/*`
 - Test: `packages/domain/src/facts/fact-guard.test.ts`, `claim-guard.test.ts`, vertical integration/UI tests.
 
 **Interfaces:**
+
 - Produces: `evaluateFacts(facts): FactGuardResult`, `checkClaims(claims, allowedFacts): ClaimGuardResult`, fact CRUD/confirm endpoints.
 - Consumes: current product identity and evidence references.
 
@@ -184,10 +200,12 @@ docs/adr/                     architecture decisions
 ### Task 9: Specification dimensions and SKU matrix
 
 **Files:**
+
 - Create: domain `specification.ts`, `sku-matrix.ts`; Drizzle spec/SKU tables; repository/use cases/contracts/routes; `apps/web/src/features/skus/*`
 - Test: matrix unit/property tests, repository/route/UI tests.
 
 **Interfaces:**
+
 - Produces: `generateSkuMatrix(dimensions, existing): SkuCombination[]`, SKU CRUD/status contracts.
 - Consumes: product ID and UUID-v7 factory.
 
@@ -200,10 +218,12 @@ docs/adr/                     architecture decisions
 ### Task 10: Product platform profiles
 
 **Files:**
+
 - Create: platform profile domain/schema/repository/use cases/contracts/routes and `apps/web/src/features/platform-profile/*`.
 - Test: profile contract/integration/UI tests.
 
 **Interfaces:**
+
 - Produces: one profile per `(productId, platformId)`, platform-specific category metadata.
 - Consumes: platform registry ID contract introduced as fixed enum data.
 
@@ -220,10 +240,12 @@ docs/adr/                     architecture decisions
 ### Task 11: Exact money, rates, and rounding
 
 **Files:**
+
 - Create: `packages/calculation-engine/src/money.ts`, `rate.ts`, `rounding.ts`, `trace.ts`, `index.ts`
 - Test: same paths with `.test.ts` and `money.property.test.ts`.
 
 **Interfaces:**
+
 - Produces: `Money`, `Rational`, `BasisPoints`, `RoundingPolicy`, `CalculationTraceStep` and safe arithmetic functions.
 - Consumes: no persistence or AI.
 
@@ -236,10 +258,12 @@ docs/adr/                     architecture decisions
 ### Task 12: Safe formula AST and dependency DAG
 
 **Files:**
+
 - Create: `packages/calculation-engine/src/formula/{ast,schema,evaluator,dag}.ts`
 - Test: evaluator, schema-depth, unknown-variable, and cycle tests.
 
 **Interfaces:**
+
 - Produces: `FormulaNodeSchema`, `evaluateFormula(ast, variables, policy)`, `orderDependencies(definitions)`.
 - Consumes: exact financial primitives.
 
@@ -252,10 +276,12 @@ docs/adr/                     architecture decisions
 ### Task 13: Cost profiles and pricing engine
 
 **Files:**
+
 - Create: cost domain/schema/repository/use cases/contracts/routes/UI; `packages/pricing-engine/src/{types,calculate,solver}.ts`
 - Test: pricing unit/property tests plus cost vertical tests.
 
 **Interfaces:**
+
 - Produces: `calculatePricing(input): PricingResult`, cost item bases/statuses, saved immutable scenarios/results.
 - Consumes: Money/formula/trace and SKU IDs; no database access inside pricing engine.
 
@@ -272,10 +298,12 @@ docs/adr/                     architecture decisions
 ### Task 14: Platform registry and capability enforcement
 
 **Files:**
+
 - Create: `packages/platform-engine/src/{registry,context,adapter,capabilities}.ts`, application/contracts/routes/UI capability banner.
 - Test: registry/context/contract/UI tests.
 
 **Interfaces:**
+
 - Produces: `PlatformAdapter`, `PlatformContext`, `getCapabilities()`, `requireCapability()`.
 - Consumes: product platform profile.
 
@@ -288,10 +316,12 @@ docs/adr/                     architecture decisions
 ### Task 15: Rule pack validation, resolution, and snapshots
 
 **Files:**
+
 - Create: `packages/rule-engine/src/{schemas,loader,checksum,resolver,snapshot,diff}.ts`; rule database tables/repository; import use case/contracts/routes/UI; `default-rule-packs/pinduoduo-cn/*`; `scripts/validate-rule-packs.mjs`
 - Test: general/category/user/conflict/expired/snapshot/import security tests.
 
 **Interfaces:**
+
 - Produces: `loadRulePack`, `resolveRules`, `createRuleSnapshot`, inert manifest/rule Zod schemas.
 - Consumes: platform/category and app version.
 
@@ -308,10 +338,12 @@ docs/adr/                     architecture decisions
 ### Task 16: Generic promotion and revenue attribution engine
 
 **Files:**
+
 - Create: `packages/promotion-engine/src/{components,normalize,calculate,solver,types}.ts`
 - Test: engine unit/property/invariant tests.
 
 **Interfaces:**
+
 - Produces: `calculatePromotion(input): PromotionResult`, `solveCampaignPrice(input)`, full money-flow trace.
 - Consumes: exact calculation/pricing types and immutable rule snapshot.
 
@@ -324,10 +356,12 @@ docs/adr/                     architecture decisions
 ### Task 17: Pinduoduo scenario vertical slice and batch calculation
 
 **Files:**
+
 - Create: Pinduoduo adapter, promotion schema/repository/use cases/contracts/routes, `apps/web/src/features/promotion/*`.
 - Test: adapter, repository, API, UI, batch integration tests.
 
 **Interfaces:**
+
 - Produces: normalized PDD scenario, immutable result, `POST /promotion-scenarios/:id/calculate`, batch result rows.
 - Consumes: promotion engine, cost profile, active rule snapshot, selected SKUs.
 
@@ -344,10 +378,12 @@ docs/adr/                     architecture decisions
 ### Task 18: Prompt templates and injection-safe compiler
 
 **Files:**
+
 - Create: `packages/prompt-engine/src/{template,compiler,trust,hash}.ts`, prompt database tables/repository, `default-prompts/*.json`
 - Test: compiler snapshot, trust-delimiting, hash/version tests.
 
 **Interfaces:**
+
 - Produces: `compilePrompt(input): CompiledPrompt`, dependency/input hash, five trust levels.
 - Consumes: allowed facts, platform context/rules, Zod JSON schema.
 
@@ -360,10 +396,12 @@ docs/adr/                     architecture decisions
 ### Task 19: AI provider, DeepSeek, structured pipeline, and logs
 
 **Files:**
+
 - Create: `packages/ai-engine/src/{provider,registry,deepseek,retry,structured,generation-log}.ts`; generation schema/repository; AI settings contracts/routes/UI.
 - Test: fake-provider, DeepSeek HTTP mock, retry, invalid-output, secret-redaction integration tests.
 
 **Interfaces:**
+
 - Produces: `AIProvider`, `DeepSeekProvider`, `generateValidated`, sanitized immutable `AIGeneration`.
 - Consumes: SecretStore, prompt compiler, fact/claim guards.
 
@@ -380,26 +418,30 @@ docs/adr/                     architecture decisions
 ### Task 20: Competitors and imports
 
 **Files:**
+
 - Create: competitor identity/snapshot/provider domain, schema/repository/use cases/contracts/routes/UI; CSV/XLSX/paste import adapters.
 - Test: raw-sales preservation, import fixtures, product ownership, UI tests.
 
 **Interfaces:**
+
 - Produces: `CompetitorDataProvider`, normalized immutable snapshots, import preview/confirm.
 - Consumes: product identity and workspace-relative assets.
 
-- [ ] **Step 1: Test that “10万+” remains text, analysis cannot mutate snapshot, and malformed/cross-product imports fail**.
-- [ ] **Step 2: Confirm failure**.
-- [ ] **Step 3: Implement preview-first import and competitor UI without crawling**.
-- [ ] **Step 4: Run import/repository/contract/UI tests**.
-- [ ] **Step 5: Commit** `feat: add auditable competitor snapshots and imports`.
+- [x] **Step 1: Test that “10万+” remains text, analysis cannot mutate snapshot, and malformed/cross-product imports fail**.
+- [x] **Step 2: Confirm failure**.
+- [x] **Step 3: Implement preview-first import and competitor UI without crawling**.
+- [x] **Step 4: Run import/repository/contract/UI tests**.
+- [x] **Step 5: Commit** `feat: add auditable competitor snapshots and imports`.
 
 ### Task 21: Competitor analysis, market insight, and selling points
 
 **Files:**
+
 - Create: AI task contracts/templates/validators, insight and selling-point domain/schema/repositories/use cases/routes/UI.
 - Test: structured pipeline/evidence ownership/needs-verification/UI tests.
 
 **Interfaces:**
+
 - Produces: structured competitor analysis, market insight, selling-point set/evidence.
 - Consumes: AI generation pipeline, snapshots, allowed facts, platform context.
 
@@ -412,10 +454,12 @@ docs/adr/                     architecture decisions
 ### Task 22: Versioned title studio
 
 **Files:**
+
 - Create: content-asset domain/schema/repository/versioning/stale service; title task/use cases/contracts/routes; title UI.
 - Test: revisions/locks/stale/claim/rule/keyword/count tests.
 
 **Interfaces:**
+
 - Produces: title lineage/revisions in recommended/search/selling-point/scenario variants.
 - Consumes: selling-point revision, facts, prompt/rule versions, platform context.
 
@@ -428,10 +472,12 @@ docs/adr/                     architecture decisions
 ### Task 23: Creative and detail-page builders
 
 **Files:**
+
 - Create: creative/detail domain/schema/repositories; three AI task contracts/templates/use cases/routes; creative/detail UI with reorder/lock/regenerate.
 - Test: structured item/section, reference, item regeneration, lock, reorder, stale tests.
 
 **Interfaces:**
+
 - Produces: `CreativePlan`, `CreativeItem[]`, `DetailPageArchitecture`, `DetailPageSection[]` with bilingual/negative prompts.
 - Consumes: selling points, facts, platform image/content rules, AI pipeline.
 
@@ -448,10 +494,12 @@ docs/adr/                     architecture decisions
 ### Task 24: Persisted workflow DAG and SSE
 
 **Files:**
+
 - Create: `packages/workflow-engine/src/{dag,runner,persistence,recovery,idempotency}.ts`; workflow schema/repository/use cases/contracts/routes/SSE; UI progress/resume banner.
 - Test: DAG, persistence, restart, retry, cancel, SSE contract tests.
 
 **Interfaces:**
+
 - Produces: `WorkflowDefinition`, `WorkflowRunner`, state GET and event stream.
 - Consumes: application-node handlers keyed by task type.
 
@@ -464,10 +512,12 @@ docs/adr/                     architecture decisions
 ### Task 25: Traceable operation plans
 
 **Files:**
+
 - Create: operation-plan domain/schema/repository/use cases/contracts/routes/UI/history.
 - Test: aggregate validation, immutability, missing/stale/locked reference tests.
 
 **Interfaces:**
+
 - Produces: immutable `OperationPlanSnapshot` referencing exact upstream IDs and rule version.
 - Consumes: completed content and financial results.
 
@@ -484,10 +534,12 @@ docs/adr/                     architecture decisions
 ### Task 26: Consistent backup and transactional restore
 
 **Files:**
+
 - Create: `packages/workspace/src/{backup,restore,manifest,archive-security}.ts`; data-management use cases/contracts/routes/UI.
 - Test: WAL snapshot, checksum, ZIP traversal, compatibility, rollback, secret exclusion, cross-machine tests.
 
 **Interfaces:**
+
 - Produces: `createBackup(context): BackupManifest`, `validateBackup`, `restoreBackup`.
 - Consumes: SQLite backup API, workspace paths, installed rule/prompt versions.
 
@@ -500,10 +552,12 @@ docs/adr/                     architecture decisions
 ### Task 27: Idempotent Windows setup and start
 
 **Files:**
+
 - Create: `scripts/setup.ps1`, `scripts/start.ps1`, `scripts/windows/*.psm1`
 - Test: `tests/scripts/setup.Tests.ps1`, `start.Tests.ps1`, cross-platform static checks.
 
 **Interfaces:**
+
 - Produces: repeatable setup/migrate/default installation and loopback start/health/browser flow.
 - Consumes: version checker and workspace bootstrap CLI.
 
@@ -520,10 +574,12 @@ docs/adr/                     architecture decisions
 ### Task 28: Dashboard, settings, and offline UX
 
 **Files:**
+
 - Create/modify: dashboard query/use case/contracts/routes/UI; rule/prompt/AI/system screens; global error boundary and offline banners.
 - Test: risk summary, capability, offline, settings redaction, accessibility tests.
 
 **Interfaces:**
+
 - Produces: actionable dashboard summary and truthful offline/capability UX.
 - Consumes: read models only; offline mode blocks new AI/external fetches but not local finance/history.
 
@@ -536,10 +592,12 @@ docs/adr/                     architecture decisions
 ### Task 29: Playwright golden path and final gates
 
 **Files:**
+
 - Create: `playwright.config.ts`, `tests/e2e/golden-path.spec.ts`, `tests/e2e/fixtures/fake-ai-provider.ts`, `tests/e2e/fixtures/competitors.csv`
 - Modify: CI to run E2E and archive traces on failure; README Windows acceptance section.
 
 **Interfaces:**
+
 - Produces: automated acceptance of the canonical product-to-locked-plan path.
 - Consumes: public browser/API behavior; no internal database shortcuts.
 
