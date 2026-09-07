@@ -253,6 +253,12 @@ importers:
 
   packages/shared: {}
 
+  packages/workflow-engine:
+    dependencies:
+      '@eaw/domain':
+        specifier: workspace:*
+        version: link:../domain
+
   packages/workspace:
     dependencies:
       '@eaw/domain':
