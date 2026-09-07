@@ -18,6 +18,10 @@ import { createBrowserAISettingsApi, type AISettingsApi } from './features/ai-se
 import { createBrowserCompetitorsApi, type CompetitorsApi } from './features/competitors/api.js';
 import { createBrowserStrategyApi, type StrategyApi } from './features/strategy/api.js';
 import { createBrowserTitlesApi, type TitlesApi } from './features/titles/api.js';
+import {
+  createBrowserContentBuildersApi,
+  type ContentBuildersApi,
+} from './features/content-builders/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -31,6 +35,7 @@ const browserAISettingsApi = createBrowserAISettingsApi();
 const browserCompetitorsApi = createBrowserCompetitorsApi();
 const browserStrategyApi = createBrowserStrategyApi();
 const browserTitlesApi = createBrowserTitlesApi();
+const browserContentBuildersApi = createBrowserContentBuildersApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -45,6 +50,7 @@ export function App({
   competitorsApi = browserCompetitorsApi,
   strategyApi = browserStrategyApi,
   titlesApi = browserTitlesApi,
+  contentBuildersApi = browserContentBuildersApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -58,6 +64,7 @@ export function App({
   readonly competitorsApi?: CompetitorsApi;
   readonly strategyApi?: StrategyApi;
   readonly titlesApi?: TitlesApi;
+  readonly contentBuildersApi?: ContentBuildersApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -74,6 +81,7 @@ export function App({
         competitorsApi={competitorsApi}
         strategyApi={strategyApi}
         titlesApi={titlesApi}
+        contentBuildersApi={contentBuildersApi}
       />
     </BrowserRouter>
   );

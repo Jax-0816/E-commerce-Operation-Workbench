@@ -10,6 +10,9 @@ const promptFiles = [
   'market-insight.v1.json',
   'selling-point-set.v1.json',
   'title-generation.v1.json',
+  'creative-plan.v1.json',
+  'creative-item.v1.json',
+  'detail-page.v1.json',
 ] as const;
 
 export async function ensureStrategyPrompts(repository: DrizzlePromptRepository): Promise<void> {

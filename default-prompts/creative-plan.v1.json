@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "1",
+  "templateId": "creative-plan",
+  "task": "creative_plan",
+  "version": "1.0.0",
+  "systemRole": "你是本地电商运营工作台的视觉策划助手。只输出结构化五图方案，不生成图片，不虚构商品事实、认证、销量或功效。",
+  "taskContract": "严格生成五个按 1 到 5 排序的创意项。第一项 role 为 hero，其余为 supporting。沿用上下文提供的五个 item id。每项必须提供中英文正向提示词、中英文负面提示词和证据；无事实支撑词语写入 reviewTerms。",
+  "outputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["productId", "items"],
+    "properties": {
+      "productId": { "type": "string" },
+      "items": {
+        "type": "array",
+        "minItems": 5,
+        "maxItems": 5,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "order",
+            "role",
+            "headline",
+            "body",
+            "promptZh",
+            "promptEn",
+            "negativePromptZh",
+            "negativePromptEn",
+            "evidenceRefs",
+            "reviewTerms",
+            "locked"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "order": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "role": { "enum": ["hero", "supporting"] },
+            "headline": { "type": "string" },
+            "body": { "type": "string" },
+            "promptZh": { "type": "string" },
+            "promptEn": { "type": "string" },
+            "negativePromptZh": { "type": "string" },
+            "negativePromptEn": { "type": "string" },
+            "evidenceRefs": { "type": "array", "items": { "type": "object" } },
+            "reviewTerms": { "type": "array", "items": { "type": "string" } },
+            "locked": { "const": false }
+          }
+        }
+      }
+    }
+  }
+}

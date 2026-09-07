@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1",
+  "templateId": "detail-page",
+  "task": "detail_page",
+  "version": "1.0.0",
+  "systemRole": "你是本地电商运营工作台的详情页架构助手。只规划有序内容区块，不生成图片，不虚构商品事实、认证、销量或功效。",
+  "taskContract": "生成 1 到 30 个按顺序排列且 id 唯一的详情页区块，沿用上下文提供的 section id。每个区块必须提供类型、标题、正文和证据；无事实支撑词语写入 reviewTerms，locked 必须为 false。",
+  "outputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["productId", "sections"],
+    "properties": {
+      "productId": { "type": "string" },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 30,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "order",
+            "kind",
+            "headline",
+            "body",
+            "evidenceRefs",
+            "reviewTerms",
+            "locked"
+          ],
+          "properties": {
+            "id": { "type": "string" },
+            "order": { "type": "integer", "minimum": 1, "maximum": 30 },
+            "kind": {
+              "enum": [
+                "hero",
+                "benefit",
+                "specification",
+                "scenario",
+                "trust",
+                "faq",
+                "call_to_action"
+              ]
+            },
+            "headline": { "type": "string" },
+            "body": { "type": "string" },
+            "evidenceRefs": { "type": "array", "items": { "type": "object" } },
+            "reviewTerms": { "type": "array", "items": { "type": "string" } },
+            "locked": { "const": false }
+          }
+        }
+      }
+    }
+  }
+}

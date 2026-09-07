@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 4 — Task 23：创意和详情页构建器（in_progress）
+Wave 5 — Task 24：持久化工作流 DAG 与 SSE（in_progress）
 
 ## Phases
 
@@ -43,14 +43,14 @@ Wave 4 — Task 23：创意和详情页构建器（in_progress）
 - [x] Task 20：竞品快照与导入（complete）
 - [x] Task 21：竞品分析、市场洞察与卖点（complete）
 - [x] Task 22：版本化标题工作室（complete）
-- [ ] Task 23：创意和详情页构建器（in_progress）
-- **Status:** in_progress
+- [x] Task 23：创意和详情页构建器（complete）
+- **Status:** complete
 
 ### Wave 5: 工作流与运营方案
 
-- [ ] Task 24：持久化工作流 DAG 与 SSE
+- [ ] Task 24：持久化工作流 DAG 与 SSE（in_progress）
 - [ ] Task 25：可追踪、可锁定运营方案
-- **Status:** pending
+- **Status:** in_progress
 
 ### Wave 6: 工作区可靠性与 Windows 交付
 

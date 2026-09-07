@@ -1783,3 +1783,42 @@ tbody small {
   display: grid;
   gap: 0.4rem;
 }
+
+.content-builder {
+  display: grid;
+  gap: 1rem;
+}
+.content-builder > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+.creative-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.creative-grid article,
+.detail-sections li {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--surface);
+}
+.creative-grid dl {
+  display: grid;
+  gap: 0.35rem;
+}
+.creative-grid dt {
+  font-weight: 700;
+}
+.creative-grid dd {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+}
+.detail-sections {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.25rem;
+}

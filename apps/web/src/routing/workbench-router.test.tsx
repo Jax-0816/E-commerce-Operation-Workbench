@@ -111,6 +111,15 @@ describe('routed workbench', () => {
     expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
+
+  it('opens the implemented creative workspace', async () => {
+    const { container, root } = await render(`/products/${product.id}/creative`);
+
+    expect(container.querySelector('h1')?.textContent).toBe('视觉方案');
+    expect(container.textContent).toContain('五图创意方案');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
 });
 
 async function render(entry: string) {
@@ -190,6 +199,17 @@ async function render(entry: string) {
             edit: async () => undefined as never,
             lock: async () => undefined as never,
             list: async () => [],
+          }}
+          contentBuildersApi={{
+            listCreative: async () => [],
+            generateCreative: async () => undefined as never,
+            regenerateCreativeItem: async () => undefined as never,
+            lockCreativeItem: async () => undefined as never,
+            reorderCreative: async () => undefined as never,
+            listDetail: async () => [],
+            generateDetail: async () => undefined as never,
+            lockDetailSection: async () => undefined as never,
+            reorderDetail: async () => undefined as never,
           }}
           skusApi={{
             configure: async () => ({ dimensions: [], skus: [] }),

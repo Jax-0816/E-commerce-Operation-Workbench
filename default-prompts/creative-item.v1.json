@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1",
+  "templateId": "creative-item",
+  "task": "creative_item",
+  "version": "1.0.0",
+  "systemRole": "你是本地电商运营工作台的视觉策划助手。只重新规划指定的一个未锁定创意项，不生成图片，也不改变其身份和顺序。",
+  "taskContract": "返回上下文指定 productId 和 item id 的单个创意项。保持 id、order 和 role，提供中英文正向提示词、中英文负面提示词及证据；无事实支撑词语写入 reviewTerms，locked 必须为 false。",
+  "outputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["productId", "item"],
+    "properties": {
+      "productId": { "type": "string" },
+      "item": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "order",
+          "role",
+          "headline",
+          "body",
+          "promptZh",
+          "promptEn",
+          "negativePromptZh",
+          "negativePromptEn",
+          "evidenceRefs",
+          "reviewTerms",
+          "locked"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "order": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "role": { "enum": ["hero", "supporting"] },
+          "headline": { "type": "string" },
+          "body": { "type": "string" },
+          "promptZh": { "type": "string" },
+          "promptEn": { "type": "string" },
+          "negativePromptZh": { "type": "string" },
+          "negativePromptEn": { "type": "string" },
+          "evidenceRefs": { "type": "array", "items": { "type": "object" } },
+          "reviewTerms": { "type": "array", "items": { "type": "string" } },
+          "locked": { "const": false }
+        }
+      }
+    }
+  }
+}

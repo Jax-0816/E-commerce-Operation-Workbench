@@ -41,11 +41,12 @@
 | Task 19：DeepSeek 生成管线            | complete    | provider 抽象、有界重试、结构修复、证据校验、脱敏不可变日志和本地密钥设置已通过门禁       |
 | Task 20：可审计竞品快照与导入         | complete    | provider port、CSV/XLSX/粘贴预览确认、不可变 SQLite、API/UI 与重启持久化测试已完成        |
 | Task 21                               | complete    | 三类结构化提示词、证据审查、不可变修订、API/UI 与 fake-provider 重启测试已完成            |
-| Task 22                               | complete    | 四类标题、事实守卫、本地规则、不可变修订、锁定、stale 原因和真实运行时持久化均已完成       |
-| Task 23                               | in_progress | 正在实现结构化创意方案、详情页架构、单项重生成、锁定与稳定重排                            |
-| Task 24–29                            | pending     | Task 23 完成后进入可恢复工作流和运营方案                                                  |
+| Task 22                               | complete    | 四类标题、事实守卫、本地规则、不可变修订、锁定、stale 原因和真实运行时持久化均已完成      |
+| Task 23                               | complete    | 五图结构化方案、详情页架构、证据守卫、单项重生成、锁定、稳定重排和不可变历史均已完成      |
+| Task 24                               | in_progress | 正在进入持久化工作流 DAG、幂等恢复与 SSE                                                  |
+| Task 25–29                            | pending     | Task 24 完成后进入可追踪运营方案、可靠性和发布收口                                        |
 
-当前主线完成度按原计划 29 个任务计为 `22/29 ≈ 76%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 22 已完成，下一项为 Task 23。
+当前主线完成度按原计划 29 个任务计为 `23/29 ≈ 79%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 23 已完成，下一项为 Task 24。
 
 ## Dependency Order
 
@@ -250,10 +251,10 @@ generateValidated<T>(input: StructuredGenerationInput<T>): Promise<ValidatedGene
 
 **Files:** creative/detail domain/schema/repository、AI task、routes、支持排序/锁定/单项重生成的 UI。
 
-- [ ] 测试五图序列、逐项证据、中英文提示词/负面提示词、锁定和稳定重排。
-- [ ] 实现结构化创意方案与详情页架构；本版本不生成图片。
-- [ ] 上游依赖改变时只标记过期，不自动覆盖用户锁定内容。
-- [ ] 提交 `feat: add structured creative and detail builders`。
+- [x] 测试五图序列、逐项证据、中英文提示词/负面提示词、锁定和稳定重排。
+- [x] 实现结构化创意方案与详情页架构；本版本不生成图片。
+- [x] 上游依赖改变时只标记过期，不自动覆盖用户锁定内容。
+- [x] 提交 `feat: add structured creative and detail builders`。
 
 ## Wave 5 — 可恢复工作流与运营方案
 

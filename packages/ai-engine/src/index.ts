@@ -7,3 +7,4 @@ export * from './validators.js';
 export * from './generation-log.js';
 export * from './strategy.js';
 export * from './title.js';
+export * from './creative-detail.js';

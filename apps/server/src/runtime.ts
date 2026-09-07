@@ -13,6 +13,9 @@ import {
   createCompetitorsApplication,
   createStrategyApplication,
   createTitlesApplication,
+  createContentBuildersApplication,
+  createContentGenerationPort,
+  createRepositoryContentContext,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
@@ -29,6 +32,8 @@ import {
   DrizzlePromptRepository,
   DrizzleStrategyRepository,
   DrizzleTitleAssetRepository,
+  DrizzleCreativePlanRepository,
+  DrizzleDetailPageRepository,
   migrateDatabase,
   openDatabase,
   type OpenDatabase,
@@ -146,16 +151,34 @@ export async function createProductionApp({
       secrets: secretStore,
       providerFactory,
     });
+    const titleRepository = new DrizzleTitleAssetRepository(database);
     const titles = createTitlesApplication({
       products: productRepository,
       facts: factRepository,
       strategies: strategyRepository,
       platformProfiles: platformProfileRepository,
-      repository: new DrizzleTitleAssetRepository(database),
+      repository: titleRepository,
       prompts: promptRepository,
       logs: generationLogs,
       secrets: secretStore,
       providerFactory,
+    });
+    const contentBuilders = createContentBuildersApplication({
+      products: productRepository,
+      creative: new DrizzleCreativePlanRepository(database),
+      detail: new DrizzleDetailPageRepository(database),
+      generation: createContentGenerationPort({
+        context: createRepositoryContentContext({
+          facts: factRepository,
+          strategies: strategyRepository,
+          titles: titleRepository,
+          platformProfiles: platformProfileRepository,
+        }),
+        prompts: promptRepository,
+        logs: generationLogs,
+        secrets: secretStore,
+        providerFactory,
+      }),
     });
     const app = buildApp(
       createAppContext({
@@ -163,6 +186,7 @@ export async function createProductionApp({
         competitors,
         strategy,
         titles,
+        contentBuilders,
         facts,
         platformCapabilities,
         platformProfiles,

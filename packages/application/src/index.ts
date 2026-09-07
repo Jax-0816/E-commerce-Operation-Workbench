@@ -58,3 +58,15 @@ export { createStrategyApplication } from './strategy/index.js';
 export type { ActivePrompt, ActivePromptPort, StrategyApplication } from './strategy/index.js';
 export { createTitlesApplication } from './titles/index.js';
 export type { TitlesApplication } from './titles/index.js';
+export { createContentBuildersApplication } from './content-builders/index.js';
+export type {
+  ContentBuildersApplication,
+  ContentGenerationPort,
+  CreativePlanView,
+  DetailPageView,
+} from './content-builders/index.js';
+export {
+  createContentGenerationPort,
+  createRepositoryContentContext,
+} from './content-builders/content-generation.js';
+export type { ContentGenerationContextPort } from './content-builders/content-generation.js';

@@ -12,6 +12,7 @@ import type {
   CompetitorsApplication,
   StrategyApplication,
   TitlesApplication,
+  ContentBuildersApplication,
 } from '@eaw/application';
 
 export interface AppContextOptions {
@@ -28,6 +29,7 @@ export interface AppContextOptions {
   readonly competitors?: CompetitorsApplication;
   readonly strategy?: StrategyApplication;
   readonly titles?: TitlesApplication;
+  readonly contentBuilders?: ContentBuildersApplication;
 }
 
 export interface AppContext {
@@ -45,6 +47,7 @@ export interface AppContext {
   readonly competitors?: CompetitorsApplication;
   readonly strategy?: StrategyApplication;
   readonly titles?: TitlesApplication;
+  readonly contentBuilders?: ContentBuildersApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -63,5 +66,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     competitors: options.competitors,
     strategy: options.strategy,
     titles: options.titles,
+    contentBuilders: options.contentBuilders,
   };
 }

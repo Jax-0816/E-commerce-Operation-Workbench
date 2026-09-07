@@ -61,6 +61,17 @@ export {
   UpdateFactInputSchema,
 } from './facts.js';
 export {
+  ContentItemParamsSchema,
+  ContentParamsSchema,
+  ContentQuerySchema,
+  ContentReorderInputSchema,
+  ContentSectionParamsSchema,
+  CreativePlanListResponseSchema,
+  CreativePlanViewResponseSchema,
+  DetailPageListResponseSchema,
+  DetailPageViewResponseSchema,
+} from './content-builders.js';
+export {
   CalculatePromotionBatchInputSchema,
   CreatePromotionScenarioInputSchema,
   ProductPromotionParamsSchema,

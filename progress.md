@@ -428,3 +428,36 @@
 
 1. 提交并推送 Task 22：`feat: add guarded versioned title studio`。
 2. 进入 Wave 4 / Task 23：结构化创意方案与详情页构建器、单项重生成、锁定和稳定重排。
+
+## Session: 2026-09-07 — Wave 4 / Task 23
+
+### Structured creative and detail builders
+
+- **Status:** complete
+- Actions taken:
+  - 新增恰好五项、稳定 ID 和显式顺序的创意方案领域模型；每项包含中英文正向提示词、中英文负面提示词、证据引用、审核状态和锁定状态，本版本明确不生成图片。
+  - 新增有序详情页区块模型；创意项与详情区块的锁定、单项重生成和重排均追加完整不可变修订，不修改历史记录。
+  - 新增三份严格结构化提示词与 AI 输出审核；只编译本商品已确认、允许且非敏感的事实，以及精确卖点/标题修订，跨商品或不存在的证据统一降级为 `needs_review`。
+  - 新增 `0013_add-creative-detail-assets.sql`、创意/详情独立仓储和 SQLite 不可变 trigger；生成日志、前序修订及商品/平台/revision 关系均可追踪。
+  - 新增应用用例、严格合同、Fastify 路由和生产组合根；fake provider 集成测试确认生成后重启仍能读取相同创意与详情历史。
+  - 将“视觉”和“详情页”占位路由替换为真实工作台，支持平台切换、生成、逐项锁定/重生成、上下移动、证据/审核/过期原因和修订历史展示。
+  - 以 Node 24.19.0 / pnpm 11.22.0 完成冻结安装和全部质量门禁；所有自动化 AI 测试只使用 fake provider，未发起付费调用。
+
+### Fresh verification evidence
+
+| Gate                              | Result               |
+| --------------------------------- | -------------------- |
+| Root unit/integration tests       | 429 passed, 0 failed |
+| Playwright golden paths           | 2 passed, 0 failed   |
+| Root typecheck                    | passed               |
+| Root lint                         | passed               |
+| Root production build             | passed               |
+| Frozen lockfile install           | passed               |
+| Prompt/rule-pack validation       | passed               |
+| Fake-provider restart persistence | passed               |
+| `git diff --check`                | passed               |
+
+### Next action
+
+1. 提交并推送 Task 23：`feat: add structured creative and detail builders`。
+2. 进入 Wave 5 / Task 24：持久化工作流 DAG、幂等恢复、取消和 SSE 进度事件。

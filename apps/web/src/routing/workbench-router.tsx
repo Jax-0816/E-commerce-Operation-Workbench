@@ -51,6 +51,9 @@ import type { StrategyApi } from '../features/strategy/api.js';
 import { StrategyPanel } from '../features/strategy/strategy-panel.js';
 import type { TitlesApi } from '../features/titles/api.js';
 import { TitleStudio } from '../features/titles/title-studio.js';
+import type { ContentBuildersApi } from '../features/content-builders/api.js';
+import { CreativeBuilder } from '../features/content-builders/creative-builder.js';
+import { DetailBuilder } from '../features/content-builders/detail-builder.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
@@ -58,6 +61,7 @@ export interface WorkbenchDependencies {
   readonly competitorsApi: CompetitorsApi;
   readonly strategyApi: StrategyApi;
   readonly titlesApi: TitlesApi;
+  readonly contentBuildersApi: ContentBuildersApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
   readonly productsApi: ProductsApi;
@@ -151,13 +155,14 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           path="products/:productId/titles"
           element={<TitlesPage api={dependencies.titlesApi} />}
         />
-        {['creative', 'detail'].map((section) => (
-          <Route
-            key={section}
-            path={`products/:productId/${section}`}
-            element={<Unavailable title={sectionTitle(section)} phase="Phase 9" />}
-          />
-        ))}
+        <Route
+          path="products/:productId/creative"
+          element={<CreativePage api={dependencies.contentBuildersApi} />}
+        />
+        <Route
+          path="products/:productId/detail"
+          element={<DetailPage api={dependencies.contentBuildersApi} />}
+        />
         <Route
           path="products/:productId/costs"
           element={<CostsPage costsApi={dependencies.costsApi} skusApi={dependencies.skusApi} />}
@@ -405,6 +410,22 @@ function TitlesPage({ api }: { readonly api: TitlesApi }): React.JSX.Element {
   );
 }
 
+function CreativePage({ api }: { readonly api: ContentBuildersApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="视觉方案">
+      <CreativeBuilder api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
+function DetailPage({ api }: { readonly api: ContentBuildersApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="详情页">
+      <DetailBuilder api={api} productId={useProductId()} />
+    </ProductFeature>
+  );
+}
+
 function CostsPage({
   costsApi,
   skusApi,
@@ -503,20 +524,5 @@ function useProductId(): string {
 function platformLabel(platform: string | null): string {
   return (
     { pinduoduo: '拼多多', taobao: '淘宝', douyin: '抖音' }[platform ?? 'pinduoduo'] ?? '拼多多'
-  );
-}
-
-function sectionTitle(section: string): string {
-  return (
-    {
-      competitors: '竞品',
-      market: '市场分析',
-      'selling-points': '卖点',
-      titles: '标题 Studio',
-      creative: '视觉方案',
-      detail: '详情页',
-      costs: '成本中心',
-      pricing: '价格实验室',
-    }[section] ?? section
   );
 }

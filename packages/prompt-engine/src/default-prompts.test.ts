@@ -7,8 +7,16 @@ import { compilePrompt } from './compiler.js';
 import { PromptTemplateSchema } from './template.js';
 
 describe('default prompts', () => {
-  it('compiles all strategy templates with stable identities', async () => {
-    const names = ['competitor-analysis', 'market-insight', 'selling-point-set'];
+  it('compiles all default AI templates with stable identities', async () => {
+    const names = [
+      'competitor-analysis',
+      'market-insight',
+      'selling-point-set',
+      'title-generation',
+      'creative-plan',
+      'creative-item',
+      'detail-page',
+    ];
     const compiled = await Promise.all(
       names.map(async (name) => {
         const path = fileURLToPath(
@@ -25,6 +33,10 @@ describe('default prompts', () => {
       { templateId: 'competitor-analysis', task: 'competitor_analysis', version: '1.1.0' },
       { templateId: 'market-insight', task: 'market_insight', version: '1.0.0' },
       { templateId: 'selling-point-set', task: 'selling_point_set', version: '1.0.0' },
+      { templateId: 'title-generation', task: 'title_generation', version: '1.0.0' },
+      { templateId: 'creative-plan', task: 'creative_plan', version: '1.0.0' },
+      { templateId: 'creative-item', task: 'creative_item', version: '1.0.0' },
+      { templateId: 'detail-page', task: 'detail_page', version: '1.0.0' },
     ]);
     expect(
       compiled.every(
