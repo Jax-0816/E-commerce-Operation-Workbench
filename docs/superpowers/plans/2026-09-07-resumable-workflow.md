@@ -188,11 +188,11 @@ Expected: all database tests pass, including every prior migration.
 
 Assert preflight performs no generation calls, reports missing competitor inputs, returns stable node order and dependency hashes, rejects archived/cross-product access, and never creates a run.
 
-- [ ] **Step 2: Write failing content handler tests**
+- [x] **Step 2: Write failing content handler tests**
 
 Each handler must hash only its exact current inputs and return an exact output reference `{ assetType, assetId, revisionNo }`. Verify strategy handlers call the matching kind, titles use the requested platform, creative/detail call their existing applications, and all six fake calls preserve product/platform identity.
 
-- [ ] **Step 3: Run focused tests and confirm RED**
+- [x] **Step 3: Run focused tests and confirm RED**
 
 Run: `pnpm --filter @eaw/application exec vitest run src/workflows`
 

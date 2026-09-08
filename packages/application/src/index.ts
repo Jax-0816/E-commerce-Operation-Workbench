@@ -81,3 +81,5 @@ export type {
   WorkflowScheduler,
   WorkflowsApplication,
 } from './workflows/index.js';
+export { createContentWorkflowHandlers } from './workflows/content-workflow-handlers.js';
+export type { ContentWorkflowContextPort } from './workflows/content-workflow-handlers.js';
