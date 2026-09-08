@@ -484,7 +484,8 @@
 - 已完成 durable SSE 适配器：严格校验事件游标，订阅期间先缓冲持久回放再切到实时写入，输出持久 id/event/JSON data 和禁缓存头，连接关闭时可靠取消订阅。Server 44 项测试及全部门禁通过。
 - 已完成生产 workflow 组合与 canonical restart：启动恢复先于 buildApp 且绝不自动执行 handler；首次在 creative 失败后重启调用增量为 0，显式 resume 的六节点调用增量严格为 0/0/0/0/1/1。SSE 增加非持久 heartbeat，真实 definition node key 已校正。Application 36、Contracts 35、Server 46 项测试及类型检查、lint、构建通过，Task 4 完成。
 - 已完成前端 workflow API 客户端：七个 JSON 操作保留严格 definition/revision guard，typed SSE 按持久事件类型监听并显式提供连接清理。Web 聚焦测试、类型检查和 lint 通过。
+- 已完成可访问 workflow 进度组件：六节点状态、精确输出 revision、安全错误、人工复核/依赖变化提示及显式 start/resume/retry/cancel；平台切换丢弃过期结果，SSE 断线严格先 GET 对账再重连。3 项组件测试、类型检查和 lint 通过。
 
 ### Next action
 
-1. 继续 Task 5：补工作流进度面板与路由的失败组件测试。
+1. 继续 Task 5：将工作流进度组件接入真实 /products/:productId/plans 路由并补样式。
