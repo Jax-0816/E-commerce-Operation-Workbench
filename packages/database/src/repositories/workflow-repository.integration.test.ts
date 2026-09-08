@@ -152,4 +152,28 @@ describe('SQLite workflow repository', () => {
 
     await expect(repository.listEvents(eventGapRun.id, 0)).rejects.toThrow(/sequence/u);
   });
+
+  it('lists only the product workflow runs in newest-first order', async () => {
+    const repository = new SqliteWorkflowRepository(database);
+    const older = await repository.create({
+      id: createUuidV7(new Date('2026-09-08T05:00:00.000Z')),
+      productId,
+      platformId: 'pinduoduo',
+      definition: contentWorkflowDefinition,
+      createdAt: new Date('2026-09-08T05:00:00.000Z'),
+    });
+    const newer = await repository.create({
+      id: createUuidV7(new Date('2026-09-08T05:01:00.000Z')),
+      productId,
+      platformId: 'taobao',
+      definition: contentWorkflowDefinition,
+      createdAt: new Date('2026-09-08T05:01:00.000Z'),
+    });
+
+    expect((await repository.listByProduct(productId)).map(({ id }) => id)).toEqual([
+      newer.id,
+      older.id,
+    ]);
+    expect(await repository.listByProduct(createUuidV7())).toEqual([]);
+  });
 });

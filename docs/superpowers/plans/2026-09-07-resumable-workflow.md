@@ -184,7 +184,7 @@ Expected: all database tests pass, including every prior migration.
 - Consumes: product/fact/competitor/strategy/title/creative/detail repositories, existing strategy/title/content-builder applications, `WorkflowRepository`, and `WorkflowRunner`.
 - Produces: `WorkflowsApplication` with `preflight`, `start`, `list`, `get`, `resume`, `retryNode`, `cancel`, `listEvents`, and `subscribe`; plus `createContentWorkflowHandlers`.
 
-- [ ] **Step 1: Write failing preflight and ownership tests**
+- [x] **Step 1: Write failing preflight and ownership tests**
 
 Assert preflight performs no generation calls, reports missing competitor inputs, returns stable node order and dependency hashes, rejects archived/cross-product access, and never creates a run.
 

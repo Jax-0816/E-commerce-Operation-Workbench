@@ -99,6 +99,19 @@ export class SqliteWorkflowRepository {
     };
   }
 
+  async listByProduct(productId: UuidV7): Promise<readonly WorkflowRun[]> {
+    const rows = this.database.sqlite
+      .prepare(
+        'SELECT id FROM workflow_runs WHERE product_id = ? ORDER BY created_at DESC, id DESC',
+      )
+      .all(productId) as Row[];
+    const runs = await Promise.all(rows.map((row) => this.findById(uuid(row.id))));
+    return runs.map((run) => {
+      if (!run) throw new TypeError('Workflow run disappeared during list.');
+      return run;
+    });
+  }
+
   async listEvents(id: UuidV7, afterSequence: number): Promise<readonly WorkflowEvent[]> {
     if (!Number.isSafeInteger(afterSequence) || afterSequence < 0)
       throw new TypeError('Invalid sequence.');

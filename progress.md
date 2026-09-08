@@ -473,8 +473,10 @@
 - 已分别通过 workflow-engine 10 项、database 44 项及 application 28 项测试，以及相关类型检查、lint 和构建。
 - 已推送 `27acb0c` 至 `185f670` 共八个 Task 24 阶段提交，远端与本地同步。
 - 复核发现并已补齐 runner `retryNode/cancel`：显式重试只接受指定失败节点，取消和重试均执行 revision/状态保护；workflow-engine 12 项测试及类型检查、lint、构建通过。
+- 已完成 Application 的 start/list/get 生命周期首段：启动先持久化再调度，后台 runner 拒绝被安全接住，列表/详情均重新校验商品归属；SQLite 新增按商品最新优先查询。
+- 最新门禁：application 30 项、database 45 项测试通过，两个包的相关类型检查、lint 和构建通过。
 
 ### Next action
 
-1. 完成工作流 Application 生命周期与安全事件发布器。
+1. 完成 resume/retry/cancel/listEvents/subscribe 与安全事件发布器。
 2. 实现六个内容节点 handler 及确定性依赖检查。

@@ -72,9 +72,11 @@ export {
 export type { ContentGenerationContextPort } from './content-builders/content-generation.js';
 export { createWorkflowsApplication } from './workflows/index.js';
 export type {
+  ApplicationWorkflowRepository,
   WorkflowPreflight,
   WorkflowPreflightInspection,
   WorkflowPreflightInspector,
   WorkflowPreflightNode,
+  WorkflowScheduler,
   WorkflowsApplication,
 } from './workflows/index.js';
