@@ -140,6 +140,67 @@ describe('workflows application preflight', () => {
 
     await expect(application.get(foreignRun.id)).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
+
+  it('guards resume, retry, cancellation, and durable events by owner and revision', async () => {
+    const product = createProduct({ id: createUuidV7(), name: '恢复商品', now: new Date() });
+    const base = workflowRun(product.id, new Date());
+    const failed: WorkflowRun = {
+      ...base,
+      status: 'failed',
+      nodes: base.nodes.map((node, index) =>
+        index === 0
+          ? { ...node, status: 'failed', error: { code: 'FAILED', message: 'failed' } }
+          : node,
+      ),
+    };
+    const event: WorkflowEvent = {
+      workflowRunId: failed.id,
+      sequence: 1,
+      type: 'workflow_created',
+      runRevision: 1,
+      nodeKey: null,
+      payload: {},
+      createdAt: failed.createdAt,
+    };
+    const scheduled: Array<() => Promise<void>> = [];
+    const calls: string[] = [];
+    const application = createWorkflowsApplication({
+      products: productRepository(product),
+      competitors: emptyCompetitorRepository(),
+      handlers: preflightHandlers(),
+      repository: workflowRepository({
+        findById: async () => failed,
+        listEvents: async () => [event],
+      }),
+      runner: workflowRunner({
+        resume: async () => {
+          calls.push('resume');
+          return failed;
+        },
+        retryNode: async () => {
+          calls.push('retry');
+          return failed;
+        },
+        cancel: async () => {
+          calls.push('cancel');
+          return { ...failed, status: 'cancelled', revision: failed.revision + 1 };
+        },
+      }),
+      schedule: (task) => scheduled.push(task),
+    });
+
+    expect(await application.resume(failed.id, failed.revision)).toEqual(failed);
+    expect(await application.retryNode(failed.id, 'competitor_analysis', failed.revision)).toEqual(
+      failed,
+    );
+    expect(calls).toEqual([]);
+    await Promise.all(scheduled.map((task) => task()));
+    expect(calls).toEqual(['resume', 'retry']);
+    expect(await application.cancel(failed.id, failed.revision)).toMatchObject({
+      status: 'cancelled',
+    });
+    expect(await application.listEvents(failed.id, 0)).toEqual([event]);
+  });
 });
 
 function preflightHandlers(): Readonly<Record<string, WorkflowPreflightInspector>> {

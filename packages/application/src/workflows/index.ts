@@ -52,6 +52,10 @@ export interface WorkflowsApplication {
   start(productId: string, platformId: PlatformId): Promise<WorkflowRun>;
   list(productId: string): Promise<readonly WorkflowRun[]>;
   get(runId: string): Promise<WorkflowRun>;
+  resume(runId: string, expectedRevision: number): Promise<WorkflowRun>;
+  retryNode(runId: string, nodeKey: string, expectedRevision: number): Promise<WorkflowRun>;
+  cancel(runId: string, expectedRevision: number): Promise<WorkflowRun>;
+  listEvents(runId: string, afterSequence: number): Promise<readonly WorkflowEvent[]>;
 }
 
 export interface ApplicationWorkflowRepository extends WorkflowRepository {
@@ -85,6 +89,29 @@ export function createWorkflowsApplication(dependencies: {
       throw new DomainError('CAPABILITY_UNAVAILABLE', 'Workflow runtime is unavailable.');
     }
     return { repository: dependencies.repository, runner: dependencies.runner };
+  };
+  const ownedRun = async (value: string): Promise<WorkflowRun> => {
+    const run = await runtime().repository.findById(parseUuidV7(value));
+    if (!run) throw new DomainError('NOT_FOUND', 'Workflow run was not found.');
+    await owner(run.productId);
+    return run;
+  };
+  const schedule = (task: () => Promise<unknown>): void => {
+    const scheduler = dependencies.schedule ?? ((work) => queueMicrotask(() => void work()));
+    scheduler(async () => {
+      try {
+        await task();
+      } catch {
+        // Runner failures are durable; background promise failures must remain contained.
+      }
+    });
+  };
+  const revisionedRun = async (value: string, expectedRevision: number): Promise<WorkflowRun> => {
+    const run = await ownedRun(value);
+    if (run.revision !== expectedRevision) {
+      throw new DomainError('CONFLICT', 'Workflow revision conflict.');
+    }
+    return run;
   };
   return {
     async preflight(productIdValue, platformId) {
@@ -136,14 +163,7 @@ export function createWorkflowsApplication(dependencies: {
         definition: contentWorkflowDefinition,
         createdAt: now,
       });
-      const schedule = dependencies.schedule ?? ((task) => queueMicrotask(() => void task()));
-      schedule(async () => {
-        try {
-          await runner.run(run.id, run.revision);
-        } catch {
-          // Runner failures are durable; background promise failures must remain contained.
-        }
-      });
+      schedule(() => runner.run(run.id, run.revision));
       return run;
     },
     async list(productIdValue) {
@@ -151,10 +171,25 @@ export function createWorkflowsApplication(dependencies: {
       return runtime().repository.listByProduct(productId);
     },
     async get(runIdValue) {
-      const run = await runtime().repository.findById(parseUuidV7(runIdValue));
-      if (!run) throw new DomainError('NOT_FOUND', 'Workflow run was not found.');
-      await owner(run.productId);
+      return ownedRun(runIdValue);
+    },
+    async resume(runIdValue, expectedRevision) {
+      const run = await revisionedRun(runIdValue, expectedRevision);
+      schedule(() => runtime().runner.resume(run.id, expectedRevision));
       return run;
+    },
+    async retryNode(runIdValue, nodeKey, expectedRevision) {
+      const run = await revisionedRun(runIdValue, expectedRevision);
+      schedule(() => runtime().runner.retryNode(run.id, nodeKey, expectedRevision));
+      return run;
+    },
+    async cancel(runIdValue, expectedRevision) {
+      const run = await revisionedRun(runIdValue, expectedRevision);
+      return runtime().runner.cancel(run.id, expectedRevision);
+    },
+    async listEvents(runIdValue, afterSequence) {
+      const run = await ownedRun(runIdValue);
+      return runtime().repository.listEvents(run.id, afterSequence);
     },
   };
 }
