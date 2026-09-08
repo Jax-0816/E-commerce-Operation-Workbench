@@ -239,7 +239,7 @@ Expected: all application tests pass.
 
 Test strict UUIDv7, platform, definition ID, node key, non-negative event sequence, positive expected revision, unknown-field rejection, ownership, 404/409/503 mapping, and successful preflight/start/get/list/resume/retry/cancel flows.
 
-- [ ] **Step 2: Write failing SSE replay and live-event tests**
+- [x] **Step 2: Write failing SSE replay and live-event tests**
 
 Assert `content-type: text/event-stream`, `cache-control: no-cache`, durable event IDs, replay only after `afterSequence`, live delivery after subscription, JSON data, and connection cleanup. Reconnect by GET state followed by SSE and prove no sequence gap or duplicate.
 
