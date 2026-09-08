@@ -82,7 +82,7 @@ Expected: FAIL because the package and modules do not exist.
 
 Define the exact public states from the spec. `createWorkflowDefinition` must clone/freeze input, validate the complete graph, and return nodes in stable `order`. Implement `createIdempotencyKey(runId, nodeKey, dependencyHash)` as canonical text after validating a lowercase 64-character SHA-256 hash.
 
-- [ ] **Step 4: Implement the repository-driven serial runner**
+- [x] **Step 4: Implement the repository-driven serial runner**
 
 ```ts
 export interface WorkflowNodeHandler {
@@ -100,11 +100,11 @@ export interface WorkflowRunner {
 
 The runner must claim one node transactionally, persist `running` before `execute`, stop on the first failure, reuse unchanged successful nodes, never replace locked outputs, observe cancellation at persistence boundaries, and reject concurrent stale revisions.
 
-- [ ] **Step 5: Prove canonical failure and idempotent resume in memory**
+- [x] **Step 5: Prove canonical failure and idempotent resume in memory**
 
 Use six counting fake handlers. Fail `creative` once after the first four handlers complete; resume and assert the first four counts remain `1`, creative becomes `2`, detail becomes `1`, and a duplicate resume with the old revision returns `CONFLICT`.
 
-- [ ] **Step 6: Run package test/typecheck/lint/build**
+- [x] **Step 6: Run package test/typecheck/lint/build**
 
 Run: `pnpm --filter @eaw/workflow-engine test && pnpm --filter @eaw/workflow-engine typecheck && pnpm --filter @eaw/workflow-engine lint && pnpm --filter @eaw/workflow-engine build`
 

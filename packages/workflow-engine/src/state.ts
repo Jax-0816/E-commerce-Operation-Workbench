@@ -3,7 +3,7 @@ import { DomainError } from '@eaw/domain';
 import type { RevisionedRunState, WorkflowNodeStatus, WorkflowRunStatus } from './types.js';
 
 const RUN_TRANSITIONS: Readonly<Record<WorkflowRunStatus, readonly WorkflowRunStatus[]>> = {
-  not_started: ['running', 'cancelled'],
+  not_started: ['running', 'failed', 'cancelled'],
   running: ['completed', 'failed', 'interrupted', 'cancelled'],
   completed: [],
   failed: ['running', 'cancelled'],

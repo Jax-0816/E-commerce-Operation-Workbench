@@ -28,3 +28,58 @@ export interface RevisionedRunState {
   readonly status: WorkflowRunStatus;
   readonly revision: number;
 }
+
+export interface WorkflowNodeOutputReference {
+  readonly assetType: string;
+  readonly assetId: import('@eaw/domain').UuidV7;
+  readonly revisionNo: number;
+}
+
+export interface WorkflowNodeError {
+  readonly code: string;
+  readonly message: string;
+}
+
+export interface WorkflowNode {
+  readonly key: string;
+  readonly taskType: string;
+  readonly status: WorkflowNodeStatus;
+  readonly dependencyHash: string | null;
+  readonly output: WorkflowNodeOutputReference | null;
+  readonly error: WorkflowNodeError | null;
+}
+
+export interface WorkflowRun {
+  readonly id: import('@eaw/domain').UuidV7;
+  readonly productId: import('@eaw/domain').UuidV7;
+  readonly platformId: import('@eaw/domain').PlatformId;
+  readonly definition: WorkflowDefinition;
+  readonly status: WorkflowRunStatus;
+  readonly revision: number;
+  readonly cancellationRequested: boolean;
+  readonly nodes: readonly WorkflowNode[];
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+export interface WorkflowNodeInspection {
+  readonly dependencyHash: string;
+  readonly reusableOutput?: WorkflowNodeOutputReference;
+}
+
+export interface WorkflowNodeResult {
+  readonly status: 'completed' | 'locked' | 'needs_review';
+  readonly output: WorkflowNodeOutputReference;
+}
+
+export interface WorkflowNodeInput {
+  readonly workflowRunId: import('@eaw/domain').UuidV7;
+  readonly productId: import('@eaw/domain').UuidV7;
+  readonly platformId: import('@eaw/domain').PlatformId;
+  readonly nodeKey: string;
+}
+
+export interface WorkflowNodeHandler {
+  inspect(input: WorkflowNodeInput): Promise<WorkflowNodeInspection>;
+  execute(input: WorkflowNodeInput & { readonly signal: AbortSignal }): Promise<WorkflowNodeResult>;
+}
