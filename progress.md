@@ -461,3 +461,20 @@
 
 1. 提交并推送 Task 23：`feat: add structured creative and detail builders`。
 2. 进入 Wave 5 / Task 24：持久化工作流 DAG、幂等恢复、取消和 SSE 进度事件。
+
+## Session: 2026-09-08 — Wave 5 / Task 24
+
+### Resumable persisted workflow — engine, SQLite, recovery and preflight
+
+- **Status:** in_progress
+- 已完成工作流定义、状态模型、串行 runner 与内存幂等恢复测试。
+- 已完成 SQLite run/node/attempt/event 持久化、revision CAS、不可变审计、失败关闭读取及启动中断恢复。
+- 已完成只读预检与归档商品保护；预检不会调用 `execute` 或产生付费 AI 请求。
+- 已分别通过 workflow-engine 10 项、database 44 项及 application 28 项测试，以及相关类型检查、lint 和构建。
+- 已推送 `27acb0c` 至 `185f670` 共八个 Task 24 阶段提交，远端与本地同步。
+- 复核发现并已补齐 runner `retryNode/cancel`：显式重试只接受指定失败节点，取消和重试均执行 revision/状态保护；workflow-engine 12 项测试及类型检查、lint、构建通过。
+
+### Next action
+
+1. 完成工作流 Application 生命周期与安全事件发布器。
+2. 实现六个内容节点 handler 及确定性依赖检查。

@@ -112,6 +112,76 @@ describe('workflow runner', () => {
     });
     expect(JSON.stringify(failed)).not.toContain('private provider body');
   });
+
+  it('retries only the requested failed node before continuing the workflow', async () => {
+    const initial = workflowRun();
+    const failed: WorkflowRun = {
+      ...initial,
+      status: 'failed',
+      nodes: initial.nodes.map((node, index) =>
+        index === 0
+          ? {
+              ...node,
+              status: 'failed',
+              error: { code: 'AI_PROVIDER_UNAVAILABLE', message: 'Temporary failure.' },
+            }
+          : node,
+      ),
+    };
+    const repository = new MemoryWorkflowRepository(failed);
+    const executed: string[] = [];
+    const handlers = Object.fromEntries(
+      contentWorkflowDefinition.nodes.map((definition) => [
+        definition.taskType,
+        {
+          async inspect() {
+            return { dependencyHash: 'a'.repeat(64) };
+          },
+          async execute(): Promise<WorkflowNodeResult> {
+            executed.push(definition.key);
+            return {
+              status: 'completed',
+              output: { assetType: definition.key, assetId: createUuidV7(), revisionNo: 1 },
+            };
+          },
+        },
+      ]),
+    );
+    const runner = createWorkflowRunner({
+      definition: contentWorkflowDefinition,
+      repository,
+      handlers,
+    });
+
+    const completed = await runner.retryNode(failed.id, 'competitor_analysis', failed.revision);
+
+    expect(completed.status).toBe('completed');
+    expect(executed).toEqual([
+      'competitor_analysis',
+      'market_insight',
+      'selling_points',
+      'titles',
+      'creative',
+      'detail_page',
+    ]);
+    await expect(
+      runner.retryNode(failed.id, 'competitor_analysis', completed.revision),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
+  it('cancels through the revision-protected repository transition', async () => {
+    const run = workflowRun();
+    const runner = createWorkflowRunner({
+      definition: contentWorkflowDefinition,
+      repository: new MemoryWorkflowRepository(run),
+      handlers: {},
+    });
+
+    const cancelled = await runner.cancel(run.id, run.revision);
+
+    expect(cancelled).toMatchObject({ status: 'cancelled', revision: 2 });
+    await expect(runner.cancel(run.id, run.revision)).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
 });
 
 class MemoryWorkflowRepository implements WorkflowRepository {

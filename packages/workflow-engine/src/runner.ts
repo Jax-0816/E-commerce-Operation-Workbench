@@ -17,6 +17,8 @@ const REUSABLE = new Set<WorkflowNode['status']>(['completed', 'locked', 'needs_
 export interface WorkflowRunner {
   run(id: UuidV7, expectedRevision: number): Promise<WorkflowRun>;
   resume(id: UuidV7, expectedRevision: number): Promise<WorkflowRun>;
+  retryNode(id: UuidV7, nodeKey: string, expectedRevision: number): Promise<WorkflowRun>;
+  cancel(id: UuidV7, expectedRevision: number): Promise<WorkflowRun>;
 }
 
 export function createWorkflowRunner(dependencies: {
@@ -27,6 +29,24 @@ export function createWorkflowRunner(dependencies: {
   return {
     run: (id, revision) => execute(id, revision, ['not_started'], dependencies),
     resume: (id, revision) => execute(id, revision, ['failed', 'interrupted'], dependencies),
+    retryNode: async (id, nodeKey, revision) => {
+      const run = await requiredRun(dependencies.repository, id);
+      if (
+        run.revision !== revision ||
+        run.status !== 'failed' ||
+        requiredNode(run, nodeKey).status !== 'failed'
+      ) {
+        throw conflict();
+      }
+      return execute(id, revision, ['failed'], dependencies);
+    },
+    cancel: async (id, revision) => {
+      const run = await requiredRun(dependencies.repository, id);
+      if (run.revision !== revision || run.status === 'completed' || run.status === 'cancelled') {
+        throw conflict();
+      }
+      return dependencies.repository.cancelRun(id, revision);
+    },
   };
 }
 
