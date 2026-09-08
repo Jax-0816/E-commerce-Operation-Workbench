@@ -146,7 +146,7 @@ expect(() =>
 
 Persist a running run/node, close the database, reopen it, invoke recovery, and assert the run is `interrupted`, the node is `failed` with `WORKFLOW_INTERRUPTED`, one durable interruption event exists, and handler call count remains zero.
 
-- [ ] **Step 3: Run focused tests and confirm RED**
+- [x] **Step 3: Run focused tests and confirm RED**
 
 Run: `pnpm --filter @eaw/database exec vitest run --fileParallelism=false src/repositories/workflow-repository.integration.test.ts src/repositories/workflow-recovery.integration.test.ts`
 
@@ -156,11 +156,11 @@ Expected: FAIL because migration and repositories do not exist.
 
 Create STRICT `workflow_runs`, `workflow_nodes`, `workflow_attempts`, and `workflow_events` tables. Add foreign keys, unique `(run_id,node_key)`, `(run_id,attempt_no)`, `(run_id,event_sequence)`, status checks, JSON text fields, indices, and immutable update/delete triggers for attempts/events. Repository write methods must use `BEGIN IMMEDIATE`, expected revision predicates, and rollback the entire transition/event/attempt unit on failure.
 
-- [ ] **Step 5: Implement fail-closed reads and startup recovery**
+- [x] **Step 5: Implement fail-closed reads and startup recovery**
 
 Parse every JSON field, validate stored definition snapshots and state combinations through workflow-engine constructors, verify contiguous event sequences, and reject malformed output references. Recovery performs one transaction and never accepts or calls handlers.
 
-- [ ] **Step 6: Run database and migration gates**
+- [x] **Step 6: Run database and migration gates**
 
 Run: `pnpm --filter @eaw/database test && pnpm --filter @eaw/database typecheck && pnpm --filter @eaw/database lint && pnpm --filter @eaw/database build`
 

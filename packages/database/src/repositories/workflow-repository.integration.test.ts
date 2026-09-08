@@ -119,4 +119,37 @@ describe('SQLite workflow repository', () => {
       repository.claimNode(created.id, 'market_insight', 'b'.repeat(64), running.revision),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
   });
+
+  it('fails closed on malformed output references and non-contiguous event history', async () => {
+    const repository = new SqliteWorkflowRepository(database);
+    const malformedRun = await repository.create({
+      id: createUuidV7(),
+      productId,
+      platformId: 'pinduoduo',
+      definition: contentWorkflowDefinition,
+      createdAt: new Date('2026-09-08T03:00:00.000Z'),
+    });
+    database.sqlite
+      .prepare(
+        "UPDATE workflow_nodes SET status = 'completed', dependency_hash = ?, output_json = '{}' WHERE workflow_run_id = ? AND node_key = 'competitor_analysis'",
+      )
+      .run('d'.repeat(64), malformedRun.id);
+
+    await expect(repository.findById(malformedRun.id)).rejects.toThrow(/output reference/u);
+
+    const eventGapRun = await repository.create({
+      id: createUuidV7(),
+      productId,
+      platformId: 'taobao',
+      definition: contentWorkflowDefinition,
+      createdAt: new Date('2026-09-08T03:01:00.000Z'),
+    });
+    database.sqlite
+      .prepare(
+        'INSERT INTO workflow_events (workflow_run_id,event_sequence,event_type,run_revision,node_key,payload_json,created_at) VALUES (?,?,?,?,?,?,?)',
+      )
+      .run(eventGapRun.id, 3, 'invalid_gap', 2, null, '{}', Date.now());
+
+    await expect(repository.listEvents(eventGapRun.id, 0)).rejects.toThrow(/sequence/u);
+  });
 });

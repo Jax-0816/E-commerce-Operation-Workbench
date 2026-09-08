@@ -3,7 +3,7 @@ import {
   createWorkflowDefinition,
   type CreateWorkflowRunInput,
   type WorkflowEvent,
-  type WorkflowDefinition,
+  type WorkflowNodeDefinition,
   type WorkflowNode,
   type WorkflowNodeStatus,
   type WorkflowRun,
@@ -13,6 +13,13 @@ import { DomainError, type UuidV7 } from '@eaw/domain';
 
 import type { OpenDatabase } from '../client.js';
 import { integer, json, platform, rollback, uuid } from './content-revision-values.js';
+import {
+  dependencyHash,
+  workflowDefinition,
+  workflowError,
+  workflowEventPayload,
+  workflowOutput,
+} from './workflow-values.js';
 
 type Row = Record<string, unknown>;
 
@@ -71,12 +78,13 @@ export class SqliteWorkflowRepository {
     const row = this.database.sqlite.prepare('SELECT * FROM workflow_runs WHERE id = ?').get(id) as
       Row | undefined;
     if (!row) return undefined;
-    const definition = createWorkflowDefinition(json(row.definition_json) as WorkflowDefinition);
+    const definition = workflowDefinition(json(row.definition_json));
     const nodes = this.database.sqlite
       .prepare('SELECT * FROM workflow_nodes WHERE workflow_run_id = ? ORDER BY node_order')
       .all(id) as Row[];
     if (nodes.length !== definition.nodes.length)
       throw new TypeError('Workflow nodes are invalid.');
+    const parsedNodes = nodes.map((node, index) => toNode(node, definition.nodes[index]!));
     return {
       id: uuid(row.id),
       productId: uuid(row.product_id),
@@ -85,7 +93,7 @@ export class SqliteWorkflowRepository {
       status: runStatus(row.status),
       revision: positive(row.revision),
       cancellationRequested: booleanInteger(row.cancellation_requested),
-      nodes: nodes.map(toNode),
+      nodes: parsedNodes,
       createdAt: validDate(row.created_at),
       updatedAt: validDate(row.updated_at),
     };
@@ -94,13 +102,15 @@ export class SqliteWorkflowRepository {
   async listEvents(id: UuidV7, afterSequence: number): Promise<readonly WorkflowEvent[]> {
     if (!Number.isSafeInteger(afterSequence) || afterSequence < 0)
       throw new TypeError('Invalid sequence.');
-    return (
+    const events = (
       this.database.sqlite
-        .prepare(
-          'SELECT * FROM workflow_events WHERE workflow_run_id = ? AND event_sequence > ? ORDER BY event_sequence',
-        )
-        .all(id, afterSequence) as Row[]
+        .prepare('SELECT * FROM workflow_events WHERE workflow_run_id = ? ORDER BY event_sequence')
+        .all(id) as Row[]
     ).map(toEvent);
+    if (events.some(({ sequence }, index) => sequence !== index + 1)) {
+      throw new TypeError('Workflow event sequence is not contiguous.');
+    }
+    return events.filter(({ sequence }) => sequence > afterSequence);
   }
 
   async markRunning(id: UuidV7, expectedRevision: number): Promise<WorkflowRun> {
@@ -349,14 +359,26 @@ export class SqliteWorkflowRepository {
   }
 }
 
-function toNode(row: Row): WorkflowNode {
+function toNode(row: Row, definition: WorkflowNodeDefinition): WorkflowNode {
+  if (
+    text(row.node_key) !== definition.key ||
+    text(row.task_type) !== definition.taskType ||
+    positive(row.node_order) !== definition.order
+  ) {
+    throw new TypeError('Workflow node does not match its definition.');
+  }
+  const status = nodeStatus(row.status);
+  const hash = row.dependency_hash === null ? null : dependencyHash(row.dependency_hash);
+  const output = row.output_json === null ? null : workflowOutput(json(row.output_json));
+  const error = row.error_json === null ? null : workflowError(json(row.error_json));
+  validateNodeState(status, hash, output, error);
   return {
     key: text(row.node_key),
     taskType: text(row.task_type),
-    status: nodeStatus(row.status),
-    dependencyHash: nullableText(row.dependency_hash),
-    output: row.output_json === null ? null : (json(row.output_json) as WorkflowNode['output']),
-    error: row.error_json === null ? null : (json(row.error_json) as WorkflowNode['error']),
+    status,
+    dependencyHash: hash,
+    output,
+    error,
   };
 }
 
@@ -367,7 +389,7 @@ function toEvent(row: Row): WorkflowEvent {
     type: text(row.event_type),
     runRevision: positive(row.run_revision),
     nodeKey: nullableText(row.node_key),
-    payload: json(row.payload_json) as Record<string, unknown>,
+    payload: workflowEventPayload(json(row.payload_json)),
     createdAt: validDate(row.created_at),
   };
 }
@@ -418,6 +440,29 @@ function text(value: unknown): string {
 
 function nullableText(value: unknown): string | null {
   return value === null ? null : text(value);
+}
+
+function validateNodeState(
+  status: WorkflowNodeStatus,
+  hash: string | null,
+  output: WorkflowNode['output'],
+  error: WorkflowNode['error'],
+): void {
+  if (status === 'not_started' && (hash !== null || output !== null || error !== null)) {
+    throw new TypeError('Invalid not-started workflow node state.');
+  }
+  if (status === 'running' && (hash === null || output !== null || error !== null)) {
+    throw new TypeError('Invalid running workflow node state.');
+  }
+  if (
+    ['completed', 'locked', 'needs_review', 'stale'].includes(status) &&
+    (hash === null || output === null || error !== null)
+  ) {
+    throw new TypeError('Invalid reusable workflow node state.');
+  }
+  if (status === 'failed' && error === null) {
+    throw new TypeError('Invalid failed workflow node state.');
+  }
 }
 
 function validDate(value: unknown): Date {
