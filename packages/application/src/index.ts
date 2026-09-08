@@ -70,3 +70,11 @@ export {
   createRepositoryContentContext,
 } from './content-builders/content-generation.js';
 export type { ContentGenerationContextPort } from './content-builders/content-generation.js';
+export { createWorkflowsApplication } from './workflows/index.js';
+export type {
+  WorkflowPreflight,
+  WorkflowPreflightInspection,
+  WorkflowPreflightInspector,
+  WorkflowPreflightNode,
+  WorkflowsApplication,
+} from './workflows/index.js';

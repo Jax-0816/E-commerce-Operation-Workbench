@@ -17,11 +17,12 @@
     "prepare:promotion": "pnpm --filter @eaw/promotion-engine run build",
     "prepare:ai": "pnpm --filter @eaw/ai-engine run build && pnpm --filter @eaw/workspace run build",
     "prepare:competitors": "pnpm --filter @eaw/competitor-engine run build",
-    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai && pnpm run prepare:competitors",
+    "prepare:workflows": "pnpm --filter @eaw/workflow-engine run build",
+    "prebuild": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai && pnpm run prepare:competitors && pnpm run prepare:workflows",
     "build": "tsc -p tsconfig.json",
-    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai && pnpm run prepare:competitors",
+    "pretest": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai && pnpm run prepare:competitors && pnpm run prepare:workflows",
     "test": "vitest run src",
-    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai && pnpm run prepare:competitors",
+    "pretypecheck": "pnpm run prepare:domain && pnpm run prepare:pricing && pnpm run prepare:platform && pnpm run prepare:rules && pnpm run prepare:promotion && pnpm run prepare:ai && pnpm run prepare:competitors && pnpm run prepare:workflows",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src"
   },
@@ -35,6 +36,7 @@
     "@eaw/platform-engine": "workspace:*",
     "@eaw/prompt-engine": "workspace:*",
     "@eaw/rule-engine": "workspace:*",
+    "@eaw/workflow-engine": "workspace:*",
     "@eaw/workspace": "workspace:*"
   }
 }

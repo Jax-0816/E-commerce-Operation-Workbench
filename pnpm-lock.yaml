@@ -157,6 +157,9 @@ importers:
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine
+      '@eaw/workflow-engine':
+        specifier: workspace:*
+        version: link:../workflow-engine
       '@eaw/workspace':
         specifier: workspace:*
         version: link:../workspace
