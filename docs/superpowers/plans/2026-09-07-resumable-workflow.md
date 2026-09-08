@@ -235,7 +235,7 @@ Expected: all application tests pass.
 - Consumes: `WorkflowsApplication`.
 - Produces: the eight HTTP/SSE endpoints specified in the design.
 
-- [ ] **Step 1: Write failing contract and route tests**
+- [x] **Step 1: Write failing contract and route tests**
 
 Test strict UUIDv7, platform, definition ID, node key, non-negative event sequence, positive expected revision, unknown-field rejection, ownership, 404/409/503 mapping, and successful preflight/start/get/list/resume/retry/cancel flows.
 

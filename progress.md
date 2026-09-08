@@ -480,7 +480,8 @@
 - 已完成六节点 handler 路由与统一结果映射：三类策略、标题、创意和详情均复用现有应用用例，保留商品/平台身份、精确资产 ID/revision 以及 completed/locked/needs_review 状态；检查快照使用规范 JSON + SHA-256。Application 34 项测试及类型检查、lint、构建通过。
 - 已完成真实仓储依赖检查：仅纳入已确认、策略允许且非敏感的事实，并追踪竞品快照、上游资产 ID/revision、平台资料、活动规则包/覆盖项和活动提示词哈希；仅在同商品、同平台且资产保存的 workflow 哈希完全一致时复用。Application 36 项测试及全部包门禁通过，Task 3 完成。
 - 已完成 workflow HTTP/SSE 严格 contracts：UUIDv7、平台、固定定义、节点键、正 revision、非负事件游标及所有响应结构均拒绝未知字段。Contracts 35 项测试及类型检查、lint、构建通过。
+- 已完成七个 workflow HTTP 操作路由：preflight/start/list/get/resume/retry/cancel 严格解析输入，异步调度操作返回 202，并复用全局安全错误映射。Server 42 项测试及类型检查、lint、构建通过。
 
 ### Next action
 
-1. 继续 Task 4：补 Fastify workflow 路由失败测试并实现七个 HTTP 操作接口。
+1. 继续 Task 4：补 durable replay + live delivery 的 SSE 路由失败测试并实现连接清理。

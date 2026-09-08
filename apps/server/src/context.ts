@@ -13,6 +13,7 @@ import type {
   StrategyApplication,
   TitlesApplication,
   ContentBuildersApplication,
+  WorkflowsApplication,
 } from '@eaw/application';
 
 export interface AppContextOptions {
@@ -30,6 +31,7 @@ export interface AppContextOptions {
   readonly strategy?: StrategyApplication;
   readonly titles?: TitlesApplication;
   readonly contentBuilders?: ContentBuildersApplication;
+  readonly workflows?: WorkflowsApplication;
 }
 
 export interface AppContext {
@@ -48,6 +50,7 @@ export interface AppContext {
   readonly strategy?: StrategyApplication;
   readonly titles?: TitlesApplication;
   readonly contentBuilders?: ContentBuildersApplication;
+  readonly workflows?: WorkflowsApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -67,5 +70,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     strategy: options.strategy,
     titles: options.titles,
     contentBuilders: options.contentBuilders,
+    workflows: options.workflows,
   };
 }
