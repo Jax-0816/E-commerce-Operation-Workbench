@@ -83,3 +83,21 @@ export interface WorkflowNodeHandler {
   inspect(input: WorkflowNodeInput): Promise<WorkflowNodeInspection>;
   execute(input: WorkflowNodeInput & { readonly signal: AbortSignal }): Promise<WorkflowNodeResult>;
 }
+
+export interface CreateWorkflowRunInput {
+  readonly id: import('@eaw/domain').UuidV7;
+  readonly productId: import('@eaw/domain').UuidV7;
+  readonly platformId: import('@eaw/domain').PlatformId;
+  readonly definition: WorkflowDefinition;
+  readonly createdAt: Date;
+}
+
+export interface WorkflowEvent {
+  readonly workflowRunId: import('@eaw/domain').UuidV7;
+  readonly sequence: number;
+  readonly type: string;
+  readonly runRevision: number;
+  readonly nodeKey: string | null;
+  readonly payload: Readonly<Record<string, unknown>>;
+  readonly createdAt: Date;
+}

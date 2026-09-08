@@ -202,6 +202,9 @@ importers:
       '@eaw/rule-engine':
         specifier: workspace:*
         version: link:../rule-engine
+      '@eaw/workflow-engine':
+        specifier: workspace:*
+        version: link:../workflow-engine
       drizzle-orm:
         specifier: 0.45.2
         version: 0.45.2

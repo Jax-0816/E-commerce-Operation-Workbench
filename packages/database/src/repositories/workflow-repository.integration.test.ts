@@ -1,0 +1,58 @@
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { createProduct, createUuidV7 } from '@eaw/domain';
+import { contentWorkflowDefinition } from '@eaw/workflow-engine';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { openDatabase, type OpenDatabase } from '../client.js';
+import { migrateDatabase } from '../migrate.js';
+import { DrizzleProductRepository } from './product-repository.js';
+import { SqliteWorkflowRepository } from './workflow-repository.js';
+
+describe('SQLite workflow repository', () => {
+  let directory: string;
+  let database: OpenDatabase;
+  let productId: ReturnType<typeof createUuidV7>;
+
+  beforeEach(async () => {
+    directory = await mkdtemp(join(tmpdir(), 'eaw-workflow-'));
+    database = openDatabase(join(directory, 'workbench.sqlite'));
+    await migrateDatabase(database, join(process.cwd(), '../../migrations'));
+    const product = createProduct({ id: createUuidV7(), name: '工作流商品', now: new Date() });
+    productId = product.id;
+    await new DrizzleProductRepository(database.drizzle).create(product);
+  });
+
+  afterEach(async () => {
+    database.close();
+    await rm(directory, { recursive: true });
+  });
+
+  it('atomically creates a run, six nodes, and the first durable event', async () => {
+    const repository = new SqliteWorkflowRepository(database);
+    const now = new Date('2026-09-08T01:00:00.000Z');
+    const run = await repository.create({
+      id: createUuidV7(now),
+      productId,
+      platformId: 'pinduoduo',
+      definition: contentWorkflowDefinition,
+      createdAt: now,
+    });
+
+    expect(run).toMatchObject({ status: 'not_started', revision: 1 });
+    expect(run.nodes.map(({ key, status }) => [key, status])).toEqual(
+      contentWorkflowDefinition.nodes.map(({ key }) => [key, 'not_started']),
+    );
+    expect(await repository.findById(run.id)).toEqual(run);
+    expect(await repository.listEvents(run.id, 0)).toEqual([
+      expect.objectContaining({ sequence: 1, type: 'workflow_created', runRevision: 1 }),
+    ]);
+    expect(() =>
+      database.sqlite
+        .prepare('UPDATE workflow_events SET event_type = ? WHERE workflow_run_id = ?')
+        .run('tampered', run.id),
+    ).toThrow(/immutable/u);
+  });
+});

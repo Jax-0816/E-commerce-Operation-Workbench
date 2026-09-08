@@ -23,6 +23,7 @@ export { DrizzleStrategyRepository } from './repositories/strategy-repository.js
 export { DrizzleTitleAssetRepository } from './repositories/title-asset-repository.js';
 export { DrizzleCreativePlanRepository } from './repositories/creative-plan-repository.js';
 export { DrizzleDetailPageRepository } from './repositories/detail-page-repository.js';
+export { SqliteWorkflowRepository } from './repositories/workflow-repository.js';
 export {
   DrizzleRuleRepository,
   type StoredRuleOverride,
