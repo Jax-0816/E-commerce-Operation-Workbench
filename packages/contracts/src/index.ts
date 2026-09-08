@@ -61,6 +61,30 @@ export {
   UpdateFactInputSchema,
 } from './facts.js';
 export {
+  ProductWorkflowParamsSchema,
+  StartWorkflowInputSchema,
+  WorkflowDefinitionIdSchema,
+  WorkflowEventResponseSchema,
+  WorkflowEventsQuerySchema,
+  WorkflowNodeKeySchema,
+  WorkflowNodeParamsSchema,
+  WorkflowNodeResponseSchema,
+  WorkflowOutputReferenceSchema,
+  WorkflowPreflightNodeSchema,
+  WorkflowPreflightResponseSchema,
+  WorkflowRevisionInputSchema,
+  WorkflowRunListResponseSchema,
+  WorkflowRunParamsSchema,
+  WorkflowRunResponseSchema,
+} from './workflows.js';
+export type {
+  StartWorkflowInput,
+  WorkflowEventResponse,
+  WorkflowPreflightResponse,
+  WorkflowRevisionInput,
+  WorkflowRunResponse,
+} from './workflows.js';
+export {
   ContentItemParamsSchema,
   ContentParamsSchema,
   ContentQuerySchema,

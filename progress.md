@@ -479,7 +479,8 @@
 - 已完成安全事件订阅器：订阅时先回放持久事件、注册后再次补齐竞态窗口，按 sequence 去重；runner/取消完成后才从 durable event 仓储发布，监听器异常与取消订阅均被隔离。Application 32 项测试及类型检查、lint、构建通过。
 - 已完成六节点 handler 路由与统一结果映射：三类策略、标题、创意和详情均复用现有应用用例，保留商品/平台身份、精确资产 ID/revision 以及 completed/locked/needs_review 状态；检查快照使用规范 JSON + SHA-256。Application 34 项测试及类型检查、lint、构建通过。
 - 已完成真实仓储依赖检查：仅纳入已确认、策略允许且非敏感的事实，并追踪竞品快照、上游资产 ID/revision、平台资料、活动规则包/覆盖项和活动提示词哈希；仅在同商品、同平台且资产保存的 workflow 哈希完全一致时复用。Application 36 项测试及全部包门禁通过，Task 3 完成。
+- 已完成 workflow HTTP/SSE 严格 contracts：UUIDv7、平台、固定定义、节点键、正 revision、非负事件游标及所有响应结构均拒绝未知字段。Contracts 35 项测试及类型检查、lint、构建通过。
 
 ### Next action
 
-1. 开始 Task 4：先补严格 workflow HTTP contracts 与 Fastify 路由失败测试。
+1. 继续 Task 4：补 Fastify workflow 路由失败测试并实现七个 HTTP 操作接口。
