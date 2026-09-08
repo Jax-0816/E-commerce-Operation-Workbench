@@ -142,7 +142,7 @@ expect(() =>
 ).toThrow(/immutable/u);
 ```
 
-- [ ] **Step 2: Write failing restart recovery tests**
+- [x] **Step 2: Write failing restart recovery tests**
 
 Persist a running run/node, close the database, reopen it, invoke recovery, and assert the run is `interrupted`, the node is `failed` with `WORKFLOW_INTERRUPTED`, one durable interruption event exists, and handler call count remains zero.
 

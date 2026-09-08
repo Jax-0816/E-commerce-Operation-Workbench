@@ -24,6 +24,7 @@ export { DrizzleTitleAssetRepository } from './repositories/title-asset-reposito
 export { DrizzleCreativePlanRepository } from './repositories/creative-plan-repository.js';
 export { DrizzleDetailPageRepository } from './repositories/detail-page-repository.js';
 export { SqliteWorkflowRepository } from './repositories/workflow-repository.js';
+export { recoverInterruptedWorkflows } from './repositories/workflow-recovery.js';
 export {
   DrizzleRuleRepository,
   type StoredRuleOverride,
