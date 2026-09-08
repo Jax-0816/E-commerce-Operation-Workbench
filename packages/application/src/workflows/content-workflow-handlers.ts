@@ -18,11 +18,16 @@ interface GeneratedTitle extends GeneratedAsset {
 }
 
 export interface ContentWorkflowContextPort {
-  inspect(input: WorkflowNodeInput): Promise<{
+  inspect(input: ContentWorkflowInspectionInput): Promise<{
     readonly dependencies: unknown;
     readonly reusableOutput?: WorkflowNodeOutputReference;
   }>;
 }
+
+export type ContentWorkflowInspectionInput = Pick<
+  WorkflowNodeInput,
+  'productId' | 'platformId' | 'nodeKey'
+>;
 
 export function createContentWorkflowHandlers(dependencies: {
   readonly context: ContentWorkflowContextPort;

@@ -478,7 +478,8 @@
 - 已补齐 resume/retry/cancel/listEvents：所有操作先验证 run 商品归属与 expected revision，恢复/重试后台拒绝被安全收敛，取消直接返回原子转换结果；application 31 项测试及类型检查、lint、构建通过。
 - 已完成安全事件订阅器：订阅时先回放持久事件、注册后再次补齐竞态窗口，按 sequence 去重；runner/取消完成后才从 durable event 仓储发布，监听器异常与取消订阅均被隔离。Application 32 项测试及类型检查、lint、构建通过。
 - 已完成六节点 handler 路由与统一结果映射：三类策略、标题、创意和详情均复用现有应用用例，保留商品/平台身份、精确资产 ID/revision 以及 completed/locked/needs_review 状态；检查快照使用规范 JSON + SHA-256。Application 34 项测试及类型检查、lint、构建通过。
+- 已完成真实仓储依赖检查：仅纳入已确认、策略允许且非敏感的事实，并追踪竞品快照、上游资产 ID/revision、平台资料、活动规则包/覆盖项和活动提示词哈希；仅在同商品、同平台且资产保存的 workflow 哈希完全一致时复用。Application 36 项测试及全部包门禁通过，Task 3 完成。
 
 ### Next action
 
-1. 实现读取真实事实、竞品、上游资产、平台和提示词身份的 ContentWorkflowContextPort。
+1. 开始 Task 4：先补严格 workflow HTTP contracts 与 Fastify 路由失败测试。

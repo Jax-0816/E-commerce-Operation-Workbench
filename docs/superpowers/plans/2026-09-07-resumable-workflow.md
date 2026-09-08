@@ -202,11 +202,11 @@ Expected: FAIL because workflow application modules do not exist.
 
 Validate product ownership before every public operation. `start` creates a `not_started` run and schedules runner work with a caught promise so Fastify never receives an unhandled rejection. Keep one in-process subscriber set per run; publish only after durable repository append and always allow event replay from `afterSequence`.
 
-- [ ] **Step 5: Implement deterministic handler inspection**
+- [x] **Step 5: Implement deterministic handler inspection**
 
 Use canonical JSON and SHA-256 over confirmed policy-eligible non-sensitive facts, current competitor snapshots, precise upstream asset IDs/revisions, platform profile/rule identity, and active prompt hashes. `inspect` returns existing exact output only when it belongs to the same product/platform and matches the dependency hash.
 
-- [ ] **Step 6: Run application package gates**
+- [x] **Step 6: Run application package gates**
 
 Run: `pnpm --filter @eaw/application test && pnpm --filter @eaw/application typecheck && pnpm --filter @eaw/application lint && pnpm --filter @eaw/application build`
 
