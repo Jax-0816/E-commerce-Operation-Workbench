@@ -56,6 +56,11 @@ export interface WorkflowsApplication {
   retryNode(runId: string, nodeKey: string, expectedRevision: number): Promise<WorkflowRun>;
   cancel(runId: string, expectedRevision: number): Promise<WorkflowRun>;
   listEvents(runId: string, afterSequence: number): Promise<readonly WorkflowEvent[]>;
+  subscribe(
+    runId: string,
+    afterSequence: number,
+    listener: WorkflowEventListener,
+  ): Promise<() => void>;
 }
 
 export interface ApplicationWorkflowRepository extends WorkflowRepository {
@@ -65,6 +70,12 @@ export interface ApplicationWorkflowRepository extends WorkflowRepository {
 }
 
 export type WorkflowScheduler = (task: () => Promise<void>) => void;
+export type WorkflowEventListener = (event: WorkflowEvent) => void;
+
+interface WorkflowSubscription {
+  sequence: number;
+  readonly listener: WorkflowEventListener;
+}
 
 export function createWorkflowsApplication(dependencies: {
   readonly products: ProductRepository;
@@ -76,6 +87,7 @@ export function createWorkflowsApplication(dependencies: {
   readonly now?: () => Date;
   readonly schedule?: WorkflowScheduler;
 }): WorkflowsApplication {
+  const subscribers = new Map<string, Set<WorkflowSubscription>>();
   const owner = async (value: string): Promise<UuidV7> => {
     const productId = parseUuidV7(value);
     const product = await dependencies.products.findById(productId);
@@ -96,13 +108,33 @@ export function createWorkflowsApplication(dependencies: {
     await owner(run.productId);
     return run;
   };
-  const schedule = (task: () => Promise<unknown>): void => {
+  const deliver = (subscription: WorkflowSubscription, events: readonly WorkflowEvent[]): void => {
+    for (const event of events) {
+      if (event.sequence <= subscription.sequence) continue;
+      subscription.sequence = event.sequence;
+      try {
+        subscription.listener(event);
+      } catch {
+        // A faulty listener must not block other subscribers or durable execution.
+      }
+    }
+  };
+  const publish = async (runId: UuidV7): Promise<void> => {
+    const active = subscribers.get(runId);
+    if (!active) return;
+    for (const subscription of active) {
+      deliver(subscription, await runtime().repository.listEvents(runId, subscription.sequence));
+    }
+  };
+  const schedule = (runId: UuidV7, task: () => Promise<unknown>): void => {
     const scheduler = dependencies.schedule ?? ((work) => queueMicrotask(() => void work()));
     scheduler(async () => {
       try {
         await task();
       } catch {
         // Runner failures are durable; background promise failures must remain contained.
+      } finally {
+        await publish(runId);
       }
     });
   };
@@ -163,7 +195,7 @@ export function createWorkflowsApplication(dependencies: {
         definition: contentWorkflowDefinition,
         createdAt: now,
       });
-      schedule(() => runner.run(run.id, run.revision));
+      schedule(run.id, () => runner.run(run.id, run.revision));
       return run;
     },
     async list(productIdValue) {
@@ -175,21 +207,41 @@ export function createWorkflowsApplication(dependencies: {
     },
     async resume(runIdValue, expectedRevision) {
       const run = await revisionedRun(runIdValue, expectedRevision);
-      schedule(() => runtime().runner.resume(run.id, expectedRevision));
+      schedule(run.id, () => runtime().runner.resume(run.id, expectedRevision));
       return run;
     },
     async retryNode(runIdValue, nodeKey, expectedRevision) {
       const run = await revisionedRun(runIdValue, expectedRevision);
-      schedule(() => runtime().runner.retryNode(run.id, nodeKey, expectedRevision));
+      schedule(run.id, () => runtime().runner.retryNode(run.id, nodeKey, expectedRevision));
       return run;
     },
     async cancel(runIdValue, expectedRevision) {
       const run = await revisionedRun(runIdValue, expectedRevision);
-      return runtime().runner.cancel(run.id, expectedRevision);
+      const cancelled = await runtime().runner.cancel(run.id, expectedRevision);
+      await publish(run.id);
+      return cancelled;
     },
     async listEvents(runIdValue, afterSequence) {
       const run = await ownedRun(runIdValue);
       return runtime().repository.listEvents(run.id, afterSequence);
+    },
+    async subscribe(runIdValue, afterSequence, listener) {
+      const run = await ownedRun(runIdValue);
+      const subscription: WorkflowSubscription = { sequence: afterSequence, listener };
+      deliver(subscription, await runtime().repository.listEvents(run.id, afterSequence));
+      const active = subscribers.get(run.id) ?? new Set<WorkflowSubscription>();
+      active.add(subscription);
+      subscribers.set(run.id, active);
+      try {
+        deliver(subscription, await runtime().repository.listEvents(run.id, subscription.sequence));
+      } catch (error) {
+        active.delete(subscription);
+        throw error;
+      }
+      return () => {
+        active.delete(subscription);
+        if (active.size === 0) subscribers.delete(run.id);
+      };
     },
   };
 }

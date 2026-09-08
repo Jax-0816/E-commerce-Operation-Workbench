@@ -74,6 +74,7 @@ export { createWorkflowsApplication } from './workflows/index.js';
 export type {
   ApplicationWorkflowRepository,
   WorkflowPreflight,
+  WorkflowEventListener,
   WorkflowPreflightInspection,
   WorkflowPreflightInspector,
   WorkflowPreflightNode,

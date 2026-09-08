@@ -201,7 +201,56 @@ describe('workflows application preflight', () => {
     });
     expect(await application.listEvents(failed.id, 0)).toEqual([event]);
   });
+
+  it('replays durable events before live publication and stops after unsubscribe', async () => {
+    const product = createProduct({ id: createUuidV7(), name: '订阅商品', now: new Date() });
+    const run = { ...workflowRun(product.id, new Date()), status: 'failed' as const };
+    const events: WorkflowEvent[] = [workflowEvent(run, 1, 'workflow_created')];
+    const scheduled: Array<() => Promise<void>> = [];
+    const application = createWorkflowsApplication({
+      products: productRepository(product),
+      competitors: emptyCompetitorRepository(),
+      handlers: preflightHandlers(),
+      repository: workflowRepository({
+        findById: async () => run,
+        listEvents: async (_id, after) => events.filter(({ sequence }) => sequence > after),
+      }),
+      runner: workflowRunner({
+        resume: async () => {
+          events.push(workflowEvent(run, 2, 'workflow_started'));
+          return run;
+        },
+      }),
+      schedule: (task) => scheduled.push(task),
+    });
+    const received: number[] = [];
+
+    const unsubscribe = await application.subscribe(run.id, 0, (event) => {
+      received.push(event.sequence);
+    });
+    await application.resume(run.id, run.revision);
+    await scheduled.shift()?.();
+
+    expect(received).toEqual([1, 2]);
+    unsubscribe();
+    events.push(workflowEvent(run, 3, 'node_claimed'));
+    await application.resume(run.id, run.revision);
+    await scheduled.shift()?.();
+    expect(received).toEqual([1, 2]);
+  });
 });
+
+function workflowEvent(run: WorkflowRun, sequence: number, type: string): WorkflowEvent {
+  return {
+    workflowRunId: run.id,
+    sequence,
+    type,
+    runRevision: sequence,
+    nodeKey: null,
+    payload: {},
+    createdAt: run.createdAt,
+  };
+}
 
 function preflightHandlers(): Readonly<Record<string, WorkflowPreflightInspector>> {
   return Object.fromEntries(

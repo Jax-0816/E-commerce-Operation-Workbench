@@ -198,7 +198,7 @@ Run: `pnpm --filter @eaw/application exec vitest run src/workflows`
 
 Expected: FAIL because workflow application modules do not exist.
 
-- [ ] **Step 4: Implement the application facade and safe event publisher**
+- [x] **Step 4: Implement the application facade and safe event publisher**
 
 Validate product ownership before every public operation. `start` creates a `not_started` run and schedules runner work with a caught promise so Fastify never receives an unhandled rejection. Keep one in-process subscriber set per run; publish only after durable repository append and always allow event replay from `afterSequence`.
 
