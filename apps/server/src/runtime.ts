@@ -15,7 +15,10 @@ import {
   createTitlesApplication,
   createContentBuildersApplication,
   createContentGenerationPort,
+  createContentWorkflowHandlers,
   createRepositoryContentContext,
+  createRepositoryContentWorkflowContext,
+  createWorkflowsApplication,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
@@ -34,12 +37,15 @@ import {
   DrizzleTitleAssetRepository,
   DrizzleCreativePlanRepository,
   DrizzleDetailPageRepository,
+  SqliteWorkflowRepository,
   migrateDatabase,
   openDatabase,
+  recoverInterruptedWorkflows,
   type OpenDatabase,
 } from '@eaw/database';
 import { createUuidV7 } from '@eaw/domain';
 import { APP_VERSION } from '@eaw/shared';
+import { contentWorkflowDefinition, createWorkflowRunner } from '@eaw/workflow-engine';
 import {
   acquireWorkspaceLock,
   initializeWorkspace,
@@ -85,6 +91,7 @@ export async function createProductionApp({
     const databasePath = resolveWorkspacePath(workspace.path, 'database/workbench.sqlite');
     database = openDatabase(databasePath);
     await migrateDatabase(database, migrationsDirectory);
+    await recoverInterruptedWorkflows(database, new Date());
 
     const productRepository = new DrizzleProductRepository(database.drizzle);
     const products = createProductsApplication({ repository: productRepository });
@@ -163,10 +170,12 @@ export async function createProductionApp({
       secrets: secretStore,
       providerFactory,
     });
+    const creativeRepository = new DrizzleCreativePlanRepository(database);
+    const detailRepository = new DrizzleDetailPageRepository(database);
     const contentBuilders = createContentBuildersApplication({
       products: productRepository,
-      creative: new DrizzleCreativePlanRepository(database),
-      detail: new DrizzleDetailPageRepository(database),
+      creative: creativeRepository,
+      detail: detailRepository,
       generation: createContentGenerationPort({
         context: createRepositoryContentContext({
           facts: factRepository,
@@ -179,6 +188,46 @@ export async function createProductionApp({
         secrets: secretStore,
         providerFactory,
       }),
+    });
+    const workflowRepository = new SqliteWorkflowRepository(database);
+    const { handlers: workflowHandlers } = createContentWorkflowHandlers({
+      context: createRepositoryContentWorkflowContext({
+        facts: factRepository,
+        competitors: competitorRepository,
+        strategies: strategyRepository,
+        titles: titleRepository,
+        creativePlans: creativeRepository,
+        detailPages: detailRepository,
+        platformProfiles: platformProfileRepository,
+        prompts: promptRepository,
+        rules: ruleRepository,
+      }),
+      strategies: strategy,
+      titles: {
+        async generate(productId, platformId) {
+          return (await titles.generate(productId, platformId)).revision;
+        },
+      },
+      content: {
+        async generateCreative(productId, platformId) {
+          return (await contentBuilders.generateCreative(productId, platformId)).revision;
+        },
+        async generateDetail(productId, platformId) {
+          return (await contentBuilders.generateDetail(productId, platformId)).revision;
+        },
+      },
+    });
+    const workflowRunner = createWorkflowRunner({
+      definition: contentWorkflowDefinition,
+      repository: workflowRepository,
+      handlers: workflowHandlers,
+    });
+    const workflows = createWorkflowsApplication({
+      products: productRepository,
+      competitors: competitorRepository,
+      handlers: workflowHandlers,
+      repository: workflowRepository,
+      runner: workflowRunner,
     });
     const app = buildApp(
       createAppContext({
@@ -196,6 +245,7 @@ export async function createProductionApp({
         rules,
         skus,
         webDistDir,
+        workflows,
       }),
     );
     app.addHook('onClose', cleanup);

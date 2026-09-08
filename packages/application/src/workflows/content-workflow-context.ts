@@ -31,9 +31,9 @@ type ReadPlatformProfiles = Pick<PlatformProfileRepository, 'find'>;
 const PROMPT_BY_NODE = {
   competitor_analysis: ['competitor-analysis'],
   market_insight: ['market-insight'],
-  selling_point_set: ['selling-point-set'],
-  title_generation: ['title-generation'],
-  creative_plan: ['creative-plan', 'creative-item', 'detail-page'],
+  selling_points: ['selling-point-set'],
+  titles: ['title-generation'],
+  creative: ['creative-plan', 'creative-item', 'detail-page'],
   detail_page: ['creative-plan', 'creative-item', 'detail-page'],
 } as const;
 
@@ -178,11 +178,11 @@ function snapshot(
       competitorAnalysis: assetIdentity(sources.competitorAnalysis),
     };
   }
-  if (nodeKey === 'selling_point_set') {
+  if (nodeKey === 'selling_points') {
     return { ...base, marketInsight: assetIdentity(sources.marketInsight) };
   }
   const platformRules = { platform: sources.platform, rules: sources.rules };
-  if (nodeKey === 'title_generation') {
+  if (nodeKey === 'titles') {
     return { ...base, sellingPoints: assetIdentity(sources.sellingPoints), platformRules };
   }
   return {
@@ -204,8 +204,8 @@ function revisionIdentity(revision: { readonly id: UuidV7; readonly revisionNo: 
 }
 
 function candidateFor(nodeKey: ContentNodeKey, sources: Awaited<ReturnType<typeof collectSources>>) {
-  if (nodeKey === 'title_generation') return sources.title;
-  if (nodeKey === 'creative_plan') return sources.creative;
+  if (nodeKey === 'titles') return sources.title;
+  if (nodeKey === 'creative') return sources.creative;
   if (nodeKey === 'detail_page') return sources.detail;
   return undefined;
 }
@@ -225,7 +225,7 @@ function reusable(
     return undefined;
   }
   return {
-    assetType: nodeKey === 'title_generation' ? 'title_asset' : nodeKey,
+    assetType: nodeKey === 'titles' ? 'title_asset' : nodeKey === 'creative' ? 'creative_plan' : nodeKey,
     assetId: candidate.id,
     revisionNo: candidate.revisionNo,
   };

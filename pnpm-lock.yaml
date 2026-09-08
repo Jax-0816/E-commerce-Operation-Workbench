@@ -65,6 +65,9 @@ importers:
       '@eaw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@eaw/workflow-engine':
+        specifier: workspace:*
+        version: link:../../packages/workflow-engine
       '@eaw/workspace':
         specifier: workspace:*
         version: link:../../packages/workspace

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 import type { AIProvider } from '@eaw/ai-engine';
+import { openDatabase, SqliteWorkflowRepository } from '@eaw/database';
+import { createUuidV7 } from '@eaw/domain';
 
 import { createProductionApp } from './runtime.js';
 
@@ -18,6 +20,127 @@ afterEach(async () => {
 });
 
 describe('production app composition', () => {
+  it('wires workflow APIs and recovers a persisted running node without executing it', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-workflow-')));
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const productId = (
+      await first.inject({ method: 'POST', url: '/api/v1/products', payload: { name: '恢复商品' } })
+    ).json().id as ReturnType<typeof createUuidV7>;
+    await first.close();
+
+    const database = openDatabase(join(workspacePath, 'database/workbench.sqlite'));
+    const repository = new SqliteWorkflowRepository(database);
+    const runId = createUuidV7();
+    await repository.create({
+      id: runId,
+      productId,
+      platformId: 'taobao',
+      definition: {
+        definitionId: 'product_content',
+        version: '1.0.0',
+        nodes: [
+          { key: 'competitor_analysis', taskType: 'competitor_analysis', dependsOn: [], order: 1 },
+        ],
+      },
+      createdAt: new Date('2026-09-08T10:00:00.000Z'),
+    });
+    const running = await repository.markRunning(runId, 1);
+    await repository.claimNode(runId, 'competitor_analysis', 'a'.repeat(64), running.revision);
+    database.close();
+
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const recovered = await restarted.inject({ method: 'GET', url: `/api/v1/workflows/${runId}` });
+    expect(recovered.statusCode, recovered.body).toBe(200);
+    expect(recovered.json()).toMatchObject({
+      id: runId,
+      productId,
+      status: 'interrupted',
+      cancellationRequested: false,
+      nodes: [
+        {
+          key: 'competitor_analysis',
+          status: 'failed',
+          error: { code: 'WORKFLOW_INTERRUPTED' },
+        },
+      ],
+    });
+    await restarted.close();
+  });
+
+  it('restarts inertly and resumes only the failed creative node plus its remaining successor', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-workflow-resume-')));
+    directories.push(workspacePath);
+    const taskSequence = [
+      'competitor_analysis',
+      'market_insight',
+      'selling_point_set',
+      'title_generation',
+      'creative_plan',
+      'creative_plan',
+      'detail_page',
+    ] as const;
+    const calls: Record<(typeof taskSequence)[number], number> = {
+      competitor_analysis: 0,
+      market_insight: 0,
+      selling_point_set: 0,
+      title_generation: 0,
+      creative_plan: 0,
+      detail_page: 0,
+    };
+    let callIndex = 0;
+    let productId = '';
+    const providerFactory = (): AIProvider => ({
+      id: 'workflow-fake',
+      async generate(request) {
+        const task = taskSequence[callIndex++];
+        if (!task) throw new Error('Unexpected workflow generation call.');
+        calls[task] += 1;
+        if (task === 'creative_plan' && calls.creative_plan === 1) {
+          throw new Error('One intentional creative failure.');
+        }
+        return {
+          provider: 'workflow-fake',
+          responseId: `response-${callIndex}`,
+          model: 'workflow-fake',
+          content: JSON.stringify(workflowOutput(task, productId, request.messages.map(({ content }) => content).join('\n'))),
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+        };
+      },
+      async testConnection() { return true; },
+      getCapabilities() { return { text: true, structured: true }; },
+    });
+    const first = await createProductionApp({ migrationsDirectory, workspacePath, providerFactory });
+    productId = (
+      await first.inject({ method: 'POST', url: '/api/v1/products', payload: { name: '续跑商品' } })
+    ).json().id as string;
+    await first.inject({ method: 'PUT', url: '/api/v1/ai/settings', payload: { apiKey: 'fake-secret' } });
+    const started = await first.inject({
+      method: 'POST',
+      url: `/api/v1/products/${productId}/workflows`,
+      payload: { platformId: 'taobao', definitionId: 'product_content' },
+    });
+    expect(started.statusCode, started.body).toBe(202);
+    const runId = started.json().id as string;
+    const failed = await waitForWorkflowStatus(first, runId, 'failed');
+    expect(Object.values(calls)).toEqual([1, 1, 1, 1, 1, 0]);
+    await first.close();
+
+    const beforeRestart = { ...calls };
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath, providerFactory });
+    expect(calls).toEqual(beforeRestart);
+    const resume = await restarted.inject({
+      method: 'POST',
+      url: `/api/v1/workflows/${runId}/resume`,
+      payload: { expectedRevision: failed.revision },
+    });
+    expect(resume.statusCode, resume.body).toBe(202);
+    await waitForWorkflowStatus(restarted, runId, 'completed');
+    expect(Object.entries(calls).map(([task, count]) => count - beforeRestart[task as keyof typeof calls]))
+      .toEqual([0, 0, 0, 0, 1, 1]);
+    await restarted.close();
+  });
+
   it('generates and persists evidence-backed strategy revisions with a fake provider', async () => {
     const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-strategy-')));
     directories.push(workspacePath);
@@ -666,3 +789,83 @@ describe('production app composition', () => {
     await restarted.close();
   });
 });
+
+async function waitForWorkflowStatus(
+  app: Awaited<ReturnType<typeof createProductionApp>>,
+  runId: string,
+  status: string,
+): Promise<{ readonly revision: number }> {
+  let latest: { status?: string; revision?: number; nodes?: unknown } = {};
+  for (let attempt = 0; attempt < 400; attempt += 1) {
+    const response = await app.inject({ method: 'GET', url: `/api/v1/workflows/${runId}` });
+    const body = response.json() as { status?: string; revision?: number };
+    latest = body;
+    if (body.status === status && body.revision !== undefined) return { revision: body.revision };
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  throw new Error(`Workflow did not reach ${status}: ${JSON.stringify(latest)}`);
+}
+
+function workflowOutput(task: string, productId: string, prompt: string): unknown {
+  if (task === 'competitor_analysis') return { productId, conclusions: [], limitations: [] };
+  if (task === 'market_insight') return { productId, insights: [], limitations: [] };
+  if (task === 'selling_point_set') {
+    return { productId, sellingPoints: [], suggestedFacts: [], limitations: [] };
+  }
+  if (task === 'title_generation') {
+    return {
+      productId,
+      titles: ['recommended', 'search', 'selling_point', 'scenario'].map((variant) => ({
+        variant,
+        text: `${variant} 商品标题`,
+        keywords: ['商品'],
+        claims: [],
+        reviewTerms: [],
+      })),
+    };
+  }
+  const count = task === 'creative_plan' ? 5 : 7;
+  const ids = requestedIds(prompt, task === 'creative_plan' ? 'itemIds' : 'sectionIds', count);
+  if (task === 'creative_plan') {
+    return {
+      productId,
+      items: ids.map((id, index) => ({
+        id,
+        order: index + 1,
+        role: index === 0 ? 'hero' : 'supporting',
+        headline: `图片 ${index + 1}`,
+        body: '画面说明',
+        promptZh: '中文提示',
+        promptEn: 'English prompt',
+        negativePromptZh: '中文负面',
+        negativePromptEn: 'English negative',
+        evidenceRefs: [],
+        reviewTerms: [],
+        locked: false,
+      })),
+    };
+  }
+  const kinds = ['hero', 'benefit', 'specification', 'scenario', 'trust', 'faq', 'call_to_action'];
+  return {
+    productId,
+    sections: ids.map((id, index) => ({
+      id,
+      order: index + 1,
+      kind: kinds[index],
+      headline: `模块 ${index + 1}`,
+      body: '详情说明',
+      evidenceRefs: [],
+      reviewTerms: [],
+      locked: false,
+    })),
+  };
+}
+
+function requestedIds(prompt: string, key: string, count: number): readonly string[] {
+  const start = prompt.lastIndexOf(`"${key}"`);
+  const values = start < 0
+    ? []
+    : prompt.slice(start).match(/[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gu) ?? [];
+  if (values.length < count) throw new Error(`Prompt omitted ${key}.`);
+  return values.slice(0, count);
+}

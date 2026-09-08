@@ -37,27 +37,27 @@ describe('repository content workflow context', () => {
     fixture.competitors[0] = competitor(fixture.productId);
     expect(await inspect('competitor_analysis')).not.toEqual(beforeCompetitor);
 
-    const titleBefore = await inspect('title_generation');
+    const titleBefore = await inspect('titles');
     fixture.profile = { ...fixture.profile, updatedAt: new Date('2026-09-08T02:00:00.000Z') };
-    expect(await inspect('title_generation')).not.toEqual(titleBefore);
+    expect(await inspect('titles')).not.toEqual(titleBefore);
 
-    const creativeBefore = await inspect('creative_plan');
+    const creativeBefore = await inspect('creative');
     fixture.title = { ...fixture.title, id: createUuidV7(), revisionNo: 2 };
-    expect(await inspect('creative_plan')).not.toEqual(creativeBefore);
+    expect(await inspect('creative')).not.toEqual(creativeBefore);
 
     const detailBefore = await inspect('detail_page');
     fixture.promptHashes['detail-page'] = 'f'.repeat(64);
     expect(await inspect('detail_page')).not.toEqual(detailBefore);
 
-    const titleRulesBefore = await inspect('title_generation');
+    const titleRulesBefore = await inspect('titles');
     fixture.ruleChecksum = 'e'.repeat(64);
-    expect(await inspect('title_generation')).not.toEqual(titleRulesBefore);
+    expect(await inspect('titles')).not.toEqual(titleRulesBefore);
   });
 
   it('reuses only an output owned by the same product/platform with the exact workflow hash', async () => {
     const fixture = contextFixture();
     const context = createRepositoryContentWorkflowContext(fixture.dependencies);
-    const input = { productId: fixture.productId, platformId: 'taobao', nodeKey: 'creative_plan' } as const;
+    const input = { productId: fixture.productId, platformId: 'taobao', nodeKey: 'creative' } as const;
     const first = await context.inspect(input);
     const workflowHash = sha256(canonicalJson(first.dependencies));
     fixture.creative = {

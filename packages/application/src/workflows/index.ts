@@ -28,7 +28,6 @@ export interface WorkflowPreflightInspector {
     readonly platformId: PlatformId;
     readonly nodeKey: string;
   }): Promise<WorkflowPreflightInspection>;
-  execute(...input: readonly unknown[]): Promise<unknown>;
 }
 
 export interface WorkflowPreflightNode extends WorkflowPreflightInspection {

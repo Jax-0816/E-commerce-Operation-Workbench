@@ -17,17 +17,12 @@ import {
 describe('workflows application preflight', () => {
   it('reports stable hashes and missing competitor inputs without executing generation', async () => {
     const product = createProduct({ id: createUuidV7(), name: '预检商品', now: new Date() });
-    let executeCalls = 0;
     const handlers = Object.fromEntries(
       contentWorkflowDefinition.nodes.map((node, index) => [
         node.taskType,
         {
           async inspect() {
             return { dependencyHash: (index + 1).toString(16).repeat(64) };
-          },
-          async execute() {
-            executeCalls += 1;
-            throw new Error('preflight must not execute');
           },
         } satisfies WorkflowPreflightInspector,
       ]),
@@ -50,7 +45,6 @@ describe('workflows application preflight', () => {
       runnable: false,
       missingInputs: ['competitor_snapshot'],
     });
-    expect(executeCalls).toBe(0);
   });
 
   it('rejects archived product ownership before inspecting nodes', async () => {
@@ -66,9 +60,6 @@ describe('workflows application preflight', () => {
           async inspect() {
             inspections += 1;
             return { dependencyHash: 'a'.repeat(64) };
-          },
-          async execute() {
-            throw new Error('not used');
           },
         } satisfies WorkflowPreflightInspector,
       ]),
@@ -259,9 +250,6 @@ function preflightHandlers(): Readonly<Record<string, WorkflowPreflightInspector
       {
         async inspect() {
           return { dependencyHash: 'a'.repeat(64) };
-        },
-        async execute() {
-          throw new Error('not used');
         },
       } satisfies WorkflowPreflightInspector,
     ]),

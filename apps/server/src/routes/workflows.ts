@@ -77,6 +77,7 @@ export function registerWorkflowRoutes(
 export function registerWorkflowEventRoute(
   app: FastifyInstance,
   workflows: WorkflowsApplication | undefined,
+  heartbeatMs = 15_000,
 ): void {
   app.get('/api/v1/workflows/:workflowRunId/events', async (request, reply) => {
     const { workflowRunId } = parse(WorkflowRunParamsSchema.safeParse(request.params));
@@ -86,7 +87,10 @@ export function registerWorkflowEventRoute(
     const pending: WorkflowEvent[] = [];
     let ready = false;
     let closed = false;
-    const subscription: { unsubscribe?: () => void } = {};
+    const subscription: {
+      unsubscribe?: () => void;
+      heartbeat?: ReturnType<typeof setInterval>;
+    } = {};
     const deliver = (event: WorkflowEvent): void => {
       if (closed) return;
       if (!ready) pending.push(event);
@@ -94,6 +98,7 @@ export function registerWorkflowEventRoute(
     };
     reply.raw.once('close', () => {
       closed = true;
+      if (subscription.heartbeat) clearInterval(subscription.heartbeat);
       subscription.unsubscribe?.();
     });
     subscription.unsubscribe = await workflows.subscribe(workflowRunId, afterSequence, deliver);
@@ -108,6 +113,10 @@ export function registerWorkflowEventRoute(
     reply.hijack();
     ready = true;
     for (const event of pending) reply.raw.write(encodeEvent(event));
+    subscription.heartbeat = setInterval(() => {
+      if (!closed) reply.raw.write(': heartbeat\n\n');
+    }, heartbeatMs);
+    subscription.heartbeat.unref();
   });
 }
 

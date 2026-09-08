@@ -21,6 +21,7 @@ const expectedPackageNames = [
   '@eaw/prompt-engine',
   '@eaw/ai-engine',
   '@eaw/competitor-engine',
+  '@eaw/workflow-engine',
   '@eaw/pricing-engine',
   '@eaw/domain',
   '@eaw/shared',

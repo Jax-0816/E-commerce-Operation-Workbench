@@ -26,6 +26,7 @@ describe('workflow event stream', () => {
     registerWorkflowEventRoute(
       { get: (_path: string, route: typeof handler) => { handler = route; } } as never,
       workflows,
+      1,
     );
     const raw = Object.assign(new EventEmitter(), {
       headers: {} as Record<string, string>,
@@ -36,6 +37,7 @@ describe('workflow event stream', () => {
     const reply = { raw, hijack: () => undefined };
     await handler!({ params: { workflowRunId }, query: { afterSequence: '1' } }, reply);
     await eventually(() => expect(raw.body).toContain('id: 3'));
+    await eventually(() => expect(raw.body).toContain(': heartbeat\n\n'));
 
     expect(raw.headers['content-type']).toContain('text/event-stream');
     expect(raw.headers['cache-control']).toBe('no-cache');

@@ -243,21 +243,21 @@ Test strict UUIDv7, platform, definition ID, node key, non-negative event sequen
 
 Assert `content-type: text/event-stream`, `cache-control: no-cache`, durable event IDs, replay only after `afterSequence`, live delivery after subscription, JSON data, and connection cleanup. Reconnect by GET state followed by SSE and prove no sequence gap or duplicate.
 
-- [ ] **Step 3: Run server tests and confirm RED**
+- [x] **Step 3: Run server tests and confirm RED**
 
 Run: `pnpm --filter @eaw/server exec vitest run --fileParallelism=false src/routes/workflows.test.ts src/routes/workflow-events.test.ts src/runtime.integration.test.ts`
 
 Expected: FAIL because contracts/routes/composition are missing.
 
-- [ ] **Step 4: Implement contracts, routes, and SSE framing**
+- [x] **Step 4: Implement contracts, routes, and SSE framing**
 
 Serialize dates at the route boundary. Write SSE frames as `id: <sequence>\nevent: <type>\ndata: <single-line-json>\n\n`; send a comment heartbeat without creating a durable event; unregister listeners on socket close. State GET remains authoritative.
 
-- [ ] **Step 5: Wire production and prove canonical restart**
+- [x] **Step 5: Wire production and prove canonical restart**
 
 Construct the repository, run startup recovery before `buildApp`, inject existing content applications into handlers, and inject runner/application into context. The production integration test must fail creative once after four successful handlers, close/reopen the same workspace, assert no calls occur during startup, explicitly resume, and assert call deltas `0,0,0,0,1,1`.
 
-- [ ] **Step 6: Run contracts/server gates**
+- [x] **Step 6: Run contracts/server gates**
 
 Run: `pnpm --filter @eaw/contracts test && pnpm --filter @eaw/server test`
 

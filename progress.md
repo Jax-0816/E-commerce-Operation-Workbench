@@ -482,7 +482,8 @@
 - 已完成 workflow HTTP/SSE 严格 contracts：UUIDv7、平台、固定定义、节点键、正 revision、非负事件游标及所有响应结构均拒绝未知字段。Contracts 35 项测试及类型检查、lint、构建通过。
 - 已完成七个 workflow HTTP 操作路由：preflight/start/list/get/resume/retry/cancel 严格解析输入，异步调度操作返回 202，并复用全局安全错误映射。Server 42 项测试及类型检查、lint、构建通过。
 - 已完成 durable SSE 适配器：严格校验事件游标，订阅期间先缓冲持久回放再切到实时写入，输出持久 id/event/JSON data 和禁缓存头，连接关闭时可靠取消订阅。Server 44 项测试及全部门禁通过。
+- 已完成生产 workflow 组合与 canonical restart：启动恢复先于 buildApp 且绝不自动执行 handler；首次在 creative 失败后重启调用增量为 0，显式 resume 的六节点调用增量严格为 0/0/0/0/1/1。SSE 增加非持久 heartbeat，真实 definition node key 已校正。Application 36、Contracts 35、Server 46 项测试及类型检查、lint、构建通过，Task 4 完成。
 
 ### Next action
 
-1. 继续 Task 4：把 workflow 仓储、恢复、runner、handlers 与应用门面接入生产 runtime。
+1. 开始 Task 5：先补工作流进度面板与路由的失败组件测试。
