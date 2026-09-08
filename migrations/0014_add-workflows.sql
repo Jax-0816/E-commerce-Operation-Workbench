@@ -14,7 +14,7 @@ CREATE INDEX `workflow_runs_product_created` ON `workflow_runs` (`product_id`,`c
 CREATE TABLE `workflow_nodes` (
   `workflow_run_id` text NOT NULL, `node_key` text NOT NULL, `task_type` text NOT NULL,
   `node_order` integer NOT NULL, `status` text NOT NULL, `dependency_hash` text,
-  `output_json` text, `error_json` text,
+  `output_json` text, `error_json` text, `claimed_at` integer,
   PRIMARY KEY (`workflow_run_id`,`node_key`),
   UNIQUE (`workflow_run_id`,`node_order`),
   CHECK(`node_order` >= 1),

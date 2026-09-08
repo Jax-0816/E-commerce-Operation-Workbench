@@ -1,4 +1,5 @@
 import {
+  createIdempotencyKey,
   createWorkflowDefinition,
   type CreateWorkflowRunInput,
   type WorkflowEvent,
@@ -8,7 +9,7 @@ import {
   type WorkflowRun,
   type WorkflowRunStatus,
 } from '@eaw/workflow-engine';
-import type { UuidV7 } from '@eaw/domain';
+import { DomainError, type UuidV7 } from '@eaw/domain';
 
 import type { OpenDatabase } from '../client.js';
 import { integer, json, platform, rollback, uuid } from './content-revision-values.js';
@@ -101,6 +102,251 @@ export class SqliteWorkflowRepository {
         .all(id, afterSequence) as Row[]
     ).map(toEvent);
   }
+
+  async markRunning(id: UuidV7, expectedRevision: number): Promise<WorkflowRun> {
+    return this.transition(id, expectedRevision, 'workflow_started', null, {}, ({ status }) => {
+      if (!['not_started', 'failed', 'interrupted'].includes(String(status))) throw conflict();
+      return 'running';
+    });
+  }
+
+  async markNodeStale(
+    id: UuidV7,
+    nodeKey: string,
+    dependencyHash: string,
+    expectedRevision: number,
+  ): Promise<WorkflowRun> {
+    createIdempotencyKey(id, nodeKey, dependencyHash);
+    return this.transition(
+      id,
+      expectedRevision,
+      'node_stale',
+      nodeKey,
+      { dependencyHash },
+      ({ status }, now) => {
+        if (status !== 'running') throw conflict();
+        const node = this.requiredNode(id, nodeKey);
+        if (!['completed', 'needs_review'].includes(String(node.status))) throw conflict();
+        this.database.sqlite
+          .prepare(
+            "UPDATE workflow_nodes SET status = 'stale', dependency_hash = ?, error_json = NULL, claimed_at = NULL WHERE workflow_run_id = ? AND node_key = ?",
+          )
+          .run(dependencyHash, id, nodeKey);
+        void now;
+        return 'running';
+      },
+    );
+  }
+
+  async claimNode(
+    id: UuidV7,
+    nodeKey: string,
+    dependencyHash: string,
+    expectedRevision: number,
+  ): Promise<WorkflowRun> {
+    createIdempotencyKey(id, nodeKey, dependencyHash);
+    return this.transition(
+      id,
+      expectedRevision,
+      'node_claimed',
+      nodeKey,
+      { dependencyHash },
+      ({ status }, now) => {
+        if (status !== 'running') throw conflict();
+        const node = this.requiredNode(id, nodeKey);
+        if (!['not_started', 'failed', 'stale'].includes(String(node.status))) throw conflict();
+        this.database.sqlite
+          .prepare(
+            "UPDATE workflow_nodes SET status = 'running', dependency_hash = ?, error_json = NULL, claimed_at = ? WHERE workflow_run_id = ? AND node_key = ?",
+          )
+          .run(dependencyHash, now, id, nodeKey);
+        return 'running';
+      },
+    );
+  }
+
+  async completeNode(
+    id: UuidV7,
+    nodeKey: string,
+    result: import('@eaw/workflow-engine').WorkflowNodeResult,
+    expectedRevision: number,
+  ): Promise<WorkflowRun> {
+    return this.transition(
+      id,
+      expectedRevision,
+      'node_completed',
+      nodeKey,
+      { status: result.status, output: result.output },
+      ({ status }, now) => {
+        if (status !== 'running') throw conflict();
+        const node = this.requiredNode(id, nodeKey);
+        if (node.status !== 'running' || typeof node.dependency_hash !== 'string') throw conflict();
+        this.insertAttempt(
+          id,
+          nodeKey,
+          node.dependency_hash,
+          result.status,
+          node.claimed_at,
+          now,
+          null,
+        );
+        this.database.sqlite
+          .prepare(
+            'UPDATE workflow_nodes SET status = ?, output_json = ?, error_json = NULL, claimed_at = NULL WHERE workflow_run_id = ? AND node_key = ?',
+          )
+          .run(result.status, JSON.stringify(result.output), id, nodeKey);
+        return 'running';
+      },
+    );
+  }
+
+  async failNode(
+    id: UuidV7,
+    nodeKey: string,
+    error: import('@eaw/workflow-engine').WorkflowNodeError,
+    expectedRevision: number,
+  ): Promise<WorkflowRun> {
+    return this.transition(
+      id,
+      expectedRevision,
+      'node_failed',
+      nodeKey,
+      { error },
+      ({ status }, now) => {
+        if (status !== 'running') throw conflict();
+        const node = this.requiredNode(id, nodeKey);
+        if (node.status === 'running' && typeof node.dependency_hash === 'string') {
+          this.insertAttempt(
+            id,
+            nodeKey,
+            node.dependency_hash,
+            'failed',
+            node.claimed_at,
+            now,
+            error,
+          );
+        } else if (!['not_started', 'failed', 'stale'].includes(String(node.status))) {
+          throw conflict();
+        }
+        this.database.sqlite
+          .prepare(
+            "UPDATE workflow_nodes SET status = 'failed', error_json = ?, claimed_at = NULL WHERE workflow_run_id = ? AND node_key = ?",
+          )
+          .run(JSON.stringify(error), id, nodeKey);
+        return 'failed';
+      },
+    );
+  }
+
+  async completeRun(id: UuidV7, expectedRevision: number): Promise<WorkflowRun> {
+    return this.transition(id, expectedRevision, 'workflow_completed', null, {}, ({ status }) => {
+      if (status !== 'running') throw conflict();
+      const incomplete = this.database.sqlite
+        .prepare(
+          "SELECT COUNT(*) AS count FROM workflow_nodes WHERE workflow_run_id = ? AND status NOT IN ('completed','locked','needs_review')",
+        )
+        .get(id) as Row;
+      if (integer(incomplete.count) !== 0) throw conflict();
+      return 'completed';
+    });
+  }
+
+  async cancelRun(id: UuidV7, expectedRevision: number): Promise<WorkflowRun> {
+    return this.transition(id, expectedRevision, 'workflow_cancelled', null, {}, ({ status }) => {
+      if (['completed', 'cancelled'].includes(String(status))) throw conflict();
+      this.database.sqlite
+        .prepare(
+          "UPDATE workflow_nodes SET status = 'cancelled', claimed_at = NULL WHERE workflow_run_id = ? AND status NOT IN ('completed','locked','needs_review')",
+        )
+        .run(id);
+      return 'cancelled';
+    });
+  }
+
+  private async transition(
+    id: UuidV7,
+    expectedRevision: number,
+    eventType: string,
+    nodeKey: string | null,
+    payload: Readonly<Record<string, unknown>>,
+    change: (run: Row, now: number) => WorkflowRunStatus,
+  ): Promise<WorkflowRun> {
+    if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 1) throw conflict();
+    this.database.sqlite.exec('BEGIN IMMEDIATE;');
+    try {
+      const current = this.database.sqlite
+        .prepare('SELECT revision,status FROM workflow_runs WHERE id = ?')
+        .get(id) as Row | undefined;
+      if (!current) throw new DomainError('NOT_FOUND', 'Workflow run was not found.');
+      if (integer(current.revision) !== expectedRevision) throw conflict();
+      const now = Date.now();
+      const status = change(current, now);
+      const updated = this.database.sqlite
+        .prepare(
+          'UPDATE workflow_runs SET status = ?, revision = revision + 1, updated_at = ? WHERE id = ? AND revision = ?',
+        )
+        .run(status, now, id, expectedRevision);
+      if (Number(updated.changes) !== 1) throw conflict();
+      const sequence = this.nextEventSequence(id);
+      this.database.sqlite
+        .prepare(
+          'INSERT INTO workflow_events (workflow_run_id,event_sequence,event_type,run_revision,node_key,payload_json,created_at) VALUES (?,?,?,?,?,?,?)',
+        )
+        .run(id, sequence, eventType, expectedRevision + 1, nodeKey, JSON.stringify(payload), now);
+      this.database.sqlite.exec('COMMIT;');
+    } catch (error) {
+      rollback(this.database);
+      throw error;
+    }
+    return (await this.findById(id))!;
+  }
+
+  private requiredNode(id: UuidV7, nodeKey: string): Row {
+    const node = this.database.sqlite
+      .prepare('SELECT * FROM workflow_nodes WHERE workflow_run_id = ? AND node_key = ?')
+      .get(id, nodeKey) as Row | undefined;
+    if (!node) throw new DomainError('NOT_FOUND', 'Workflow node was not found.');
+    return node;
+  }
+
+  private insertAttempt(
+    id: UuidV7,
+    nodeKey: string,
+    dependencyHash: string,
+    status: 'completed' | 'locked' | 'needs_review' | 'failed',
+    claimedAt: unknown,
+    now: number,
+    error: import('@eaw/workflow-engine').WorkflowNodeError | null,
+  ): void {
+    const row = this.database.sqlite
+      .prepare(
+        'SELECT COALESCE(MAX(attempt_no), 0) + 1 AS attempt_no FROM workflow_attempts WHERE workflow_run_id = ? AND node_key = ?',
+      )
+      .get(id, nodeKey) as Row;
+    this.database.sqlite
+      .prepare(
+        'INSERT INTO workflow_attempts (workflow_run_id,node_key,attempt_no,dependency_hash,status,started_at,finished_at,error_json) VALUES (?,?,?,?,?,?,?,?)',
+      )
+      .run(
+        id,
+        nodeKey,
+        positive(row.attempt_no),
+        dependencyHash,
+        status === 'failed' ? 'failed' : 'completed',
+        claimedAt === null ? now : integer(claimedAt),
+        now,
+        error === null ? null : JSON.stringify(error),
+      );
+  }
+
+  private nextEventSequence(id: UuidV7): number {
+    const row = this.database.sqlite
+      .prepare(
+        'SELECT COALESCE(MAX(event_sequence), 0) + 1 AS event_sequence FROM workflow_events WHERE workflow_run_id = ?',
+      )
+      .get(id) as Row;
+    return positive(row.event_sequence);
+  }
 }
 
 function toNode(row: Row): WorkflowNode {
@@ -178,4 +424,8 @@ function validDate(value: unknown): Date {
   const date = new Date(integer(value));
   if (!Number.isSafeInteger(date.getTime())) throw new TypeError('Invalid date.');
   return date;
+}
+
+function conflict(): DomainError {
+  return new DomainError('CONFLICT', 'Workflow revision or state conflict.');
 }

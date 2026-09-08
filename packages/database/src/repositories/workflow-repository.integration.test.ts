@@ -55,4 +55,68 @@ describe('SQLite workflow repository', () => {
         .run('tampered', run.id),
     ).toThrow(/immutable/u);
   });
+
+  it('commits node state, attempt history, events, and revision checks together', async () => {
+    const repository = new SqliteWorkflowRepository(database);
+    const now = new Date('2026-09-08T01:00:00.000Z');
+    const created = await repository.create({
+      id: createUuidV7(now),
+      productId,
+      platformId: 'pinduoduo',
+      definition: contentWorkflowDefinition,
+      createdAt: now,
+    });
+    const running = await repository.markRunning(created.id, created.revision);
+    const dependencyHash = 'a'.repeat(64);
+    const claimed = await repository.claimNode(
+      running.id,
+      'competitor_analysis',
+      dependencyHash,
+      running.revision,
+    );
+    const output = {
+      assetType: 'competitor_analysis',
+      assetId: createUuidV7(),
+      revisionNo: 1,
+    } as const;
+    const completed = await repository.completeNode(
+      claimed.id,
+      'competitor_analysis',
+      { status: 'completed', output },
+      claimed.revision,
+    );
+
+    expect(completed).toMatchObject({ revision: 4, status: 'running' });
+    expect(completed.nodes[0]).toMatchObject({
+      status: 'completed',
+      dependencyHash,
+      output,
+      error: null,
+    });
+    expect(
+      database.sqlite
+        .prepare(
+          'SELECT attempt_no, dependency_hash, status, finished_at FROM workflow_attempts WHERE workflow_run_id = ? AND node_key = ?',
+        )
+        .all(created.id, 'competitor_analysis'),
+    ).toEqual([
+      expect.objectContaining({
+        attempt_no: 1,
+        dependency_hash: dependencyHash,
+        status: 'completed',
+        finished_at: expect.any(Number),
+      }),
+    ]);
+    expect(
+      (await repository.listEvents(created.id, 0)).map(({ sequence, type }) => [sequence, type]),
+    ).toEqual([
+      [1, 'workflow_created'],
+      [2, 'workflow_started'],
+      [3, 'node_claimed'],
+      [4, 'node_completed'],
+    ]);
+    await expect(
+      repository.claimNode(created.id, 'market_insight', 'b'.repeat(64), running.revision),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
 });

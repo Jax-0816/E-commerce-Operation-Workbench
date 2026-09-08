@@ -130,7 +130,7 @@ Expected: all workflow-engine gates pass.
 - Consumes: workflow-engine value types and the existing `OpenDatabase` wrapper.
 - Produces: `SqliteWorkflowRepository` and `recoverInterruptedWorkflows(database, now)`.
 
-- [ ] **Step 1: Write failing real-SQLite repository tests**
+- [x] **Step 1: Write failing real-SQLite repository tests**
 
 Create one run and assert six nodes plus `workflow_created` event are committed atomically. Claim and complete a node, then assert attempt/event history, monotonically increasing event sequences, exact output references, and revision compare-and-swap behavior.
 
@@ -152,7 +152,7 @@ Run: `pnpm --filter @eaw/database exec vitest run --fileParallelism=false src/re
 
 Expected: FAIL because migration and repositories do not exist.
 
-- [ ] **Step 4: Implement migration and transactional repository**
+- [x] **Step 4: Implement migration and transactional repository**
 
 Create STRICT `workflow_runs`, `workflow_nodes`, `workflow_attempts`, and `workflow_events` tables. Add foreign keys, unique `(run_id,node_key)`, `(run_id,attempt_no)`, `(run_id,event_sequence)`, status checks, JSON text fields, indices, and immutable update/delete triggers for attempts/events. Repository write methods must use `BEGIN IMMEDIATE`, expected revision predicates, and rollback the entire transition/event/attempt unit on failure.
 
