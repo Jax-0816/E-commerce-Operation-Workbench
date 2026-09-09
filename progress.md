@@ -600,3 +600,18 @@
 
 1. 提交并推送浏览器 API 小任务，确认本地与远端一致。
 2. 按失败组件测试实现运营方案面板、路由依赖注入和样式。
+
+## Session: 2026-09-09 — Task 25 traceable operation-plan panel
+
+- **Status:** complete
+- RED：面板聚焦测试因组件不存在失败；新增测试锁定精确来源呈现、blocker 无障碍公告、阻塞时禁用锁定、显式 mutation、准确 revision guard、新到旧历史和迟到商品/平台结果隔离。
+- GREEN：运营方案页保留六节点工作流在上方，并新增可选择已完成工作流、已验证/警告定价历史及可选拼多多活动批次的草稿组合器。
+- 当前修订使用语义化 details/list 展示工作流、六项资产 ID/revision/dependency hash、竞品快照、定价/成本修订、促销规则 hash 和总 source hash；五类 blocker 提供所属工作区处理链接。
+- 任何创建与锁定都只由用户点击触发；锁定提交当前草稿的精确 `revisionNo`，有 blocker 时按钮禁用。
+- 固定 Node.js 24.19.0 下 Web 22 个测试文件、54 项测试通过，typecheck、lint、build、变更文件格式与 `git diff --check` 通过。
+- Windows 敏感检查通过：新增前端不含文件系统路径、shell、大小写冲突、CRLF 解析、符号链接或本机绝对路径依赖。
+
+### Next action
+
+1. 提交并推送运营方案面板小任务，确认本地与远端一致。
+2. 添加 Phase 11 确定性 Playwright，验证草稿、blocker 处理、锁定、重载后的精确来源与零额外 provider 调用。

@@ -23,6 +23,10 @@ import {
   type ContentBuildersApi,
 } from './features/content-builders/api.js';
 import { createBrowserWorkflowApi, type WorkflowApi } from './features/workflows/api.js';
+import {
+  createBrowserOperationPlansApi,
+  type OperationPlansApi,
+} from './features/operation-plans/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -38,6 +42,7 @@ const browserStrategyApi = createBrowserStrategyApi();
 const browserTitlesApi = createBrowserTitlesApi();
 const browserContentBuildersApi = createBrowserContentBuildersApi();
 const browserWorkflowApi = createBrowserWorkflowApi();
+const browserOperationPlansApi = createBrowserOperationPlansApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -54,6 +59,7 @@ export function App({
   titlesApi = browserTitlesApi,
   contentBuildersApi = browserContentBuildersApi,
   workflowApi = browserWorkflowApi,
+  operationPlansApi = browserOperationPlansApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -69,6 +75,7 @@ export function App({
   readonly titlesApi?: TitlesApi;
   readonly contentBuildersApi?: ContentBuildersApi;
   readonly workflowApi?: WorkflowApi;
+  readonly operationPlansApi?: OperationPlansApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -87,6 +94,7 @@ export function App({
         titlesApi={titlesApi}
         contentBuildersApi={contentBuildersApi}
         workflowApi={workflowApi}
+        operationPlansApi={operationPlansApi}
       />
     </BrowserRouter>
   );

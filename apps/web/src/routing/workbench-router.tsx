@@ -56,6 +56,8 @@ import { CreativeBuilder } from '../features/content-builders/creative-builder.j
 import { DetailBuilder } from '../features/content-builders/detail-builder.js';
 import type { WorkflowApi } from '../features/workflows/api.js';
 import { WorkflowProgress } from '../features/workflows/workflow-progress.js';
+import type { OperationPlansApi } from '../features/operation-plans/api.js';
+import { OperationPlanPanel } from '../features/operation-plans/operation-plan-panel.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
@@ -64,6 +66,7 @@ export interface WorkbenchDependencies {
   readonly strategyApi: StrategyApi;
   readonly titlesApi: TitlesApi;
   readonly workflowApi: WorkflowApi;
+  readonly operationPlansApi: OperationPlansApi;
   readonly contentBuildersApi: ContentBuildersApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
@@ -187,7 +190,15 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
         />
         <Route
           path="products/:productId/plans"
-          element={<PlansPage api={dependencies.workflowApi} />}
+          element={
+            <PlansPage
+              operationPlansApi={dependencies.operationPlansApi}
+              pricingApi={dependencies.pricingApi}
+              promotionApi={dependencies.promotionApi}
+              skusApi={dependencies.skusApi}
+              workflowApi={dependencies.workflowApi}
+            />
+          }
         />
         <Route
           path="products/:productId/history"
@@ -479,10 +490,31 @@ function PromotionPage({
   );
 }
 
-function PlansPage({ api }: { readonly api: WorkflowApi }): React.JSX.Element {
+function PlansPage({
+  operationPlansApi,
+  pricingApi,
+  promotionApi,
+  skusApi,
+  workflowApi,
+}: {
+  readonly operationPlansApi: OperationPlansApi;
+  readonly pricingApi: PricingApi;
+  readonly promotionApi: PromotionApi;
+  readonly skusApi: SkusApi;
+  readonly workflowApi: WorkflowApi;
+}): React.JSX.Element {
+  const productId = useProductId();
   return (
     <ProductFeature title="运营方案">
-      <WorkflowProgress api={api} productId={useProductId()} />
+      <WorkflowProgress api={workflowApi} productId={productId} />
+      <OperationPlanPanel
+        operationPlansApi={operationPlansApi}
+        pricingApi={pricingApi}
+        productId={productId}
+        promotionApi={promotionApi}
+        skusApi={skusApi}
+        workflowApi={workflowApi}
+      />
     </ProductFeature>
   );
 }

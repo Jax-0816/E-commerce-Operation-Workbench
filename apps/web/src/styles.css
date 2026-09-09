@@ -1896,3 +1896,125 @@ tbody small {
   border-radius: 14px;
   background: var(--surface);
 }
+
+.operation-plan-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border, var(--line));
+}
+
+.operation-plan-panel > header,
+.operation-plan-current > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.operation-plan-panel h2,
+.operation-plan-panel h3,
+.operation-plan-panel p {
+  margin-block: 0;
+}
+
+.operation-plan-composer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.8rem;
+  align-items: end;
+  padding: 1rem;
+  border-radius: 14px;
+  background: var(--surface-soft, #f5f7f8);
+}
+
+.operation-plan-composer label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+}
+
+.operation-plan-current,
+.operation-plan-trace,
+.operation-plan-blockers,
+.operation-plan-history {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.operation-plan-trace {
+  padding: 1rem;
+  border: 1px solid var(--border, var(--line));
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.operation-plan-trace summary {
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.operation-plan-trace dl,
+.operation-plan-trace ol {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0;
+  margin: 0;
+}
+
+.operation-plan-trace dl > div,
+.operation-plan-trace li {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.7fr) minmax(180px, 2fr);
+  gap: 0.35rem 0.8rem;
+  align-items: start;
+}
+
+.operation-plan-trace dd {
+  margin: 0;
+}
+
+.operation-plan-trace code,
+.operation-plan-history code {
+  overflow-wrap: anywhere;
+}
+
+.operation-plan-blockers {
+  padding: 1rem;
+  border-left: 4px solid #d88b1f;
+  border-radius: 10px;
+  background: #fff8ec;
+}
+
+.operation-plan-blockers ul,
+.operation-plan-history ol {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.operation-plan-blockers li,
+.operation-plan-history button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.operation-plan-history button {
+  width: 100%;
+  text-align: left;
+}
+
+@media (max-width: 720px) {
+  .operation-plan-panel > header,
+  .operation-plan-trace dl > div,
+  .operation-plan-trace li {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

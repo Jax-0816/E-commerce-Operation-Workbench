@@ -257,17 +257,17 @@ git push origin codex/phase-0
 - Consumes: operation-plan JSON endpoints plus existing workflow/pricing/promotion history.
 - Produces: explicit draft creation, source trace, blocker resolution links, lock action, and immutable history on `/products/:productId/plans`.
 
-- [ ] **Step 1: Write failing React tests**
+- [x] **Step 1: Write failing React tests**
 
 Assert exact source IDs/revisions/hashes render, blockers are announced accessibly, lock stays disabled with blockers, stale late product/platform results are discarded, explicit create/lock sends exact revision guards, history is newest first, and no automatic create/lock occurs.
 
-- [ ] **Step 2: Run focused web tests and confirm RED**
+- [x] **Step 2: Run focused web tests and confirm RED**
 
 Run: `pnpm --filter @eaw/web exec vitest run src/features/operation-plans`
 
 Expected: FAIL because the feature does not exist.
 
-- [ ] **Step 3: Implement browser API, panel, routing, and styles**
+- [x] **Step 3: Implement browser API, panel, routing, and styles**
 
 Keep workflow progress above the plan panel. Use semantic lists/details for source trace, links to owning workspaces for blockers, buttons for explicit mutations, `aria-live` status, and generation tokens so late responses cannot overwrite another product/platform.
 

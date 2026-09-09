@@ -127,6 +127,7 @@ describe('routed workbench', () => {
     expect(container.querySelector('h1')?.textContent).toBe('运营方案');
     expect(container.querySelectorAll('[data-testid="workflow-node"]')).toHaveLength(6);
     expect(container.textContent).toContain('启动工作流');
+    expect(container.textContent).toContain('可追踪运营方案');
     expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
@@ -188,6 +189,12 @@ async function render(entry: string) {
           pricingApi={{
             calculate: async () => undefined as never,
             history: async () => ({ items: [] }),
+          }}
+          operationPlansApi={{
+            create: async () => undefined as never,
+            get: async () => undefined as never,
+            list: async () => [],
+            lock: async () => undefined as never,
           }}
           promotionApi={{
             calculate: async () => undefined as never,
