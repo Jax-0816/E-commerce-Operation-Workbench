@@ -85,6 +85,20 @@ export type {
   WorkflowRunResponse,
 } from './workflows.js';
 export {
+  CreateOperationPlanInputSchema,
+  LockOperationPlanInputSchema,
+  OperationPlanBlockerSchema,
+  OperationPlanListResponseSchema,
+  OperationPlanParamsSchema,
+  OperationPlanResponseSchema,
+  ProductOperationPlansParamsSchema,
+} from './operation-plans.js';
+export type {
+  CreateOperationPlanInput,
+  LockOperationPlanInput,
+  OperationPlanResponse,
+} from './operation-plans.js';
+export {
   ContentItemParamsSchema,
   ContentParamsSchema,
   ContentQuerySchema,

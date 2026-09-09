@@ -545,3 +545,17 @@
 
 1. 本小任务随本次记录提交并推送至 `origin/codex/phase-0`，确认本地与远端一致。
 2. 进入 Task 25 HTTP contracts、routes 与生产组合，继续先写失败测试。
+
+## Session: 2026-09-09 — Task 25 strict HTTP contracts
+
+- **Status:** complete
+- RED：contracts 聚焦测试先因 `operation-plans` 模块不存在失败；blocker 来源空白规范化测试随后证明宽松 `.trim()` 会静默接受脏响应。
+- GREEN：新增严格 create/lock/params、固定六节点来源、定价/促销来源、blocker、单项响应和列表响应 schema，并通过公共 barrel 导出。
+- 生命周期约束拒绝 locked + null 时间、带 blocker 的 locked 计划和错误 lineage；所有嵌套对象拒绝未知字段，所有 hash 只接受 64 位小写 SHA-256。
+- 固定 Node.js 24.19.0 下 Contracts 10 个测试文件、38 项测试全部通过，typecheck、lint 和 build 通过。
+- Windows 敏感检查通过：合同实现不包含文件路径、shell、换行或平台专用运行时行为。
+
+### Next action
+
+1. 提交并推送 contracts 小任务，确认本地与远端一致。
+2. 为 operation-plan Fastify routes 先写失败测试，再实现四个端点和安全错误映射。

@@ -188,6 +188,8 @@ git push origin codex/phase-0
 
 ### Task 4: Strict HTTP contracts, routes, and production composition
 
+**Current progress:** strict operation-plan request/response contracts are complete and exported; route tests, routes, and production composition remain.
+
 **Files:**
 
 - Create: `packages/contracts/src/operation-plans.ts`
