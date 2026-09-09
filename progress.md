@@ -531,3 +531,17 @@
 - 主计划现要求每个验证通过的小任务先提交并推送，确认本地与 `origin/codex/phase-0` 同步后才能继续。
 - Windows 兼容提升为持续门禁：禁止本机绝对路径和隐式 POSIX-only 依赖，持续覆盖空格/中文路径、CRLF、路径分隔符、大小写、进程行为、符号链接和 SQLite 原生依赖。
 - Task 27 仍负责幂等 Windows 安装启动的专项实现；Task 29 必须从 GitHub 全新克隆在 Windows 与 Ubuntu 执行完整统一门禁。
+
+## Session: 2026-09-09 — Task 25 exact repository source resolver
+
+- **Status:** complete
+- RED：repository resolver 聚焦测试因模块不存在而失败；公共 barrel 导出测试随后因函数未导出而失败。
+- GREEN：实现六节点精确 revision、竞品证据快照、商品 SKU 定价历史、可选促销结果与规则快照的跨仓储解析。
+- revalidate 会重新读取精确来源并计算五类稳定 blocker；检测新 revision 时返回 `SOURCE_STALE`，但保留计划原 asset ID/revision 和成本 revision，不自动前移。
+- 固定 Node.js 24.19.0 下 Application 19 个测试文件、42 项测试全部通过，typecheck、lint 和 build 通过。
+- Windows 敏感检查通过：本次代码未引入文件路径、路径分隔符、CRLF 解析、子进程、符号链接或本机绝对路径依赖。
+
+### Next action
+
+1. 本小任务随本次记录提交并推送至 `origin/codex/phase-0`，确认本地与远端一致。
+2. 进入 Task 25 HTTP contracts、routes 与生产组合，继续先写失败测试。

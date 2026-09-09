@@ -14,6 +14,8 @@ import {
 } from '@eaw/domain';
 import { canonicalJson, sha256 } from '@eaw/prompt-engine';
 
+export { createRepositoryOperationPlanSourceResolver } from './repository-source-resolver.js';
+
 export interface CreateOperationPlanInput {
   readonly workflowRunId: string;
   readonly pricingRecordId: string;

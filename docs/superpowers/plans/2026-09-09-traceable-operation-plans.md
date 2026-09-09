@@ -154,31 +154,31 @@ interface OperationPlansApplication {
 }
 ```
 
-- [ ] **Step 1: Write failing valid aggregation and ownership tests**
+- [x] **Step 1: Write failing valid aggregation and ownership tests**
 
 Build memory repositories with one completed six-node workflow and exact financial records. Assert `createDraft` stores all source IDs/revisions/hashes and makes zero provider calls. Reject archived products, cross-product workflow/assets/financials, cross-platform sources, missing nodes/assets, and mismatched output types.
 
-- [ ] **Step 2: Write failing blocker and lock tests**
+- [x] **Step 2: Write failing blocker and lock tests**
 
 Assert drafts expose stable blocker codes for `SOURCE_STALE`, `SOURCE_NEEDS_REVIEW`, `CONTENT_UNLOCKED`, `FINANCIAL_INPUT_MISMATCH`, and `RULE_SNAPSHOT_MISMATCH`. Lock only with zero blockers and current expected revision; re-read every exact source before append and reject concurrent/stale requests without writing.
 
-- [ ] **Step 3: Run focused application tests and confirm RED**
+- [x] **Step 3: Run focused application tests and confirm RED**
 
 Run: `pnpm --filter @eaw/application exec vitest run src/operation-plans`
 
-Expected: FAIL because operation-plan application modules do not exist.
+Expected: FAIL because the concrete repository source resolver does not exist.
 
-- [ ] **Step 4: Implement deterministic source resolver and application facade**
+- [x] **Step 4: Implement deterministic source resolver and application facade**
 
 Resolve the workflow by ID, map each persisted output to its owning repository by `assetType`, compare exact IDs/revisions/product/platform, collect competitor snapshots from the workflow dependency context, and validate financial compatibility. Compute canonical `sourceHash`; list/get must re-resolve blockers for display but never mutate historical sources.
 
-- [ ] **Step 5: Run application gates**
+- [x] **Step 5: Run application gates**
 
 Run: `pnpm --filter @eaw/application test && pnpm --filter @eaw/application typecheck && pnpm --filter @eaw/application lint && pnpm --filter @eaw/application build`
 
 Expected: all application gates pass with no AI generation call.
 
-- [ ] **Step 6: Commit and push**
+- [x] **Step 6: Commit and push**
 
 ```bash
 git add packages/application

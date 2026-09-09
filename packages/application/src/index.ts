@@ -87,7 +87,10 @@ export type {
   ContentWorkflowInspectionInput,
 } from './workflows/content-workflow-handlers.js';
 export { createRepositoryContentWorkflowContext } from './workflows/content-workflow-context.js';
-export { createOperationPlansApplication } from './operation-plans/index.js';
+export {
+  createOperationPlansApplication,
+  createRepositoryOperationPlanSourceResolver,
+} from './operation-plans/index.js';
 export type {
   CreateOperationPlanInput,
   OperationPlansApplication,
