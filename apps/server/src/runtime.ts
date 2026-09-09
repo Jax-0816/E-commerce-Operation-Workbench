@@ -18,6 +18,8 @@ import {
   createContentWorkflowHandlers,
   createRepositoryContentContext,
   createRepositoryContentWorkflowContext,
+  createOperationPlansApplication,
+  createRepositoryOperationPlanSourceResolver,
   createWorkflowsApplication,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
@@ -38,6 +40,7 @@ import {
   DrizzleCreativePlanRepository,
   DrizzleDetailPageRepository,
   SqliteWorkflowRepository,
+  SqliteOperationPlanRepository,
   migrateDatabase,
   openDatabase,
   recoverInterruptedWorkflows,
@@ -113,9 +116,10 @@ export async function createProductionApp({
     const platformCapabilities = createPlatformCapabilitiesApplication();
     const costRepository = new DrizzleCostProfileRepository(database);
     const ruleRepository = new DrizzleRuleRepository(database);
+    const pricingRepository = new DrizzlePricingRepository(database);
     const pricing = createPricingApplication({
       costs: costRepository,
-      pricing: new DrizzlePricingRepository(database),
+      pricing: pricingRepository,
       products: productRepository,
       skus: skuRepository,
     });
@@ -124,9 +128,10 @@ export async function createProductionApp({
       appVersion: APP_VERSION,
       idFactory: createUuidV7,
     });
+    const promotionRepository = new DrizzlePromotionRepository(database);
     const promotions = createPromotionApplication({
       costs: costRepository,
-      promotions: new DrizzlePromotionRepository(database),
+      promotions: promotionRepository,
       products: productRepository,
       rules,
       skus: skuRepository,
@@ -229,6 +234,24 @@ export async function createProductionApp({
       repository: workflowRepository,
       runner: workflowRunner,
     });
+    const operationPlans = createOperationPlansApplication({
+      products: productRepository,
+      repository: new SqliteOperationPlanRepository(database),
+      resolver: createRepositoryOperationPlanSourceResolver({
+        workflows: workflowRepository,
+        inspectors: workflowHandlers,
+        competitors: competitorRepository,
+        strategies: strategyRepository,
+        titles: titleRepository,
+        creativePlans: creativeRepository,
+        detailPages: detailRepository,
+        skus: skuRepository,
+        pricing: pricingRepository,
+        costs: costRepository,
+        promotions: promotionRepository,
+        rules,
+      }),
+    });
     const app = buildApp(
       createAppContext({
         aiSettings,
@@ -246,6 +269,7 @@ export async function createProductionApp({
         skus,
         webDistDir,
         workflows,
+        operationPlans,
       }),
     );
     app.addHook('onClose', cleanup);

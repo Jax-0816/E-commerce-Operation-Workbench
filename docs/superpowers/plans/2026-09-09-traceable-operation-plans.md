@@ -188,7 +188,7 @@ git push origin codex/phase-0
 
 ### Task 4: Strict HTTP contracts, routes, and production composition
 
-**Current progress:** strict operation-plan contracts and four Fastify routes are complete and exported; production SQLite composition and restart integration remain.
+**Current progress:** strict contracts, four Fastify routes, production SQLite composition, dynamic draft blocker reads, and restart persistence are complete.
 
 **Files:**
 
@@ -218,17 +218,17 @@ Run: `pnpm --filter @eaw/contracts exec vitest run src/operation-plans.test.ts &
 
 Expected: FAIL because contracts/routes/composition are missing.
 
-- [ ] **Step 3: Implement routes and composition**
+- [x] **Step 3: Implement routes and composition**
 
 Parse request params/body through strict Zod schemas, serialize dates at the route boundary, register routes in `buildApp`, and construct the repository/resolver/application in `createProductionApp`. Add a restart integration proving locked history retains identical exact references and causes zero provider calls.
 
-- [ ] **Step 4: Run contracts/server gates**
+- [x] **Step 4: Run contracts/server gates**
 
 Run: `pnpm --filter @eaw/contracts test && pnpm --filter @eaw/server test && pnpm --filter @eaw/server typecheck && pnpm --filter @eaw/server lint && pnpm --filter @eaw/server build`
 
 Expected: all contract/server gates pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add packages/contracts apps/server

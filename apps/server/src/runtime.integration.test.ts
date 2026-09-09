@@ -5,8 +5,12 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 import type { AIProvider } from '@eaw/ai-engine';
-import { openDatabase, SqliteWorkflowRepository } from '@eaw/database';
-import { createUuidV7 } from '@eaw/domain';
+import {
+  openDatabase,
+  SqliteOperationPlanRepository,
+  SqliteWorkflowRepository,
+} from '@eaw/database';
+import { createOperationPlanRevision, createUuidV7, lockOperationPlanRevision } from '@eaw/domain';
 
 import { createProductionApp } from './runtime.js';
 
@@ -20,6 +24,115 @@ afterEach(async () => {
 });
 
 describe('production app composition', () => {
+  it('serves identical locked operation-plan sources after restart without provider calls', async () => {
+    const workspacePath = await realpath(
+      await mkdtemp(join(tmpdir(), 'eaw-server-operation-plan-')),
+    );
+    directories.push(workspacePath);
+    let providerCalls = 0;
+    const providerFactory = (): AIProvider => ({
+      id: 'unused',
+      async generate() {
+        providerCalls += 1;
+        throw new Error('Provider must stay unused.');
+      },
+      async testConnection() {
+        return true;
+      },
+      getCapabilities() {
+        return { text: true, structured: true };
+      },
+    });
+    const first = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
+    const productId = (
+      await first.inject({ method: 'POST', url: '/api/v1/products', payload: { name: '方案商品' } })
+    ).json().id;
+    await first.close();
+
+    const database = openDatabase(join(workspacePath, 'database/workbench.sqlite'));
+    const plans = new SqliteOperationPlanRepository(database);
+    const id = createUuidV7();
+    const nodeKeys = [
+      'competitor_analysis',
+      'market_insight',
+      'selling_points',
+      'titles',
+      'creative',
+      'detail_page',
+    ] as const;
+    const assetTypes = [
+      'competitor_analysis',
+      'market_insight',
+      'selling_point_set',
+      'title_asset',
+      'creative_plan',
+      'detail_page',
+    ] as const;
+    const draft = createOperationPlanRevision({
+      id,
+      lineageId: id,
+      productId,
+      platformId: 'pinduoduo',
+      revisionNo: 1,
+      status: 'draft',
+      lockedAt: null,
+      sources: {
+        workflowRunId: createUuidV7(),
+        workflowRunRevision: 9,
+        nodes: nodeKeys.map((nodeKey, index) => ({
+          nodeKey,
+          assetType: assetTypes[index]!,
+          assetId: createUuidV7(),
+          revisionNo: 1,
+          dependencyHash: 'a'.repeat(64),
+        })),
+        competitorSnapshotIds: [createUuidV7()],
+        pricing: {
+          resultId: createUuidV7(),
+          scenarioId: createUuidV7(),
+          skuId: createUuidV7(),
+          costProfileId: createUuidV7(),
+          costProfileRevisionNo: 1,
+        },
+        promotion: null,
+      },
+      sourceHash: 'b'.repeat(64),
+      blockers: [],
+      supersedesRevisionId: null,
+      createdAt: new Date('2026-09-09T03:00:00.000Z'),
+    });
+    await plans.append(draft, null);
+    const locked = lockOperationPlanRevision(
+      draft,
+      createUuidV7(),
+      new Date('2026-09-09T03:01:00.000Z'),
+    );
+    await plans.append(locked, 1);
+    database.close();
+
+    const restarted = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
+    const response = await restarted.inject({
+      method: 'GET',
+      url: `/api/v1/operation-plans/${locked.id}`,
+    });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toMatchObject({
+      id: locked.id,
+      status: 'locked',
+      sources: locked.sources,
+    });
+    expect(providerCalls).toBe(0);
+    await restarted.close();
+  });
+
   it('wires workflow APIs and recovers a persisted running node without executing it', async () => {
     const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-workflow-')));
     directories.push(workspacePath);
@@ -69,7 +182,9 @@ describe('production app composition', () => {
   });
 
   it('restarts inertly and resumes only the failed creative node plus its remaining successor', async () => {
-    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-workflow-resume-')));
+    const workspacePath = await realpath(
+      await mkdtemp(join(tmpdir(), 'eaw-server-workflow-resume-')),
+    );
     directories.push(workspacePath);
     const taskSequence = [
       'competitor_analysis',
@@ -103,18 +218,36 @@ describe('production app composition', () => {
           provider: 'workflow-fake',
           responseId: `response-${callIndex}`,
           model: 'workflow-fake',
-          content: JSON.stringify(workflowOutput(task, productId, request.messages.map(({ content }) => content).join('\n'))),
+          content: JSON.stringify(
+            workflowOutput(
+              task,
+              productId,
+              request.messages.map(({ content }) => content).join('\n'),
+            ),
+          ),
           usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
         };
       },
-      async testConnection() { return true; },
-      getCapabilities() { return { text: true, structured: true }; },
+      async testConnection() {
+        return true;
+      },
+      getCapabilities() {
+        return { text: true, structured: true };
+      },
     });
-    const first = await createProductionApp({ migrationsDirectory, workspacePath, providerFactory });
+    const first = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
     productId = (
       await first.inject({ method: 'POST', url: '/api/v1/products', payload: { name: '续跑商品' } })
     ).json().id as string;
-    await first.inject({ method: 'PUT', url: '/api/v1/ai/settings', payload: { apiKey: 'fake-secret' } });
+    await first.inject({
+      method: 'PUT',
+      url: '/api/v1/ai/settings',
+      payload: { apiKey: 'fake-secret' },
+    });
     const started = await first.inject({
       method: 'POST',
       url: `/api/v1/products/${productId}/workflows`,
@@ -127,7 +260,11 @@ describe('production app composition', () => {
     await first.close();
 
     const beforeRestart = { ...calls };
-    const restarted = await createProductionApp({ migrationsDirectory, workspacePath, providerFactory });
+    const restarted = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
     expect(calls).toEqual(beforeRestart);
     const resume = await restarted.inject({
       method: 'POST',
@@ -136,8 +273,11 @@ describe('production app composition', () => {
     });
     expect(resume.statusCode, resume.body).toBe(202);
     await waitForWorkflowStatus(restarted, runId, 'completed');
-    expect(Object.entries(calls).map(([task, count]) => count - beforeRestart[task as keyof typeof calls]))
-      .toEqual([0, 0, 0, 0, 1, 1]);
+    expect(
+      Object.entries(calls).map(
+        ([task, count]) => count - beforeRestart[task as keyof typeof calls],
+      ),
+    ).toEqual([0, 0, 0, 0, 1, 1]);
     await restarted.close();
   });
 
@@ -863,9 +1003,12 @@ function workflowOutput(task: string, productId: string, prompt: string): unknow
 
 function requestedIds(prompt: string, key: string, count: number): readonly string[] {
   const start = prompt.lastIndexOf(`"${key}"`);
-  const values = start < 0
-    ? []
-    : prompt.slice(start).match(/[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gu) ?? [];
+  const values =
+    start < 0
+      ? []
+      : (prompt
+          .slice(start)
+          .match(/[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/gu) ?? []);
   if (values.length < count) throw new Error(`Prompt omitted ${key}.`);
   return values.slice(0, count);
 }

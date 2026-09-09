@@ -77,6 +77,10 @@ export function createOperationPlansApplication(dependencies: {
     await owner(found.productId);
     return found;
   };
+  const present = async (value: OperationPlanRevision): Promise<OperationPlanRevision> =>
+    value.status === 'locked'
+      ? value
+      : { ...value, blockers: await dependencies.resolver.revalidate(value) };
   return {
     async createDraft(productIdValue, input) {
       const productId = await owner(productIdValue);
@@ -100,9 +104,12 @@ export function createOperationPlansApplication(dependencies: {
       return dependencies.repository.append(draft, null);
     },
     async list(productIdValue) {
-      return dependencies.repository.list(await owner(productIdValue));
+      const values = await dependencies.repository.list(await owner(productIdValue));
+      return Promise.all(values.map(present));
     },
-    get: plan,
+    async get(planId) {
+      return present(await plan(planId));
+    },
     async lock(planId, expectedRevisionNo) {
       const draft = await plan(planId);
       const latest = await dependencies.repository.latest(draft.lineageId);

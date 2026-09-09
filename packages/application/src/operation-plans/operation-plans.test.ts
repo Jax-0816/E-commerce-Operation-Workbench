@@ -59,6 +59,23 @@ describe('operation plans application', () => {
     expect(locked.sources).toEqual(draft.sources);
     expect(fixture.resolver.revalidateCalls).toBe(2);
   });
+
+  it('refreshes draft blockers for reads without mutating persisted history', async () => {
+    const fixture = setup();
+    const draft = await fixture.application.createDraft(fixture.productId, {
+      workflowRunId: fixture.sources.workflowRunId,
+      pricingRecordId: fixture.sources.pricing.resultId,
+    });
+    fixture.resolver.blockers = [{ code: 'CONTENT_UNLOCKED', source: 'titles' }];
+
+    await expect(fixture.application.get(draft.id)).resolves.toMatchObject({
+      blockers: fixture.resolver.blockers,
+    });
+    await expect(fixture.application.list(fixture.productId)).resolves.toMatchObject([
+      { blockers: fixture.resolver.blockers },
+    ]);
+    expect(fixture.repository.values[0]!.blockers).toEqual([]);
+  });
 });
 
 function setup() {

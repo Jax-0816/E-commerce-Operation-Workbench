@@ -573,3 +573,17 @@
 
 1. 提交并推送 Fastify routes 小任务，确认本地与远端一致。
 2. 实现 operation-plan 生产 SQLite 组合与重启持久化集成测试。
+
+## Session: 2026-09-09 — Task 25 production composition and restart
+
+- **Status:** complete
+- 调试回归 RED 证明草稿 GET/list 没有重新调用 resolver；修复后读取返回当前 blocker，同时持久化 revision 保持未变。
+- 组合 RED 证明重启后的 operation-plan API 因未注入应用返回 503；接入真实 SQLite repository、跨仓储 resolver 和应用门面后返回 200。
+- 真实重启集成测试直接写入 draft + locked 两个不可变 revision，重启服务后锁定来源 ID/revision/hash 完全一致，AI provider 调用次数为 0。
+- 固定 Node.js 24.19.0 下 Application 43、Contracts 38、Server 50 项测试通过；三包 typecheck、lint、build 通过。
+- Windows 敏感检查通过：生产组合沿用 Node `path.join`、临时目录和既有跨平台 workspace API，没有新增绝对路径、shell 或符号链接依赖。
+
+### Next action
+
+1. 提交并推送生产组合小任务，确认本地与远端一致。
+2. 进入 Task 25 UI 与 Phase 11 Playwright 验收，先实现浏览器 API 和失败组件测试。
