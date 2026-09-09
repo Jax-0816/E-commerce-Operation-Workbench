@@ -125,6 +125,7 @@
 | 竞品来源取实际引用的快照证据                    | 从竞品分析资产提取 `competitor_snapshot` evidence 并复核商品归属，避免后来导入的快照冒充历史来源          |
 | blocker 固定排序且从精确来源重新计算            | 依赖、复核、锁定、成本和规则变化只阻止锁定，不会自动把计划引用前移到 latest                               |
 | 运营方案 HTTP 合同复刻领域不变量                | 固定节点顺序/类型、成对促销引用、revision 生命周期和小写哈希在网络边界即失败关闭，route 不接收宽松对象    |
+| 运营方案 mutation 使用 201 且锁定携带 revision  | 草稿和锁定都会新增不可变 revision；GET 保持 200，锁定必须提交正整数 `expectedRevisionNo` 防止并发覆盖     |
 
 ## Issues Encountered
 

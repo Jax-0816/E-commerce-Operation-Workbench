@@ -559,3 +559,17 @@
 
 1. 提交并推送 contracts 小任务，确认本地与远端一致。
 2. 为 operation-plan Fastify routes 先写失败测试，再实现四个端点和安全错误映射。
+
+## Session: 2026-09-09 — Task 25 Fastify operation-plan routes
+
+- **Status:** complete
+- RED：真实 Fastify inject 验证创建、列表、读取、锁定四个目标端点全部返回 404，证明路由尚未注册。
+- GREEN：新增四个严格 route，草稿与锁定返回 201，列表/读取返回 200；Date 只在 HTTP 边界序列化。
+- malformed UUID、unknown field 和非正 revision 在调用应用层前返回 400；未配置、未找到和 revision 冲突分别安全映射为 503/404/409。
+- 固定 Node.js 24.19.0 下 Server 19 个测试文件、49 项测试全部通过，typecheck、lint 和 build 通过。
+- Windows 敏感检查通过：路由未引入路径、shell、换行解析、子进程或平台专用 API。
+
+### Next action
+
+1. 提交并推送 Fastify routes 小任务，确认本地与远端一致。
+2. 实现 operation-plan 生产 SQLite 组合与重启持久化集成测试。

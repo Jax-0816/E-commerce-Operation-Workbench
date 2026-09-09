@@ -188,7 +188,7 @@ git push origin codex/phase-0
 
 ### Task 4: Strict HTTP contracts, routes, and production composition
 
-**Current progress:** strict operation-plan request/response contracts are complete and exported; route tests, routes, and production composition remain.
+**Current progress:** strict operation-plan contracts and four Fastify routes are complete and exported; production SQLite composition and restart integration remain.
 
 **Files:**
 
@@ -208,11 +208,11 @@ git push origin codex/phase-0
 - Consumes: `OperationPlansApplication`.
 - Produces: strict draft/list/get/lock JSON endpoints and production SQLite composition.
 
-- [ ] **Step 1: Write failing contract and route tests**
+- [x] **Step 1: Write failing contract and route tests**
 
 Cover UUIDv7, positive expected revision, exact input shape, unknown-field rejection, 201 draft, newest-first list, resolved GET trace, 201 locked revision, ownership 404, validation 400, conflict 409, and capability 503 mappings.
 
-- [ ] **Step 2: Run focused tests and confirm RED**
+- [x] **Step 2: Run focused tests and confirm RED**
 
 Run: `pnpm --filter @eaw/contracts exec vitest run src/operation-plans.test.ts && pnpm --filter @eaw/server exec vitest run --fileParallelism=false src/routes/operation-plans.test.ts src/runtime.integration.test.ts`
 
