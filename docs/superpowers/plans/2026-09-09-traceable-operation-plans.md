@@ -36,7 +36,7 @@
 - Consumes: `UuidV7`, `PlatformId`, existing workflow output-reference semantics, and SHA-256 canonical hashing at the application boundary.
 - Produces: `OperationPlanRevision`, `OperationPlanSources`, `OperationPlanBlocker`, `createOperationPlanRevision`, `lockOperationPlanRevision`, and `OperationPlanRepository`.
 
-- [ ] **Step 1: Write failing aggregate tests**
+- [x] **Step 1: Write failing aggregate tests**
 
 Test exact six-node uniqueness/order, lowercase SHA-256 hashes, duplicate competitor/result IDs, `lockedAt` lifecycle consistency, revision monotonicity, immutable cloning, and rejection of a locked revision with blockers.
 
@@ -55,23 +55,23 @@ expect(lockOperationPlanRevision(draft, createUuidV7(), new Date())).toMatchObje
 });
 ```
 
-- [ ] **Step 2: Run the focused domain test and confirm RED**
+- [x] **Step 2: Run the focused domain test and confirm RED**
 
 Run: `pnpm --filter @eaw/domain exec vitest run src/operation-plans/operation-plan.test.ts`
 
 Expected: FAIL because the operation-plan modules do not exist.
 
-- [ ] **Step 3: Implement strict immutable constructors and repository port**
+- [x] **Step 3: Implement strict immutable constructors and repository port**
 
 Use readonly discriminated blocker codes, clone/freeze nested references, reject extra/malformed source combinations, and require node keys in canonical workflow order. `lockOperationPlanRevision` must preserve `lineageId`, `productId`, `platformId`, `sources`, and `sourceHash` exactly while incrementing the revision.
 
-- [ ] **Step 4: Run domain test/typecheck/lint/build**
+- [x] **Step 4: Run domain test/typecheck/lint/build**
 
 Run: `pnpm --filter @eaw/domain test && pnpm --filter @eaw/domain typecheck && pnpm --filter @eaw/domain lint && pnpm --filter @eaw/domain build`
 
 Expected: all domain gates pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add packages/domain/src

@@ -505,3 +505,17 @@
 
 1. Task 24 全部阶段提交已推送至 `origin/codex/phase-0`，最新收口提交为 `b3ec7c8`。
 2. 进入 Task 25：只引用精确上游 revision/result/snapshot ID 的可追踪、可锁定运营方案。
+
+## Session: 2026-09-09 — Wave 5 / Task 25
+
+### Traceable operation plans — domain aggregate
+
+- **Status:** in_progress
+- 已写入 Task 25 设计与 5 段实施计划，固定六节点输出、竞品快照、定价结果、可选促销结果和规则快照的精确引用边界。
+- 已实现 `OperationPlanRevision`、五类结构化 blocker、严格六节点/资产类型配对、深冻结和只允许无阻塞草稿转为锁定修订的状态机。
+- Domain 48 项测试、typecheck、lint 和 build 通过。
+
+### Next action
+
+1. 提交并推送 Task 25 领域聚合小任务。
+2. 实现 `0015_add-operation-plans.sql` 与 SQLite 追加式仓储。

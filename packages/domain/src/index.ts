@@ -13,3 +13,4 @@ export * from './promotions/index.js';
 export * from './competitors/index.js';
 export * from './strategy/index.js';
 export * from './content-assets/index.js';
+export * from './operation-plans/index.js';
