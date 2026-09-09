@@ -587,3 +587,16 @@
 
 1. 提交并推送生产组合小任务，确认本地与远端一致。
 2. 进入 Task 25 UI 与 Phase 11 Playwright 验收，先实现浏览器 API 和失败组件测试。
+
+## Session: 2026-09-09 — Task 25 operation-plan browser API
+
+- **Status:** complete
+- RED：聚焦 Vitest 因 `features/operation-plans/api` 不存在失败。
+- GREEN：实现显式创建、按商品列出、按 ID 读取和携带 `expectedRevisionNo` 锁定四个浏览器方法；所有动态路径段均用 `encodeURIComponent`。
+- 2 项聚焦测试通过，并通过 Web typecheck、目标目录 lint 和 Prettier 检查。
+- Windows 敏感检查通过：浏览器 API 不含文件系统路径、shell、换行解析、绝对路径或平台专用 API。
+
+### Next action
+
+1. 提交并推送浏览器 API 小任务，确认本地与远端一致。
+2. 按失败组件测试实现运营方案面板、路由依赖注入和样式。
