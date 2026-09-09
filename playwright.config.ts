@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { defineConfig } from '@playwright/test';
 
 const workspacePath = mkdtempSync(join(realpathSync(tmpdir()), 'eaw-phase2-e2e-'));
+const callLogPath = join(realpathSync(tmpdir()), 'eaw-phase10-fake-provider-calls.jsonl');
+process.env.EAW_E2E_CALL_LOG = callLogPath;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -18,8 +20,12 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'pnpm --filter @eaw/server dev',
-      env: { ...process.env, EAW_WORKSPACE_PATH: workspacePath },
+      command: 'pnpm --filter @eaw/server dev:e2e',
+      env: {
+        ...process.env,
+        EAW_E2E_CALL_LOG: callLogPath,
+        EAW_WORKSPACE_PATH: workspacePath,
+      },
       reuseExistingServer: false,
       timeout: 120_000,
       url: 'http://127.0.0.1:3000/api/v1/health',

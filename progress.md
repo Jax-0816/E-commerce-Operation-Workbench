@@ -486,7 +486,8 @@
 - 已完成前端 workflow API 客户端：七个 JSON 操作保留严格 definition/revision guard，typed SSE 按持久事件类型监听并显式提供连接清理。Web 聚焦测试、类型检查和 lint 通过。
 - 已完成可访问 workflow 进度组件：六节点状态、精确输出 revision、安全错误、人工复核/依赖变化提示及显式 start/resume/retry/cancel；平台切换丢弃过期结果，SSE 断线严格先 GET 对账再重连。3 项组件测试、类型检查和 lint 通过。
 - 已将工作流进度接入真实 `/products/:productId/plans` 路由与顶部入口，补齐页面样式；用户显式启动/操作后会立即订阅该 run。Web 49 项测试、typecheck、lint 和生产构建全部通过。
+- 已完成 Phase 10 Playwright 黄金路径：独立 E2E 服务入口使用确定性 fake provider，真实页面验证前四节点成功、creative 首次失败、重载后显式恢复和六节点全部产出。审计日志调用序列严格为 `1/1/1/1/2/1`；Phase 2/3/10 共 3 条 E2E 全部通过，无真实 AI 请求。
 
 ### Next action
 
-1. 继续 Task 5：新增 Phase 10 Playwright 黄金路径，验证失败、重启、显式恢复和已完成节点不重复生成。
+1. 继续 Task 5：用 Node.js 24.19.0 / pnpm 11.22.0 运行全部发布门禁，然后更新总计划并完成 Task 24。

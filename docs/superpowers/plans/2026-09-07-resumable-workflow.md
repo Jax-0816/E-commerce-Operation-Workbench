@@ -301,7 +301,7 @@ Expected: FAIL because the workflow UI/API do not exist.
 
 Use buttons rather than implicit background actions. Track request generation plus run ID/revision so late state and SSE messages cannot overwrite the selected product/platform. Show exact output revision, review/stale reason, safe error, interrupted banner, and explicit resume/retry/cancel controls.
 
-- [ ] **Step 4: Add the Phase 10 Playwright path**
+- [x] **Step 4: Add the Phase 10 Playwright path**
 
 Use a deterministic fake provider to create a product and required competitor input, start the workflow, observe four completed nodes plus a creative failure, restart/reload, explicitly resume, and verify all six nodes complete without duplicate completed-node generation logs.
 
