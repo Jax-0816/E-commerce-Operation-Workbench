@@ -17,12 +17,15 @@ describe('workflow contracts', () => {
     expect(() => ProductWorkflowParamsSchema.parse({ productId: crypto.randomUUID() })).toThrow();
     expect(() => ProductWorkflowParamsSchema.parse({ productId, extra: true })).toThrow();
 
-    expect(StartWorkflowInputSchema.parse({ platformId: 'taobao', definitionId: 'product_content' }))
-      .toEqual({ platformId: 'taobao', definitionId: 'product_content' });
-    expect(() => StartWorkflowInputSchema.parse({ platformId: 'jd', definitionId: 'product_content' }))
-      .toThrow();
-    expect(() => StartWorkflowInputSchema.parse({ platformId: 'taobao', definitionId: 'unknown' }))
-      .toThrow();
+    expect(
+      StartWorkflowInputSchema.parse({ platformId: 'taobao', definitionId: 'product_content' }),
+    ).toEqual({ platformId: 'taobao', definitionId: 'product_content' });
+    expect(() =>
+      StartWorkflowInputSchema.parse({ platformId: 'jd', definitionId: 'product_content' }),
+    ).toThrow();
+    expect(() =>
+      StartWorkflowInputSchema.parse({ platformId: 'taobao', definitionId: 'unknown' }),
+    ).toThrow();
   });
 
   it('strictly validates run, node, revision, and event cursors', () => {
@@ -33,7 +36,9 @@ describe('workflow contracts', () => {
       nodeKey: 'selling_points',
     });
     expect(() => WorkflowNodeParamsSchema.parse({ workflowRunId, nodeKey: 'unknown' })).toThrow();
-    expect(WorkflowRevisionInputSchema.parse({ expectedRevision: 1 })).toEqual({ expectedRevision: 1 });
+    expect(WorkflowRevisionInputSchema.parse({ expectedRevision: 1 })).toEqual({
+      expectedRevision: 1,
+    });
     expect(() => WorkflowRevisionInputSchema.parse({ expectedRevision: 0 })).toThrow();
     expect(() => WorkflowRevisionInputSchema.parse({ expectedRevision: 1, force: true })).toThrow();
     expect(WorkflowEventsQuerySchema.parse({ afterSequence: '0' })).toEqual({ afterSequence: 0 });

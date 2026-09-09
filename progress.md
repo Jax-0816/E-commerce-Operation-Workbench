@@ -466,7 +466,7 @@
 
 ### Resumable persisted workflow — engine, SQLite, recovery and preflight
 
-- **Status:** in_progress
+- **Status:** complete
 - 已完成工作流定义、状态模型、串行 runner 与内存幂等恢复测试。
 - 已完成 SQLite run/node/attempt/event 持久化、revision CAS、不可变审计、失败关闭读取及启动中断恢复。
 - 已完成只读预检与归档商品保护；预检不会调用 `execute` 或产生付费 AI 请求。
@@ -488,6 +488,20 @@
 - 已将工作流进度接入真实 `/products/:productId/plans` 路由与顶部入口，补齐页面样式；用户显式启动/操作后会立即订阅该 run。Web 49 项测试、typecheck、lint 和生产构建全部通过。
 - 已完成 Phase 10 Playwright 黄金路径：独立 E2E 服务入口使用确定性 fake provider，真实页面验证前四节点成功、creative 首次失败、重载后显式恢复和六节点全部产出。审计日志调用序列严格为 `1/1/1/1/2/1`；Phase 2/3/10 共 3 条 E2E 全部通过，无真实 AI 请求。
 
+### Fresh verification evidence
+
+| Gate                        | Result               |
+| --------------------------- | -------------------- |
+| Runtime / frozen install    | passed               |
+| Root unit/integration tests | 459 passed, 0 failed |
+| Playwright golden paths     | 3 passed, 0 failed   |
+| Root format/typecheck/lint  | passed               |
+| Root production build       | passed               |
+| Prompt/rule-pack validation | passed               |
+| `git diff --check`          | passed               |
+| Real paid AI calls          | 0                    |
+
 ### Next action
 
-1. 继续 Task 5：用 Node.js 24.19.0 / pnpm 11.22.0 运行全部发布门禁，然后更新总计划并完成 Task 24。
+1. 提交 Task 24 最终发布门禁与记录更新，GitHub 连通后推送待同步提交。
+2. 进入 Task 25：只引用精确上游 revision/result/snapshot ID 的可追踪、可锁定运营方案。

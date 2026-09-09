@@ -305,7 +305,7 @@ Use buttons rather than implicit background actions. Track request generation pl
 
 Use a deterministic fake provider to create a product and required competitor input, start the workflow, observe four completed nodes plus a creative failure, restart/reload, explicitly resume, and verify all six nodes complete without duplicate completed-node generation logs.
 
-- [ ] **Step 5: Run every release gate**
+- [x] **Step 5: Run every release gate**
 
 Run with Node.js 24.19.0 and pnpm 11.22.0:
 

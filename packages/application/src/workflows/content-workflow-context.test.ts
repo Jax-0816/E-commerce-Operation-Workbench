@@ -57,7 +57,11 @@ describe('repository content workflow context', () => {
   it('reuses only an output owned by the same product/platform with the exact workflow hash', async () => {
     const fixture = contextFixture();
     const context = createRepositoryContentWorkflowContext(fixture.dependencies);
-    const input = { productId: fixture.productId, platformId: 'taobao', nodeKey: 'creative' } as const;
+    const input = {
+      productId: fixture.productId,
+      platformId: 'taobao',
+      nodeKey: 'creative',
+    } as const;
     const first = await context.inspect(input);
     const workflowHash = sha256(canonicalJson(first.dependencies));
     fixture.creative = {
@@ -116,7 +120,9 @@ function contextFixture() {
     dependencies: {
       facts: { listCurrent: async () => fixture.facts },
       competitors: { listByProduct: async () => fixture.competitors },
-      strategies: { latest: async (_owner: string, kind: keyof typeof strategies) => fixture.strategies[kind] },
+      strategies: {
+        latest: async (_owner: string, kind: keyof typeof strategies) => fixture.strategies[kind],
+      },
       titles: { latest: async () => fixture.title },
       creativePlans: { latest: async () => fixture.creative },
       detailPages: { latest: async () => fixture.detail },
@@ -163,9 +169,10 @@ function fact(
     createdAt: now,
     updatedAt: now,
     confirmedAt: values.verification === 'confirmed' ? now : null,
-    confirmation: values.verification === 'confirmed'
-      ? { actorType: 'user', actorRef: 'tester', evidenceRef: 'test' }
-      : null,
+    confirmation:
+      values.verification === 'confirmed'
+        ? { actorType: 'user', actorRef: 'tester', evidenceRef: 'test' }
+        : null,
     deletedAt: null,
   };
 }
@@ -206,42 +213,91 @@ function competitor(productId: ReturnType<typeof createUuidV7>): CompetitorWithL
   };
 }
 
-function strategy(productId: ReturnType<typeof createUuidV7>, kind: StrategyAsset['kind']): StrategyAsset {
+function strategy(
+  productId: ReturnType<typeof createUuidV7>,
+  kind: StrategyAsset['kind'],
+): StrategyAsset {
   return {
-    id: createUuidV7(), productId, kind, revisionNo: 1, generationId: createUuidV7(),
-    status: 'verified', payload: { productId } as StrategyAsset['payload'],
-    supersedesAssetId: null, createdAt: new Date(),
+    id: createUuidV7(),
+    productId,
+    kind,
+    revisionNo: 1,
+    generationId: createUuidV7(),
+    status: 'verified',
+    payload: { productId } as StrategyAsset['payload'],
+    supersedesAssetId: null,
+    createdAt: new Date(),
   };
 }
 
 function profile(productId: ReturnType<typeof createUuidV7>): ProductPlatformProfile {
   return {
-    id: createUuidV7(), productId, platformId: 'taobao', categoryCode: 'c1', categoryName: 'Category',
-    externalProductId: null, title: 'Title', description: null, metadata: {}, status: 'ready',
-    createdAt: new Date('2026-09-08T00:00:00.000Z'), updatedAt: new Date('2026-09-08T01:00:00.000Z'),
+    id: createUuidV7(),
+    productId,
+    platformId: 'taobao',
+    categoryCode: 'c1',
+    categoryName: 'Category',
+    externalProductId: null,
+    title: 'Title',
+    description: null,
+    metadata: {},
+    status: 'ready',
+    createdAt: new Date('2026-09-08T00:00:00.000Z'),
+    updatedAt: new Date('2026-09-08T01:00:00.000Z'),
   };
 }
 
 function title(productId: ReturnType<typeof createUuidV7>): TitleAssetRevision {
   return {
-    id: createUuidV7(), lineageId: createUuidV7(), productId, platformId: 'taobao', revisionNo: 1,
-    origin: 'generated', status: 'verified', locked: false, titles: [], validationIssues: [],
-    dependencyHashes: {}, generationId: createUuidV7(), supersedesRevisionId: null, createdAt: new Date(),
+    id: createUuidV7(),
+    lineageId: createUuidV7(),
+    productId,
+    platformId: 'taobao',
+    revisionNo: 1,
+    origin: 'generated',
+    status: 'verified',
+    locked: false,
+    titles: [],
+    validationIssues: [],
+    dependencyHashes: {},
+    generationId: createUuidV7(),
+    supersedesRevisionId: null,
+    createdAt: new Date(),
   };
 }
 
 function creative(productId: ReturnType<typeof createUuidV7>): CreativePlanRevision {
   return {
-    id: createUuidV7(), lineageId: createUuidV7(), productId, platformId: 'taobao', revisionNo: 1,
-    origin: 'generated', status: 'verified', items: [], dependencyHashes: {}, validationIssues: [],
-    generationId: createUuidV7(), supersedesRevisionId: null, createdAt: new Date(),
+    id: createUuidV7(),
+    lineageId: createUuidV7(),
+    productId,
+    platformId: 'taobao',
+    revisionNo: 1,
+    origin: 'generated',
+    status: 'verified',
+    items: [],
+    dependencyHashes: {},
+    validationIssues: [],
+    generationId: createUuidV7(),
+    supersedesRevisionId: null,
+    createdAt: new Date(),
   };
 }
 
 function detail(productId: ReturnType<typeof createUuidV7>): DetailPageRevision {
   return {
-    id: createUuidV7(), lineageId: createUuidV7(), productId, platformId: 'taobao', revisionNo: 1,
-    origin: 'generated', status: 'verified', sections: [], dependencyHashes: {}, validationIssues: [],
-    generationId: createUuidV7(), supersedesRevisionId: null, createdAt: new Date(),
+    id: createUuidV7(),
+    lineageId: createUuidV7(),
+    productId,
+    platformId: 'taobao',
+    revisionNo: 1,
+    origin: 'generated',
+    status: 'verified',
+    sections: [],
+    dependencyHashes: {},
+    validationIssues: [],
+    generationId: createUuidV7(),
+    supersedesRevisionId: null,
+    createdAt: new Date(),
   };
 }

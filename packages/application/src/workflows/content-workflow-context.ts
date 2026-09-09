@@ -77,21 +77,33 @@ async function collectSources(
     taobao: 'taobao_tmall',
     douyin: 'douyin_ecommerce',
   }[input.platformId] as Parameters<RuleRepositoryPort['findActive']>[0];
-  const [allFacts, competitors, competitorAnalysis, marketInsight, sellingPoints, title, creative, detail, profile, rule, overrides, prompts] =
-    await Promise.all([
-      dependencies.facts.listCurrent(input.productId),
-      dependencies.competitors.listByProduct(input.productId),
-      dependencies.strategies.latest(input.productId, 'competitor_analysis'),
-      dependencies.strategies.latest(input.productId, 'market_insight'),
-      dependencies.strategies.latest(input.productId, 'selling_point_set'),
-      dependencies.titles.latest(input.productId, input.platformId),
-      dependencies.creativePlans.latest(input.productId, input.platformId),
-      dependencies.detailPages.latest(input.productId, input.platformId),
-      dependencies.platformProfiles.find(input.productId, input.platformId),
-      dependencies.rules?.findActive(rulePlatformId, region),
-      dependencies.rules?.listOverrides(rulePlatformId, region) ?? Promise.resolve([]),
-      activePrompts(dependencies.prompts),
-    ]);
+  const [
+    allFacts,
+    competitors,
+    competitorAnalysis,
+    marketInsight,
+    sellingPoints,
+    title,
+    creative,
+    detail,
+    profile,
+    rule,
+    overrides,
+    prompts,
+  ] = await Promise.all([
+    dependencies.facts.listCurrent(input.productId),
+    dependencies.competitors.listByProduct(input.productId),
+    dependencies.strategies.latest(input.productId, 'competitor_analysis'),
+    dependencies.strategies.latest(input.productId, 'market_insight'),
+    dependencies.strategies.latest(input.productId, 'selling_point_set'),
+    dependencies.titles.latest(input.productId, input.platformId),
+    dependencies.creativePlans.latest(input.productId, input.platformId),
+    dependencies.detailPages.latest(input.productId, input.platformId),
+    dependencies.platformProfiles.find(input.productId, input.platformId),
+    dependencies.rules?.findActive(rulePlatformId, region),
+    dependencies.rules?.listOverrides(rulePlatformId, region) ?? Promise.resolve([]),
+    activePrompts(dependencies.prompts),
+  ]);
   const facts = allFacts
     .filter(
       ({ verification, policyEligible, sensitive, deletedAt }) =>
@@ -147,7 +159,9 @@ async function collectSources(
   };
 }
 
-async function activePrompts(prompts: ActivePromptPort): Promise<Readonly<Record<string, string | null>>> {
+async function activePrompts(
+  prompts: ActivePromptPort,
+): Promise<Readonly<Record<string, string | null>>> {
   const ids = [...new Set(Object.values(PROMPT_BY_NODE).flat())];
   const entries = await Promise.all(
     ids.map(async (id) => [id, (await prompts.findActive(id))?.templateHash ?? null] as const),
@@ -194,16 +208,22 @@ function snapshot(
 }
 
 function assetIdentity(asset: StrategyAsset | undefined) {
-  return asset
-    ? { id: asset.id, revisionNo: asset.revisionNo, status: asset.status }
+  return asset ? { id: asset.id, revisionNo: asset.revisionNo, status: asset.status } : null;
+}
+
+function revisionIdentity(
+  revision:
+    { readonly id: UuidV7; readonly revisionNo: number; readonly status: string } | undefined,
+) {
+  return revision
+    ? { id: revision.id, revisionNo: revision.revisionNo, status: revision.status }
     : null;
 }
 
-function revisionIdentity(revision: { readonly id: UuidV7; readonly revisionNo: number; readonly status: string } | undefined) {
-  return revision ? { id: revision.id, revisionNo: revision.revisionNo, status: revision.status } : null;
-}
-
-function candidateFor(nodeKey: ContentNodeKey, sources: Awaited<ReturnType<typeof collectSources>>) {
+function candidateFor(
+  nodeKey: ContentNodeKey,
+  sources: Awaited<ReturnType<typeof collectSources>>,
+) {
   if (nodeKey === 'titles') return sources.title;
   if (nodeKey === 'creative') return sources.creative;
   if (nodeKey === 'detail_page') return sources.detail;
@@ -225,7 +245,8 @@ function reusable(
     return undefined;
   }
   return {
-    assetType: nodeKey === 'titles' ? 'title_asset' : nodeKey === 'creative' ? 'creative_plan' : nodeKey,
+    assetType:
+      nodeKey === 'titles' ? 'title_asset' : nodeKey === 'creative' ? 'creative_plan' : nodeKey,
     assetId: candidate.id,
     revisionNo: candidate.revisionNo,
   };

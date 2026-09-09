@@ -43,10 +43,11 @@
 | Task 21                               | complete    | 三类结构化提示词、证据审查、不可变修订、API/UI 与 fake-provider 重启测试已完成            |
 | Task 22                               | complete    | 四类标题、事实守卫、本地规则、不可变修订、锁定、stale 原因和真实运行时持久化均已完成      |
 | Task 23                               | complete    | 五图结构化方案、详情页架构、证据守卫、单项重生成、锁定、稳定重排和不可变历史均已完成      |
-| Task 24                               | in_progress | 正在进入持久化工作流 DAG、幂等恢复与 SSE                                                  |
-| Task 25–29                            | pending     | Task 24 完成后进入可追踪运营方案、可靠性和发布收口                                        |
+| Task 24                               | complete    | 持久 DAG、revision CAS、幂等恢复、取消、durable SSE、可访问 UI 与 Phase 10 E2E 已通过     |
+| Task 25                               | in_progress | 进入只引用精确上游修订的可追踪、可锁定运营方案                                            |
+| Task 26–29                            | pending     | 完成运营方案后进入可靠性、Windows 交付和发布收口                                          |
 
-当前主线完成度按原计划 29 个任务计为 `23/29 ≈ 79%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 23 已完成，下一项为 Task 24。
+当前主线完成度按原计划 29 个任务计为 `24/29 ≈ 83%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 24 已完成，当前进入 Task 25。
 
 ## Dependency Order
 
@@ -267,10 +268,10 @@ runWorkflow(id: WorkflowId): Promise<WorkflowState>
 resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 ```
 
-- [ ] 构造“前四节点完成、creative 失败、进程重启”的失败用例。
-- [ ] 实现持久状态、幂等键、并发保护、恢复、取消与 SSE 事件。
-- [ ] 恢复时只重跑失败/未开始节点，已完成节点 AI 调用次数保持为零。
-- [ ] 提交 `feat: add resumable persisted generation workflow`。
+- [x] 构造“前四节点完成、creative 失败、进程重启”的失败用例。
+- [x] 实现持久状态、幂等键、并发保护、恢复、取消与 SSE 事件。
+- [x] 恢复时只重跑失败/未开始节点，已完成节点 AI 调用次数保持为零。
+- [x] 提交 `feat: add resumable persisted generation workflow`。
 
 ### Task 25: Immutable traceable operation plans
 
