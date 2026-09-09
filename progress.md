@@ -514,8 +514,10 @@
 - 已写入 Task 25 设计与 5 段实施计划，固定六节点输出、竞品快照、定价结果、可选促销结果和规则快照的精确引用边界。
 - 已实现 `OperationPlanRevision`、五类结构化 blocker、严格六节点/资产类型配对、深冻结和只允许无阻塞草稿转为锁定修订的状态机。
 - Domain 48 项测试、typecheck、lint 和 build 通过。
+- 已新增 `0015_add-operation-plans.sql` 和 `SqliteOperationPlanRepository`：计划头、六节点、竞品快照、定价、促销与促销结果分表保存，全部来源表拒绝 update/delete。
+- 真实 SQLite 测试证明草稿/锁定追加、重启后精确重建、最新修订、新到旧历史、revision CAS 冲突回滚和直接 SQL 篡改拒绝。Database 47 项测试、typecheck、lint 和 build 通过。
 
 ### Next action
 
-1. 提交并推送 Task 25 领域聚合小任务。
-2. 实现 `0015_add-operation-plans.sql` 与 SQLite 追加式仓储。
+1. 提交并推送 Task 25 SQLite 仓储小任务。
+2. 进入应用层精确来源解析、blocker 计算和显式锁定。

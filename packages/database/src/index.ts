@@ -25,6 +25,7 @@ export { DrizzleCreativePlanRepository } from './repositories/creative-plan-repo
 export { DrizzleDetailPageRepository } from './repositories/detail-page-repository.js';
 export { SqliteWorkflowRepository } from './repositories/workflow-repository.js';
 export { recoverInterruptedWorkflows } from './repositories/workflow-recovery.js';
+export { SqliteOperationPlanRepository } from './repositories/operation-plan-repository.js';
 export {
   DrizzleRuleRepository,
   type StoredRuleOverride,

@@ -93,27 +93,27 @@ git push origin codex/phase-0
 - Consumes: `OperationPlanRepository` and validated domain revisions.
 - Produces: `SqliteOperationPlanRepository` with `append`, `findById`, `latest`, and `list`.
 
-- [ ] **Step 1: Write failing real-SQLite persistence tests**
+- [x] **Step 1: Write failing real-SQLite persistence tests**
 
 Append a draft and locked revision, reopen the database, and assert exact nested sources, newest-first history, lineage revision sequencing, and source-hash preservation. Execute direct SQL update/delete against both plan and reference tables and require immutable-trigger failures.
 
-- [ ] **Step 2: Run focused database tests and confirm RED**
+- [x] **Step 2: Run focused database tests and confirm RED**
 
 Run: `pnpm --filter @eaw/database exec vitest run --fileParallelism=false src/repositories/operation-plan-repository.integration.test.ts`
 
 Expected: FAIL because migration/repository do not exist.
 
-- [ ] **Step 3: Implement STRICT schema and transactional repository**
+- [x] **Step 3: Implement STRICT schema and transactional repository**
 
 Store plan headers separately from workflow-node, competitor, pricing, and promotion references. Use composite foreign keys for product identity, unique `(lineage_id, revision_no)`, one pricing reference per revision, stable node order, and update/delete rejection triggers. Parse every row and reconstruct through the domain constructor.
 
-- [ ] **Step 4: Run migration/database gates**
+- [x] **Step 4: Run migration/database gates**
 
 Run: `pnpm --filter @eaw/database test && pnpm --filter @eaw/database typecheck && pnpm --filter @eaw/database lint && pnpm --filter @eaw/database build`
 
 Expected: all prior migrations and new repository tests pass.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
 ```bash
 git add migrations/0015_add-operation-plans.sql packages/database
