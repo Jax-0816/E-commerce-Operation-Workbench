@@ -520,5 +520,14 @@
 
 ### Next action
 
-1. 提交并推送 Task 25 应用门面小任务。
-2. 继续实现真实多仓储精确来源解析与 blocker 计算。
+1. Task 25 应用门面小任务已由提交 `28c5f39` 推送至 `origin/codex/phase-0`。
+2. 已将持续 GitHub 同步和 Windows 新克隆兼容写入主计划、Task 25 计划及长期决策记录；本次记录提交推送后才继续实现。
+3. 继续实现真实多仓储精确来源解析与 blocker 计算，并把 Windows 敏感面纳入每个小任务的验收。
+
+## Session: 2026-09-09 — Continuous GitHub and Windows delivery constraint
+
+- **Status:** complete
+- 用户确认 GitHub 是跨机器交付源，Windows 必须能从全新克隆直接安装、迁移和启动。
+- 主计划现要求每个验证通过的小任务先提交并推送，确认本地与 `origin/codex/phase-0` 同步后才能继续。
+- Windows 兼容提升为持续门禁：禁止本机绝对路径和隐式 POSIX-only 依赖，持续覆盖空格/中文路径、CRLF、路径分隔符、大小写、进程行为、符号链接和 SQLite 原生依赖。
+- Task 27 仍负责幂等 Windows 安装启动的专项实现；Task 29 必须从 GitHub 全新克隆在 Windows 与 Ubuntu 执行完整统一门禁。

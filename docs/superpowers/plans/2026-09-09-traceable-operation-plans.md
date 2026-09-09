@@ -18,6 +18,8 @@
 - Draft creation and locking validate product/platform ownership and fail closed on missing or malformed sources.
 - Locking never regenerates content, advances a reference, or calls an AI provider.
 - Unsupported promotion capability remains optional and explicit; no synthetic promotion or financial result is allowed.
+- All committed paths, scripts, test fixtures, and runtime behavior must work from a fresh Windows clone, including repositories stored below directories with spaces or non-ASCII characters; do not commit POSIX-only shell assumptions or machine-specific absolute paths.
+- After every verified small task, push its commit to `origin/codex/phase-0` and confirm local `HEAD` matches the remote before starting the next task.
 
 ---
 
@@ -289,6 +291,8 @@ git diff --check
 
 Expected: every gate passes under Node.js 24.19.0 / pnpm 11.22.0 with no real AI request.
 
+Also verify that Task 25 introduces no case-conflicting paths, hard-coded path separators, CRLF-sensitive parsing, symlink dependency, or machine-specific absolute path. The final Task 29 gate must repeat the complete workflow from a fresh GitHub clone on Windows and Ubuntu.
+
 - [ ] **Step 6: Update records, commit, and push**
 
 Mark Task 25 complete and Task 26 in progress. Record exact test counts, immutable-reference/restart evidence, blocker behavior, and provider call count.
@@ -297,4 +301,5 @@ Mark Task 25 complete and Task 26 in progress. Record exact test counts, immutab
 git add apps/web tests/e2e docs/superpowers task_plan.md findings.md progress.md
 git commit -m "feat: aggregate traceable operation plans"
 git push origin codex/phase-0
+git rev-list --left-right --count HEAD...origin/codex/phase-0
 ```

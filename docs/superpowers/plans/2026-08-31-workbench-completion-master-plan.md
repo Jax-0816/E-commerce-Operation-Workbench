@@ -21,6 +21,9 @@
 - 生成资产采用不可变修订；锁定内容不被重生成覆盖，上游变化只标记下游过期。
 - 每个任务严格执行 RED → GREEN → refactor，完成前必须通过聚焦测试和相关质量门禁。
 - 禁止用伪数据或无效按钮掩盖未实现能力；未完成能力必须明确显示不可用原因。
+- Windows 兼容是持续约束而非 Task 27 的一次性收口：仓库内代码、配置和脚本不得依赖用户绝对路径、POSIX 路径分隔符、大小写敏感文件系统、符号链接或仅 Bash 可用的行为；路径与进程操作优先使用跨平台 Node API，专用运维脚本必须提供 PowerShell 入口。
+- 每个后续任务都要检查其 Windows 敏感面，包括空格/中文路径、CRLF、反斜杠、大小写冲突、进程与信号差异以及原生 SQLite 依赖；Task 27 负责整机幂等安装验证，但不得推迟此前任务的兼容修复。
+- 所有成果以 GitHub 为跨机器交付源：每个验证通过的小任务必须提交并推送到 `origin/codex/phase-0`，确认本地 `HEAD` 与远端一致后才能开始下一个小任务。
 
 ## Current Baseline — 2026-08-31
 
@@ -68,6 +71,7 @@
 3. 完成最小实现、聚焦测试、相关 workspace 测试和构建。
 4. 更新本文件复选框、`task_plan.md` 状态、`findings.md` 决策与 `progress.md` 结果。
 5. 一个任务一个可审查提交；任何质量门禁失败都不能把任务标记为 complete。
+6. 推送该提交并确认 `git rev-list --left-right --count HEAD...origin/codex/phase-0` 为 `0 0`；若 GitHub 暂时不可达，保留本地提交并重试，远端未同步前不进入下一小任务。
 
 统一完整门禁：
 
@@ -321,6 +325,7 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 - [ ] 编写端到端测试：商品 → 事实确认 → SKU → 成本 → 竞品导入 → AI 策略/内容 → 定价 → 拼多多促销 → trace → 运营方案锁定。
 - [ ] 先运行并记录第一个真实行为缺口，再只在归属模块修复并添加聚焦回归。
 - [ ] 在 Windows 与 Ubuntu 运行完整统一门禁，失败时保存 Playwright trace。
+- [ ] 从 GitHub 全新克隆验证安装、迁移、启动和黄金路径；覆盖含空格/中文的 Windows 路径，并确保仓库不含本机绝对路径或仅 POSIX 可用的启动依赖。
 - [ ] 验证空白新工作区、已有工作区升级、备份恢复和离线模式。
 - [ ] 提交 `test: verify complete ecommerce workbench golden path`，将版本标记为可发布候选。
 

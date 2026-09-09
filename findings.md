@@ -5,6 +5,8 @@
 - 根据当前真实进度列出完整后续计划。
 - 将计划持久化在项目中，后续持续按计划执行并更新。
 - 最终目标是完善整个本地电商 AI 运营工作台，而不是只完成当前页面。
+- GitHub 是项目跨机器交付源；每个验证通过的小任务必须提交并推送后再继续。
+- Windows 兼容贯穿所有后续任务；目标是在 Windows 从 GitHub 全新克隆后可直接安装、迁移和启动，而不是到 Task 27 才补兼容。
 
 ## Research Findings
 
@@ -37,6 +39,7 @@
 - 定价方案与结果必须在同一 SQLite `BEGIN IMMEDIATE` 事务中追加；结果主键或外键失败时回滚方案，避免不可变历史中留下孤立半成品。
 - Task 13 前端沿用商品路由但在页面内选择已启用 SKU；成本档案保存 revision，价格实验室展示可信状态、建议价、利润指标、计算轨迹和不可变历史。
 - 重连后优先使用 Codex bundled Node 24.19.0；pnpm 11.22.0 可临时安装到 `/private/tmp`，不改系统 Node/pnpm。
+- 本机 `/private/tmp` 工具链路径只属于当前验证环境，不得写入仓库；产品路径处理继续使用 Node `path`/`fs` API，并在后续门禁检查空格/中文路径、CRLF、反斜杠、大小写冲突、进程差异、符号链接依赖和 SQLite 原生模块安装。
 - 任意安全公式不保证目标谓词单调；Task 13 solver 最终在最多 100,000 分的搜索窗内升序穷举以保证全局最小价，并用“候选数 × 求解次数 × 成本/公式节点复杂度”不超过 2,000,000 的复合预算保护 Fastify 同步事件循环。
 - 定价公式变量严格限制为 campaign price、consumer payment、recognized revenue、merchant settlement；公共 solver 与 API 路径共享节点、变量和工作预算校验，不存在旁路。
 - SKU/商品异步请求必须以 request generation 和当前身份双重校验；切换时立即清空旧状态并使旧保存/计算失效，避免跨 SKU 覆盖和永久 loading/saving 状态。
