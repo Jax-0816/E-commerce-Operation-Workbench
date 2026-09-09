@@ -516,8 +516,9 @@
 - Domain 48 项测试、typecheck、lint 和 build 通过。
 - 已新增 `0015_add-operation-plans.sql` 和 `SqliteOperationPlanRepository`：计划头、六节点、竞品快照、定价、促销与促销结果分表保存，全部来源表拒绝 update/delete。
 - 真实 SQLite 测试证明草稿/锁定追加、重启后精确重建、最新修订、新到旧历史、revision CAS 冲突回滚和直接 SQL 篡改拒绝。Database 47 项测试、typecheck、lint 和 build 通过。
+- 已实现运营方案应用门面：活跃商品归属、确定性 source hash、显式草稿创建、锁定前重新校验、最新修订/预期 revision 并发保护，且不调用任何 AI 生成。Application 38 项测试、typecheck、lint 和 build 通过。
 
 ### Next action
 
-1. 提交并推送 Task 25 SQLite 仓储小任务。
-2. 进入应用层精确来源解析、blocker 计算和显式锁定。
+1. 提交并推送 Task 25 应用门面小任务。
+2. 继续实现真实多仓储精确来源解析与 blocker 计算。
