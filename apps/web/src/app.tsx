@@ -22,6 +22,7 @@ import {
   createBrowserContentBuildersApi,
   type ContentBuildersApi,
 } from './features/content-builders/api.js';
+import { createBrowserWorkflowApi, type WorkflowApi } from './features/workflows/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -36,6 +37,7 @@ const browserCompetitorsApi = createBrowserCompetitorsApi();
 const browserStrategyApi = createBrowserStrategyApi();
 const browserTitlesApi = createBrowserTitlesApi();
 const browserContentBuildersApi = createBrowserContentBuildersApi();
+const browserWorkflowApi = createBrowserWorkflowApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -51,6 +53,7 @@ export function App({
   strategyApi = browserStrategyApi,
   titlesApi = browserTitlesApi,
   contentBuildersApi = browserContentBuildersApi,
+  workflowApi = browserWorkflowApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -65,6 +68,7 @@ export function App({
   readonly strategyApi?: StrategyApi;
   readonly titlesApi?: TitlesApi;
   readonly contentBuildersApi?: ContentBuildersApi;
+  readonly workflowApi?: WorkflowApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -82,6 +86,7 @@ export function App({
         strategyApi={strategyApi}
         titlesApi={titlesApi}
         contentBuildersApi={contentBuildersApi}
+        workflowApi={workflowApi}
       />
     </BrowserRouter>
   );

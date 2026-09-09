@@ -120,6 +120,16 @@ describe('routed workbench', () => {
     expect(container.textContent).not.toContain('当前能力尚未实现');
     root.unmount();
   });
+
+  it('opens the implemented resumable workflow workspace', async () => {
+    const { container, root } = await render(`/products/${product.id}/plans`);
+
+    expect(container.querySelector('h1')?.textContent).toBe('运营方案');
+    expect(container.querySelectorAll('[data-testid="workflow-node"]')).toHaveLength(6);
+    expect(container.textContent).toContain('启动工作流');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
 });
 
 async function render(entry: string) {
@@ -210,6 +220,36 @@ async function render(entry: string) {
             generateDetail: async () => undefined as never,
             lockDetailSection: async () => undefined as never,
             reorderDetail: async () => undefined as never,
+          }}
+          workflowApi={{
+            preflight: async (productId, platformId) => ({
+              definitionId: 'product_content',
+              definitionVersion: '1.0.0',
+              productId,
+              platformId,
+              nodes: [
+                ['competitor_analysis', 'competitor_analysis'],
+                ['market_insight', 'market_insight'],
+                ['selling_points', 'selling_point_set'],
+                ['titles', 'title_generation'],
+                ['creative', 'creative_plan'],
+                ['detail_page', 'detail_page'],
+              ].map(([key, taskType], index) => ({
+                key: key as never,
+                taskType,
+                order: index + 1,
+                runnable: true,
+                missingInputs: [],
+                dependencyHash: 'a'.repeat(64),
+              })),
+            }),
+            list: async () => [],
+            start: async () => undefined as never,
+            get: async () => undefined as never,
+            resume: async () => undefined as never,
+            retry: async () => undefined as never,
+            cancel: async () => undefined as never,
+            subscribe: () => () => undefined,
           }}
           skusApi={{
             configure: async () => ({ dimensions: [], skus: [] }),

@@ -287,17 +287,17 @@ Expected: all contract and server tests pass.
 - Consumes: workflow JSON endpoints and durable SSE stream.
 - Produces: a real product workflow page at `/products/:productId/plans` with preflight, start, progress, resume, retry, cancel, and reconnect behavior.
 
-- [ ] **Step 1: Write failing React tests**
+- [x] **Step 1: Write failing React tests**
 
 Render six labeled nodes and assert text/`aria-live` states. Simulate failure, resume, retry, cancellation, platform switch, stale late responses, and SSE disconnect; assert reconnect calls state GET before opening a new event stream and never starts/resumes automatically.
 
-- [ ] **Step 2: Run focused web tests and confirm RED**
+- [x] **Step 2: Run focused web tests and confirm RED**
 
 Run: `pnpm --filter @eaw/web exec vitest run src/features/workflows/workflow-progress.test.tsx src/routing/workbench-router.test.tsx`
 
 Expected: FAIL because the workflow UI/API do not exist.
 
-- [ ] **Step 3: Implement accessible UI and guarded browser client**
+- [x] **Step 3: Implement accessible UI and guarded browser client**
 
 Use buttons rather than implicit background actions. Track request generation plus run ID/revision so late state and SSE messages cannot overwrite the selected product/platform. Show exact output revision, review/stale reason, safe error, interrupted banner, and explicit resume/retry/cancel controls.
 

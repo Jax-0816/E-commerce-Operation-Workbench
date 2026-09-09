@@ -20,6 +20,10 @@ describe('workflow progress', () => {
       preflight: async (_productId, platformId) => preflight(platformId),
       start: async (_productId, platformId) => { calls.push(`start:${platformId}`); return current; },
       cancel: async (_runId, revision) => { calls.push(`cancel:${revision}`); return { ...current, status: 'cancelled' }; },
+      subscribe: (runId) => {
+        calls.push(`subscribe:${runId}`);
+        return () => undefined;
+      },
     });
     const { container, root } = await render(api);
 
@@ -27,10 +31,15 @@ describe('workflow progress', () => {
     expect(container.querySelector('[aria-live="polite"]')?.textContent).toContain('预检完成');
     expect(calls).toEqual([]);
     await click(container, '启动工作流');
-    expect(calls).toEqual(['start:pinduoduo']);
+    expect(calls).toEqual(['start:pinduoduo', 'subscribe:run-1']);
     expect(container.querySelector('[aria-live="polite"]')?.textContent).toContain('运行中');
     await click(container, '取消工作流');
-    expect(calls).toEqual(['start:pinduoduo', 'cancel:5']);
+    expect(calls).toEqual([
+      'start:pinduoduo',
+      'subscribe:run-1',
+      'cancel:5',
+      'subscribe:run-1',
+    ]);
     root.unmount();
   });
 

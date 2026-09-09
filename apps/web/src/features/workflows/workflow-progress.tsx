@@ -47,6 +47,7 @@ export function WorkflowProgress({
   const [error, setError] = useState('');
   const generation = useRef(0);
   const stream = useRef<(() => void) | undefined>(undefined);
+  const connectCurrentRun = useRef<(workflowRunId: string) => void>(() => undefined);
   const lastSequence = useRef(0);
   const reconnecting = useRef(false);
 
@@ -75,6 +76,7 @@ export function WorkflowProgress({
         () => void reconnect(workflowRunId),
       );
     };
+    connectCurrentRun.current = connect;
     const reconcile = async (workflowRunId: string): Promise<void> => {
       try {
         const authoritative = await api.get(workflowRunId);
@@ -90,6 +92,7 @@ export function WorkflowProgress({
       reconnecting.current = true;
       stream.current?.();
       stream.current = undefined;
+      connectCurrentRun.current = () => undefined;
       try {
         const authoritative = await api.get(workflowRunId);
         if (!current() || authoritative.productId !== productId || authoritative.platformId !== platformId) return;
@@ -140,6 +143,7 @@ export function WorkflowProgress({
         result.platformId === platformId
       ) {
         setRun(result);
+        connectCurrentRun.current(result.id);
       }
     } catch {
       if (requestGeneration === generation.current) setError('工作流操作失败，请刷新状态后重试');

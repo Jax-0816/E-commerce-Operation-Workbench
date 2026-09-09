@@ -54,6 +54,8 @@ import { TitleStudio } from '../features/titles/title-studio.js';
 import type { ContentBuildersApi } from '../features/content-builders/api.js';
 import { CreativeBuilder } from '../features/content-builders/creative-builder.js';
 import { DetailBuilder } from '../features/content-builders/detail-builder.js';
+import type { WorkflowApi } from '../features/workflows/api.js';
+import { WorkflowProgress } from '../features/workflows/workflow-progress.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
@@ -61,6 +63,7 @@ export interface WorkbenchDependencies {
   readonly competitorsApi: CompetitorsApi;
   readonly strategyApi: StrategyApi;
   readonly titlesApi: TitlesApi;
+  readonly workflowApi: WorkflowApi;
   readonly contentBuildersApi: ContentBuildersApi;
   readonly factsApi: FactWorkspaceApi;
   readonly platformProfilesApi: PlatformProfilesApi;
@@ -184,7 +187,7 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
         />
         <Route
           path="products/:productId/plans"
-          element={<Unavailable title="运营方案" phase="Phase 10" />}
+          element={<PlansPage api={dependencies.workflowApi} />}
         />
         <Route
           path="products/:productId/history"
@@ -277,11 +280,15 @@ function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }):
             <Context label="AI Provider" value="尚未配置" />
           </dl>
           <div className="plan-action">
-            <button disabled title="Phase 10 完成后可用" type="button">
+            <Link
+              aria-disabled={!productId}
+              className={!productId ? 'disabled' : undefined}
+              to={productId ? `/products/${productId}/plans` : '/products'}
+            >
               <ChartLineUpIcon aria-hidden="true" size={18} />
               生成运营方案
-            </button>
-            <small>Phase 10 开放；财务能力从 Phase 3 开始</small>
+            </Link>
+            <small>{productId ? '预检输入后手动启动' : '请先选择商品'}</small>
           </div>
         </header>
         {productId ? (
@@ -468,6 +475,14 @@ function PromotionPage({
         promotionApi={promotionApi}
         skusApi={skusApi}
       />
+    </ProductFeature>
+  );
+}
+
+function PlansPage({ api }: { readonly api: WorkflowApi }): React.JSX.Element {
+  return (
+    <ProductFeature title="运营方案">
+      <WorkflowProgress api={api} productId={useProductId()} />
     </ProductFeature>
   );
 }
