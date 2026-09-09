@@ -325,7 +325,7 @@ git diff --check
 
 Expected: every gate passes and no real AI request is made.
 
-- [ ] **Step 6: Update records, commit, and push**
+- [x] **Step 6: Update records, commit, and push**
 
 Mark Task 24 complete and Task 25 in progress. Record exact test counts, restart/idempotency evidence, and decisions.
 

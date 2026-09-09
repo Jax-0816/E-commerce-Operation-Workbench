@@ -503,5 +503,5 @@
 
 ### Next action
 
-1. 提交 Task 24 最终发布门禁与记录更新，GitHub 连通后推送待同步提交。
+1. Task 24 全部阶段提交已推送至 `origin/codex/phase-0`，最新收口提交为 `b3ec7c8`。
 2. 进入 Task 25：只引用精确上游 revision/result/snapshot ID 的可追踪、可锁定运营方案。
