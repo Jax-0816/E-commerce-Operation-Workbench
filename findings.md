@@ -139,6 +139,8 @@
 | 恢复永不覆盖本机密钥与运行目录                  | 激活目标固定为 database、assets、rule-packs 和 workspace.json；`.secrets.json`、backups、exports、logs 留在目标机器             |
 | 数据管理应用层只依赖五个显式端口                | 创建、列表、读取、暂存和状态被映射为无路径 DTO；SecretStore 不进入依赖图，归档 TypeError 统一脱敏为验证错误                     |
 | pending restore 必须先于初始化、锁和数据库打开  | 只有关闭生产数据库后才能替换工作区；启动先探测 marker，再迁移/完整性验证并应用，随后才进入正常初始化与组合                      |
+| 数据管理 UI 的恢复必须二次显式确认              | 选择 ZIP 只进入待确认状态；用户勾选确认并再次点击后才上传，成功才清空文件输入，失败保留当前工作区                               |
+| 共享服务器且会重启的 E2E 套件固定单 worker      | `fullyParallel: false` 不会禁止测试文件并行；Phase 12 重启会打断其他文件，单 worker 保证跨阶段共享状态和服务生命周期确定性      |
 
 ## Issues Encountered
 

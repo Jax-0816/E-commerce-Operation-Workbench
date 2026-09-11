@@ -58,6 +58,8 @@ import type { WorkflowApi } from '../features/workflows/api.js';
 import { WorkflowProgress } from '../features/workflows/workflow-progress.js';
 import type { OperationPlansApi } from '../features/operation-plans/api.js';
 import { OperationPlanPanel } from '../features/operation-plans/operation-plan-panel.js';
+import type { DataManagementApi } from '../features/data-management/api.js';
+import { DataManagementPanel } from '../features/data-management/data-management-panel.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
@@ -75,6 +77,7 @@ export interface WorkbenchDependencies {
   readonly promotionApi: PromotionApi;
   readonly rulesApi: RulePacksApi;
   readonly skusApi: SkusApi;
+  readonly dataManagementApi: DataManagementApi;
 }
 
 const globalNavigation = [
@@ -217,6 +220,14 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           element={
             <ProductFeature title="AI 设置">
               <AISettingsPanel api={dependencies.aiSettingsApi} />
+            </ProductFeature>
+          }
+        />
+        <Route
+          path="capabilities/data"
+          element={
+            <ProductFeature title="数据管理">
+              <DataManagementPanel api={dependencies.dataManagementApi} />
             </ProductFeature>
           }
         />

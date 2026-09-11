@@ -7,6 +7,10 @@ import { createServerStartupOptions } from '../src/startup.js';
 
 const callLogPath = process.env.EAW_E2E_CALL_LOG;
 if (!callLogPath) throw new Error('EAW_E2E_CALL_LOG is required for the deterministic E2E server.');
+const restoreWorkspacePath = process.env.EAW_E2E_RESTORE_WORKSPACE_PATH;
+if (!restoreWorkspacePath) {
+  throw new Error('EAW_E2E_RESTORE_WORKSPACE_PATH is required for the deterministic E2E server.');
+}
 await writeFile(callLogPath, '', 'utf8');
 
 type E2eTask =
@@ -53,12 +57,45 @@ const options = createServerStartupOptions({
   port: process.env.PORT,
   workspacePath: process.env.EAW_WORKSPACE_PATH,
 });
-const app = await createProductionApp({ ...options, providerFactory });
+let currentWorkspacePath = options.workspacePath;
+let generation = 0;
+let app = await createE2eApp(currentWorkspacePath, generation);
 try {
   await app.listen({ host: options.host, port: options.port });
 } catch (error) {
   await app.close();
   throw error;
+}
+
+async function createE2eApp(workspacePath: string, appGeneration: number) {
+  const next = await createProductionApp({ ...options, workspacePath, providerFactory });
+  next.get('/api/e2e/state', async () => ({ generation: appGeneration }));
+  next.post('/api/e2e/restart', async (request, reply) => {
+    const body = request.body as { readonly workspace?: unknown } | undefined;
+    if (body?.workspace !== 'restore' && body?.workspace !== 'current') {
+      return reply.code(400).send({ error: 'invalid restart target' });
+    }
+    const target = body.workspace === 'restore' ? restoreWorkspacePath : currentWorkspacePath;
+    const nextGeneration = generation + 1;
+    reply.raw.once('finish', () => {
+      setTimeout(() => void restart(target, nextGeneration), 0);
+    });
+    return reply.code(202).send({ generation: nextGeneration });
+  });
+  return next;
+}
+
+async function restart(workspacePath: string, nextGeneration: number): Promise<void> {
+  try {
+    await app.close();
+    currentWorkspacePath = workspacePath;
+    generation = nextGeneration;
+    app = await createE2eApp(currentWorkspacePath, generation);
+    await app.listen({ host: options.host, port: options.port });
+  } catch (error) {
+    process.stderr.write(`E2E server restart failed: ${String(error)}\n`);
+    process.exitCode = 1;
+  }
 }
 
 function productIdFrom(request: ProviderRequest): string {

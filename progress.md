@@ -709,3 +709,28 @@
 
 1. 提交并推送 Task 26.4，确认本地与 GitHub 一致。
 2. 进入 Task 26.5：实现数据管理页面与 Phase 12 跨机器备份恢复验收。
+
+## Session: 2026-09-11 — Task 26 data-management UI and Phase 12 acceptance
+
+- **Status:** complete
+- RED：浏览器 API 与 React 面板聚焦测试先因模块不存在失败；Phase 12 首次真实业务运行在缺少 E2E 重启控制端点时返回 404。
+- GREEN：`/capabilities/data` 已替换占位页，展示备份时间、版本、大小和安全下载；页面明确说明不包含 API 密钥/本机路径/日志，并且挂载时只读取列表和状态。
+- 创建备份只由按钮触发；恢复只接受 ZIP，选择后还需勾选确认并再次点击。忙碌、成功和错误使用语义化公告，成功才清空文件输入，API 依赖切换后的迟到初始响应会被忽略。
+- 确定性 E2E 控制只暴露 generation，不暴露工作区路径；Phase 12 从源工作区创建 ZIP，确认归档字节不含源密钥和绝对路径，再切到中文/空格目标工作区验证损坏归档不改数据、有效归档在重启后事务生效。
+- 联合回归发现 Playwright 会并行运行测试文件，Phase 12 重启共享服务器会打断其他路径；固定 `workers: 1` 后 Phase 2/3/10/11/12 全部通过。冷启动门限增至 240 秒以覆盖 Windows 较慢构建。
+
+### Fresh verification evidence
+
+| Gate                                      | Result              |
+| ----------------------------------------- | ------------------- |
+| Web unit/component tests                  | 24 files, 59 passed |
+| Web typecheck/lint/build                  | passed              |
+| Server source lint + E2E script runtime   | passed              |
+| Phase 12 focused Playwright               | 1 passed            |
+| Phase 2/3/10/11/12 combined Playwright    | 5 passed            |
+| Paid/provider calls for backup operations | 0                   |
+
+### Next action
+
+1. 提交并推送 Task 26.5，确认本地与 GitHub 一致。
+2. 进入 Task 26.6：运行全仓发布门禁、更新主计划状态并将 Task 27 设为 in progress。

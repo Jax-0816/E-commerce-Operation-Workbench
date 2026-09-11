@@ -103,6 +103,16 @@ describe('routed workbench', () => {
     root.unmount();
   });
 
+  it('opens the implemented portable data management page', async () => {
+    const { container, root } = await render('/capabilities/data');
+
+    expect(container.querySelector('h1')?.textContent).toBe('数据管理');
+    expect(container.textContent).toContain('可移植工作区备份');
+    expect(container.textContent).toContain('备份不包含 API 密钥');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
+
   it('opens the implemented competitor import workspace', async () => {
     const { container, root } = await render(`/products/${product.id}/competitors`);
 
@@ -262,6 +272,12 @@ async function render(entry: string) {
             configure: async () => ({ dimensions: [], skus: [] }),
             get: async () => ({ dimensions: [], skus: [] }),
             update: async () => ({ dimensions: [], skus: [] }),
+          }}
+          dataManagementApi={{
+            listBackups: async () => [],
+            createBackup: async () => undefined as never,
+            stageRestore: async () => undefined as never,
+            restoreStatus: async () => ({ state: 'idle' }),
           }}
         />
       </MemoryRouter>,

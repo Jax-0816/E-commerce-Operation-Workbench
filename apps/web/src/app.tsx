@@ -27,6 +27,10 @@ import {
   createBrowserOperationPlansApi,
   type OperationPlansApi,
 } from './features/operation-plans/api.js';
+import {
+  createBrowserDataManagementApi,
+  type DataManagementApi,
+} from './features/data-management/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -43,6 +47,7 @@ const browserTitlesApi = createBrowserTitlesApi();
 const browserContentBuildersApi = createBrowserContentBuildersApi();
 const browserWorkflowApi = createBrowserWorkflowApi();
 const browserOperationPlansApi = createBrowserOperationPlansApi();
+const browserDataManagementApi = createBrowserDataManagementApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -60,6 +65,7 @@ export function App({
   contentBuildersApi = browserContentBuildersApi,
   workflowApi = browserWorkflowApi,
   operationPlansApi = browserOperationPlansApi,
+  dataManagementApi = browserDataManagementApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -76,6 +82,7 @@ export function App({
   readonly contentBuildersApi?: ContentBuildersApi;
   readonly workflowApi?: WorkflowApi;
   readonly operationPlansApi?: OperationPlansApi;
+  readonly dataManagementApi?: DataManagementApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -95,6 +102,7 @@ export function App({
         contentBuildersApi={contentBuildersApi}
         workflowApi={workflowApi}
         operationPlansApi={operationPlansApi}
+        dataManagementApi={dataManagementApi}
       />
     </BrowserRouter>
   );

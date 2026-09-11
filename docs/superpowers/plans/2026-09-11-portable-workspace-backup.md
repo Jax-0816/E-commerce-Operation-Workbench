@@ -194,19 +194,19 @@ Run all three packages' tests, typecheck, lint, build, Prettier and `git diff --
 - Consumes: Task 4 HTTP endpoints.
 - Produces: `DataManagementApi`, `createBrowserDataManagementApi()`, and an implemented `/capabilities/data` page.
 
-- [ ] **Step 1: Write failing React tests**
+- [x] **Step 1: Write failing React tests**
 
 Assert initial list/status, explicit create only, accessible busy/success/error announcements, download link filename, secret-exclusion copy, ZIP-only file selection, explicit restore confirmation, restart-required message, and stale-response isolation. No action occurs on mount.
 
-- [ ] **Step 2: Implement browser API and panel**
+- [x] **Step 2: Implement browser API and panel**
 
 POST backup with no body, download through a same-origin URL, upload the selected `File` as `application/zip`, and render semantic history/status. Disable duplicate mutations and reset the file input only after a successful stage.
 
-- [ ] **Step 3: Add deterministic Phase 12 acceptance**
+- [x] **Step 3: Add deterministic Phase 12 acceptance**
 
 Create a product/fact and configured fake secret, create/download a backup, mutate the source workspace, upload the archive into a separate Chinese/space workspace, restart the E2E server against that workspace, and verify the backed-up product is present while the source secret value and absolute path are absent from archive bytes. Corrupt restore must leave the target product intact.
 
-- [ ] **Step 4: Run web/E2E gates and commit/push**
+- [x] **Step 4: Run web/E2E gates and commit/push**
 
 Run Web tests/typecheck/lint/build, changed-file Prettier, Phase 2/3/10/11/12 Playwright, and `git diff --check`. Commit `feat: add portable data management workspace`, push, and verify `0 0`.
 

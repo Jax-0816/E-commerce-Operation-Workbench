@@ -1122,6 +1122,62 @@ tbody small {
   background: var(--warning-soft);
 }
 
+.data-management-panel,
+.data-management-grid,
+.backup-list,
+.restore-confirmation {
+  display: grid;
+  gap: 16px;
+}
+
+.data-management-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.backup-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.backup-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.backup-list li div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.backup-list strong {
+  overflow-wrap: anywhere;
+}
+
+.backup-list span,
+.empty-state {
+  color: var(--ink-650);
+}
+
+.restore-confirmation {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #f4f1eb;
+}
+
+.restore-confirmation label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
 .feature-page > h1 {
   margin-bottom: 20px;
 }
@@ -1617,6 +1673,15 @@ tbody small {
 }
 
 @media (max-width: 620px) {
+  .data-management-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .rule-toolbar,
   .rule-import-panel,
   .rule-diff-controls {
