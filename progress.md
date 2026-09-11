@@ -683,3 +683,29 @@
 
 1. 提交并推送 Task 26.3，确认本地与 GitHub 一致。
 2. 进入 Task 26.4：建立数据管理应用用例、严格 HTTP 合同、Fastify 路由，并在生产启动早期应用 pending restore。
+
+## Session: 2026-09-11 — Task 26 data-management API and startup composition
+
+- **Status:** complete
+- RED：应用/合同聚焦测试先因模块不存在失败；Fastify 与真实重启测试先因五个数据管理端点未注册返回 404。
+- GREEN：实现五端口 `DataManagementApplication`，备份公开记录只含 ID、时间、版本、大小和同源下载 URL；下载只返回复制后的字节与安全文件名，恢复上传为空、超限或损坏时均返回脱敏验证错误。
+- 严格合同拒绝未知字段、非法 ID/时间/版本/大小/下载 URL 及不可能的恢复状态组合；`pending` 必须携带 `restartRequired: true`。
+- Fastify 提供创建、列表、ZIP 下载、ZIP 暂存和状态五个端点；能力未组合返回 503，非法参数/媒体体返回 400，损坏归档响应不包含内部路径。
+- 生产组合在 `initializeWorkspace`、workspace lock 和生产数据库打开之前应用 pending restore；候选数据库在打开后执行当前迁移与 `integrity_check` 并关闭。
+- 真实中文/空格工作区集成测试证明：备份后新增商品不会出现在恢复后的数据库，备份内商品保留，恢复状态为 `applied`。
+
+### Fresh verification evidence
+
+| Gate                                  | Result                     |
+| ------------------------------------- | -------------------------- |
+| Application unit/integration tests    | 20 files, 49 passed        |
+| Contracts tests                       | 11 files, 40 passed        |
+| Server route/runtime tests            | 20 files, 54 passed        |
+| Three-package typecheck/lint/build    | passed                     |
+| Changed-file Prettier / diff check    | passed                     |
+| Windows-sensitive path/symlink review | no new platform dependency |
+
+### Next action
+
+1. 提交并推送 Task 26.4，确认本地与 GitHub 一致。
+2. 进入 Task 26.5：实现数据管理页面与 Phase 12 跨机器备份恢复验收。

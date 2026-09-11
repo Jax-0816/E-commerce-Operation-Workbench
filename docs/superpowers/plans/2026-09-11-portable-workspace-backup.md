@@ -155,23 +155,23 @@ Run focused/full workspace tests, typecheck, lint, build, Prettier and `git diff
 - Consumes: workspace backup/list/read/stage/apply/status functions, live `OpenDatabase.sqlite`, `migrateDatabase`, `checkIntegrity`, `APP_VERSION`, migrations directory, and workspace path.
 - Produces: `DataManagementApplication` methods `createBackup`, `listBackups`, `readBackup`, `stageRestore`, `restoreStatus`; the five `/api/v1/data-management` endpoints from the design.
 
-- [ ] **Step 1: Write failing application and contract tests**
+- [x] **Step 1: Write failing application and contract tests**
 
 Assert use cases call only explicit ports, reject oversized/empty uploads, never expose paths, and return exact backup/status DTOs. Contracts must reject unknown fields, invalid IDs/timestamps/hash/size/version/status combinations and `pending` without `restartRequired: true`.
 
-- [ ] **Step 2: Implement minimal use cases and strict schemas**
+- [x] **Step 2: Implement minimal use cases and strict schemas**
 
 Keep binary bytes at the port boundary; expose only backup ID, created time, version, size, download URL, state and sanitized message. No secret store is a dependency of this feature.
 
-- [ ] **Step 3: Write failing Fastify and restart tests**
+- [x] **Step 3: Write failing Fastify and restart tests**
 
 Assert 404/503 before registration/composition, 201 create, 200 list/download/status, 202 ZIP stage, strict content type/body limit, sanitized corrupt-archive response, and a two-process-equivalent restart where pending restore applies before the production database opens.
 
-- [ ] **Step 4: Implement routes and production startup ordering**
+- [x] **Step 4: Implement routes and production startup ordering**
 
 Register an `application/zip` parser with a bounded byte limit. Compose data management with the live database for backup and with a staged-database validator that opens, migrates, checks integrity, and closes. Call pending-restore apply before `initializeWorkspace`, workspace lock acquisition, and production database open; failure records status and continues with the preserved old workspace.
 
-- [ ] **Step 5: Run application/contracts/server gates and commit/push**
+- [x] **Step 5: Run application/contracts/server gates and commit/push**
 
 Run all three packages' tests, typecheck, lint, build, Prettier and `git diff --check`. Commit `feat: expose portable workspace data management`, push, and verify `0 0`.
 

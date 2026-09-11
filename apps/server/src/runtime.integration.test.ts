@@ -928,6 +928,63 @@ describe('production app composition', () => {
     ).toHaveLength(1);
     await restarted.close();
   });
+
+  it('applies a pending portable restore before opening the production database', async () => {
+    const workspacePath = await realpath(
+      await mkdtemp(join(tmpdir(), 'eaw server restore 中文 空格-')),
+    );
+    directories.push(workspacePath);
+    const first = await createProductionApp({ migrationsDirectory, workspacePath });
+    const retainedId = (
+      await first.inject({
+        method: 'POST',
+        url: '/api/v1/products',
+        payload: { name: '备份内商品' },
+      })
+    ).json().id as string;
+    const created = await first.inject({
+      method: 'POST',
+      url: '/api/v1/data-management/backups',
+    });
+    expect(created.statusCode, created.body).toBe(201);
+    const backupId = created.json().backupId as string;
+    const downloaded = await first.inject({
+      method: 'GET',
+      url: `/api/v1/data-management/backups/${backupId}/download`,
+    });
+    expect(downloaded.statusCode).toBe(200);
+    const discardedId = (
+      await first.inject({
+        method: 'POST',
+        url: '/api/v1/products',
+        payload: { name: '备份后商品' },
+      })
+    ).json().id as string;
+    const staged = await first.inject({
+      method: 'POST',
+      url: '/api/v1/data-management/restores',
+      headers: { 'content-type': 'application/zip' },
+      payload: downloaded.rawPayload,
+    });
+    expect(staged.statusCode, staged.body).toBe(202);
+    expect(staged.json()).toMatchObject({ backupId, state: 'pending', restartRequired: true });
+    await first.close();
+
+    const restarted = await createProductionApp({ migrationsDirectory, workspacePath });
+    const products = (await restarted.inject({ method: 'GET', url: '/api/v1/products' })).json()
+      .items as Array<{ id: string }>;
+    expect(products.map(({ id }) => id)).toContain(retainedId);
+    expect(products.map(({ id }) => id)).not.toContain(discardedId);
+    expect(
+      (
+        await restarted.inject({
+          method: 'GET',
+          url: '/api/v1/data-management/restore-status',
+        })
+      ).json(),
+    ).toMatchObject({ backupId, state: 'applied' });
+    await restarted.close();
+  });
 });
 
 async function waitForWorkflowStatus(

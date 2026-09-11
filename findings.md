@@ -137,6 +137,8 @@
 | 备份只从显式允许根收集常规文件                  | 只收集 workspace metadata、SQLite 快照、assets 和 rule-packs；每个文件在读取前后校验 identity/size/time，符号链接或变动立即失败 |
 | 恢复分为显式暂存与下次启动应用                  | 上传时先校验归档并在数据库副本上预检；启动时再次校验后同父目录 rename，任一目标失败即按逆序恢复旧工作区                         |
 | 恢复永不覆盖本机密钥与运行目录                  | 激活目标固定为 database、assets、rule-packs 和 workspace.json；`.secrets.json`、backups、exports、logs 留在目标机器             |
+| 数据管理应用层只依赖五个显式端口                | 创建、列表、读取、暂存和状态被映射为无路径 DTO；SecretStore 不进入依赖图，归档 TypeError 统一脱敏为验证错误                     |
+| pending restore 必须先于初始化、锁和数据库打开  | 只有关闭生产数据库后才能替换工作区；启动先探测 marker，再迁移/完整性验证并应用，随后才进入正常初始化与组合                      |
 
 ## Issues Encountered
 

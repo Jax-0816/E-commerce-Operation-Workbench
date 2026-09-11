@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify';
+import { access } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import {
   createFactsApplication,
@@ -21,6 +23,7 @@ import {
   createOperationPlansApplication,
   createRepositoryOperationPlanSourceResolver,
   createWorkflowsApplication,
+  createDataManagementApplication,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
@@ -44,6 +47,7 @@ import {
   migrateDatabase,
   openDatabase,
   recoverInterruptedWorkflows,
+  checkIntegrity,
   type OpenDatabase,
 } from '@eaw/database';
 import { createUuidV7 } from '@eaw/domain';
@@ -55,6 +59,12 @@ import {
   resolveWorkspacePath,
   type WorkspaceLock,
   FileSecretStore,
+  applyPendingWorkspaceRestore,
+  createWorkspaceBackup,
+  listWorkspaceBackups,
+  readWorkspaceBackup,
+  readWorkspaceRestoreStatus,
+  stageWorkspaceRestore,
 } from '@eaw/workspace';
 
 import { buildApp } from './app.js';
@@ -74,6 +84,7 @@ export async function createProductionApp({
   workspacePath,
   providerFactory: providerFactoryOverride,
 }: CreateProductionAppOptions): Promise<FastifyInstance> {
+  await applyPendingRestoreBeforeStartup(workspacePath, migrationsDirectory);
   const workspace = await initializeWorkspace(workspacePath);
   let lock: WorkspaceLock | undefined;
   let database: OpenDatabase | undefined;
@@ -256,6 +267,33 @@ export async function createProductionApp({
         rules,
       }),
     });
+    const dataManagement = createDataManagementApplication({
+      createBackup: () =>
+        createWorkspaceBackup({
+          appVersion: APP_VERSION,
+          database: database!.sqlite,
+          workspacePath: workspace.path,
+        }),
+      listBackups: () =>
+        listWorkspaceBackups({
+          currentAppVersion: APP_VERSION,
+          workspacePath: workspace.path,
+        }),
+      readBackup: (backupId) =>
+        readWorkspaceBackup({
+          backupId,
+          currentAppVersion: APP_VERSION,
+          workspacePath: workspace.path,
+        }),
+      stageRestore: (archive) =>
+        stageWorkspaceRestore({
+          archive,
+          currentAppVersion: APP_VERSION,
+          validateDatabase: (path) => validateRestoreDatabase(path, migrationsDirectory),
+          workspacePath: workspace.path,
+        }),
+      restoreStatus: () => readWorkspaceRestoreStatus(workspace.path),
+    });
     const app = buildApp(
       createAppContext({
         aiSettings,
@@ -274,6 +312,7 @@ export async function createProductionApp({
         webDistDir,
         workflows,
         operationPlans,
+        dataManagement,
       }),
     );
     app.addHook('onClose', cleanup);
@@ -282,4 +321,40 @@ export async function createProductionApp({
     await cleanup();
     throw error;
   }
+}
+
+async function applyPendingRestoreBeforeStartup(
+  workspacePath: string,
+  migrationsDirectory: string,
+): Promise<void> {
+  try {
+    await access(join(workspacePath, 'backups', '.pending-restore.json'));
+  } catch (error) {
+    if (isMissing(error)) return;
+    throw error;
+  }
+  await applyPendingWorkspaceRestore({
+    currentAppVersion: APP_VERSION,
+    validateDatabase: (path) => validateRestoreDatabase(path, migrationsDirectory),
+    workspacePath,
+  });
+}
+
+async function validateRestoreDatabase(
+  databasePath: string,
+  migrationsDirectory: string,
+): Promise<void> {
+  const candidate = openDatabase(databasePath);
+  try {
+    await migrateDatabase(candidate, migrationsDirectory);
+    if (!(await checkIntegrity(candidate)).ok) {
+      throw new TypeError('Restored workspace database failed integrity validation.');
+    }
+  } finally {
+    candidate.close();
+  }
+}
+
+function isMissing(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT';
 }

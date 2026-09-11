@@ -99,6 +99,13 @@ export type {
   OperationPlanResponse,
 } from './operation-plans.js';
 export {
+  BackupListResponseSchema,
+  BackupParamsSchema,
+  BackupResponseSchema,
+  RestoreStatusResponseSchema,
+} from './data-management.js';
+export type { BackupResponse, RestoreStatusResponse } from './data-management.js';
+export {
   ContentItemParamsSchema,
   ContentParamsSchema,
   ContentQuerySchema,

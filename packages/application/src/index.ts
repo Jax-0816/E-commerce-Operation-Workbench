@@ -97,3 +97,14 @@ export type {
   OperationPlanSourceResolver,
   ResolvedOperationPlanSources,
 } from './operation-plans/index.js';
+export {
+  createDataManagementApplication,
+  MAX_RESTORE_UPLOAD_BYTES,
+} from './data-management/index.js';
+export type {
+  BackupDownload,
+  BackupView,
+  DataManagementApplication,
+  DataManagementApplicationDependencies,
+  RestoreStatusView,
+} from './data-management/index.js';
