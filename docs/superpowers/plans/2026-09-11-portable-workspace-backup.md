@@ -74,25 +74,25 @@ Run workspace focused/full tests, typecheck, lint, build, Prettier and `git diff
 - Consumes: an open `DatabaseSync`, initialized `workspacePath`, `appVersion`, injected `now/idFactory`, and the Task 1 archive codec.
 - Produces: `createWorkspaceBackup(input): Promise<WorkspaceBackupRecord>`, `listWorkspaceBackups(input)`, and `readWorkspaceBackup(input)`.
 
-- [ ] **Step 1: Write failing integration tests**
+- [x] **Step 1: Write failing integration tests**
 
 Create a workspace under a Chinese/space path, keep WAL writes active, add asset/rule-pack files and `.secrets.json`, then assert the backup database passes `PRAGMA integrity_check`, contains the committed rows, includes allowed files, contains no secret value/name or absolute source path, and can be listed/read after restart. Add symlink and non-regular-file rejection plus deterministic cleanup after injected failure.
 
-- [ ] **Step 2: Run focused tests and confirm RED**
+- [x] **Step 2: Run focused tests and confirm RED**
 
 Run: `pnpm --filter @eaw/workspace exec vitest run src/backup.integration.test.ts`
 
 Expected: FAIL because `createWorkspaceBackup` is missing.
 
-- [ ] **Step 3: Implement the online snapshot and safe collector**
+- [x] **Step 3: Implement the online snapshot and safe collector**
 
 Use `node:sqlite.backup()` into an exclusive temporary directory under `backups/`. Collect only `workspace.json`, the snapshot as `database/workbench.sqlite`, regular files below `assets/` and `rule-packs/`; reject symlinks at every level and sort paths before hashing.
 
-- [ ] **Step 4: Publish and discover immutable backup files**
+- [x] **Step 4: Publish and discover immutable backup files**
 
 Write the archive to an exclusive temporary file, sync, rename to `<backupId>.eaw-backup.zip`, and clean the temporary directory in `finally`. Listing must parse/validate candidate archives and never return physical paths; reading requires a canonical backup ID and resolves only inside `backups/`.
 
-- [ ] **Step 5: Run package gates and commit/push**
+- [x] **Step 5: Run package gates and commit/push**
 
 Run focused/full workspace tests, typecheck, lint, build, Prettier and `git diff --check`. Commit `feat: create consistent workspace backups`, push, and verify `0 0`.
 

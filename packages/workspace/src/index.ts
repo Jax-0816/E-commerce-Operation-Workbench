@@ -15,3 +15,10 @@ export { createBackupArchive, readBackupArchive } from './archive-security.js';
 export type { BackupArchive } from './archive-security.js';
 export { isBackupPayloadPath, parseBackupManifest } from './manifest.js';
 export type { BackupFileEntry, BackupManifest } from './manifest.js';
+export { createWorkspaceBackup, listWorkspaceBackups, readWorkspaceBackup } from './backup.js';
+export type {
+  CreateWorkspaceBackupInput,
+  ReadWorkspaceBackupInput,
+  StoredWorkspaceBackup,
+  WorkspaceBackupRecord,
+} from './backup.js';

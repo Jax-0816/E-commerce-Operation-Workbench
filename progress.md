@@ -654,3 +654,17 @@
 
 1. 提交并推送 Task 26.1，确认本地与 GitHub 一致。
 2. 进入 Task 26.2：在活跃 WAL 上创建 SQLite 一致、密钥免疫的可移植备份。
+
+## Session: 2026-09-11 — Task 26 consistent portable backup creation
+
+- **Status:** complete
+- RED：真实 SQLite/WAL 集成测试因 `createWorkspaceBackup` 不存在失败。
+- GREEN：使用 Node.js `sqlite.backup()` 生成单文件一致快照，仅收集 `workspace.json`、快照数据库、`assets/**` 和 `rule-packs/**`，以不可覆盖的硬链接发布不可变备份。
+- 每个输入文件都校验常规文件类型、device/inode、大小和读取前后时间；符号链接或中途变动会失败，临时快照在 `finally` 清理。
+- 集成测试证明 WAL 备份数据库 `PRAGMA integrity_check = ok` 且包含已提交商品；ZIP 不含 `.secrets.json`、密钥值、源工作区绝对路径、WAL 或 SHM。
+- 备份在重新读取后仍可列表/下载，无效候选不会被宣称为可用备份。Workspace 5 个测试文件、73 项测试通过，typecheck、lint、build、Prettier 和 `git diff --check` 通过。
+
+### Next action
+
+1. 提交并推送 Task 26.2，确认本地与 GitHub 一致。
+2. 进入 Task 26.3：解压到暂存目录、迁移/完整性预检，并在下次启动执行失败可逆的事务替换。
