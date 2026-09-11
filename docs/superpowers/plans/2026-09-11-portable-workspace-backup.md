@@ -37,25 +37,25 @@
 - Consumes: `normalizeWorkspaceRelativePath(storedPath: string): string`.
 - Produces: `BackupManifest`, `BackupFileEntry`, `parseBackupManifest(value, currentAppVersion)`, `createBackupArchive(manifest, files)`, and `readBackupArchive(bytes, currentAppVersion)`.
 
-- [ ] **Step 1: Write the failing archive security tests**
+- [x] **Step 1: Write the failing archive security tests**
 
 Test one valid store-only ZIP round trip and rejection of `../`, `/absolute`, `C:\absolute`, duplicate names, case-only conflicts, backslash names, encrypted entries, bad CRC, unlisted entries, checksum/size mismatch, unsupported/newer versions, entry-count limits, per-entry limits, and inflated-total limits. Assert the valid manifest uses only sorted `/`-separated relative paths and cannot include `manifest.json` as a payload.
 
-- [ ] **Step 2: Run the focused test and confirm RED**
+- [x] **Step 2: Run the focused test and confirm RED**
 
 Run: `pnpm --filter @eaw/workspace exec vitest run src/archive-security.test.ts`
 
 Expected: FAIL because `archive-security.ts` and `manifest.ts` do not exist.
 
-- [ ] **Step 3: Implement strict manifest parsing**
+- [x] **Step 3: Implement strict manifest parsing**
 
 Use exact-key record checks, ISO timestamp round-trip checks, canonical UUID checks, safe integer byte lengths, lowercase 64-character SHA-256, sorted unique paths, `format === 'eaw-workspace-backup'`, `formatVersion === 1`, `workspaceVersion === 1`, and `backup.appVersion <= currentAppVersion`.
 
-- [ ] **Step 4: Implement the bounded ZIP writer/reader**
+- [x] **Step 4: Implement the bounded ZIP writer/reader**
 
 Write store-only local/central/end records with CRC32. Read central-directory metadata before extraction; reject flags/methods/sizes/names that violate the spec. Decode UTF-8 fatally, compare local and central names, validate CRC32, SHA-256 and size, and return a deeply immutable `{ manifest, files: ReadonlyMap<string, Uint8Array> }`.
 
-- [ ] **Step 5: Run package gates and commit/push**
+- [x] **Step 5: Run package gates and commit/push**
 
 Run workspace focused/full tests, typecheck, lint, build, Prettier and `git diff --check`. Commit `feat: add secure workspace backup archive` and push only after all pass.
 

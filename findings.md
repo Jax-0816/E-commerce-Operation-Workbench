@@ -131,6 +131,8 @@
 | 运营方案 UI 从已有历史显式选择精确来源          | 不自动采用 latest 或自动创建/锁定；用户能在提交前核对工作流、定价和促销记录 ID，迟到请求也不能串商品                       |
 | 新工作流只复用精确依赖哈希匹配的输出            | 当前资产保存 workflow dependency hash；内容节点优先复用当前精确修订，策略节点才可从最近完成 run 精确继承，避免覆盖锁定资产 |
 | E2E provider 日志按商品隔离                     | Playwright 并发执行时全局行数会串扰；每条 JSONL 记录 productId，断言只计算当前黄金路径的 provider 调用                     |
+| 备份归档使用内建的严格 store-only ZIP           | 不依赖外部命令或平台 ZIP 工具；读取仍安全支持 deflate，并在解压前校验中央目录、路径、标志和资源上限                        |
+| manifest 同时绑定 ZIP CRC32 与 SHA-256          | CRC32 用于 ZIP 结构完整性，manifest 中的小写 SHA-256 和字节数用于业务级精确内容校验；两者都通过才返回文件                  |
 
 ## Issues Encountered
 

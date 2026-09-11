@@ -640,3 +640,17 @@
 
 1. 提交并推送 Task 25 Phase 11 收口，确认 `HEAD...origin/codex/phase-0` 为 `0 0`。
 2. 进入 Wave 6 / Task 26：WAL 活跃时一致备份、归档安全和失败不破坏旧工作区的事务恢复。
+
+## Session: 2026-09-11 — Task 26 strict manifest and ZIP codec
+
+- **Status:** complete
+- 已写入 Task 26 设计与六段实施计划，固定在线 SQLite 快照、密钥/绝对路径排除、暂存恢复和失败逆序回滚边界。
+- RED：归档安全聚焦测试因 `archive-security.ts` 不存在失败。
+- GREEN：实现严格 manifest 和无外部依赖的 ZIP writer/reader；恢复前检查绝对/穿越/反斜杠路径、重复/大小写冲突、加密标志、未支持压缩、符号链接属性、资源上限、CRC32、SHA-256 和字节数。
+- Workspace 4 个测试文件、70 项测试全部通过；typecheck、lint、build、Prettier 和 `git diff --check` 通过。
+- Windows 敏感边界已由测试覆盖 drive/UNC 绝对路径、反斜杠、大小写冲突和中文/空格文件名；实现不调用 shell 或外部 ZIP 程序。
+
+### Next action
+
+1. 提交并推送 Task 26.1，确认本地与 GitHub 一致。
+2. 进入 Task 26.2：在活跃 WAL 上创建 SQLite 一致、密钥免疫的可移植备份。

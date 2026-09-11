@@ -11,3 +11,7 @@ export {
 export type { WorkspaceEnvironment, WorkspacePlatform } from './paths.js';
 export { createSecretConfigurationStatus, FileSecretStore } from './secrets.js';
 export type { SecretConfigurationStatus, SecretStore } from './secrets.js';
+export { createBackupArchive, readBackupArchive } from './archive-security.js';
+export type { BackupArchive } from './archive-security.js';
+export { isBackupPayloadPath, parseBackupManifest } from './manifest.js';
+export type { BackupFileEntry, BackupManifest } from './manifest.js';
