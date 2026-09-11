@@ -22,3 +22,14 @@ export type {
   StoredWorkspaceBackup,
   WorkspaceBackupRecord,
 } from './backup.js';
+export {
+  applyPendingWorkspaceRestore,
+  readWorkspaceRestoreStatus,
+  stageWorkspaceRestore,
+} from './restore.js';
+export type {
+  ApplyPendingWorkspaceRestoreInput,
+  PendingRestore,
+  RestoreStatus,
+  StageWorkspaceRestoreInput,
+} from './restore.js';

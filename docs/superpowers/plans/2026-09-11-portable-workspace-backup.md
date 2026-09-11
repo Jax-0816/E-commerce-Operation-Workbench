@@ -111,25 +111,25 @@ Run focused/full workspace tests, typecheck, lint, build, Prettier and `git diff
 - Consumes: Task 1 archive validator, initialized workspace path, current app version, and `validateDatabase(databasePath): Promise<void>` supplied by the production composition.
 - Produces: `stageWorkspaceRestore(input): Promise<PendingRestore>`, `applyPendingWorkspaceRestore(input): Promise<RestoreStatus>`, and `readWorkspaceRestoreStatus(workspacePath)`.
 
-- [ ] **Step 1: Write failing restore tests**
+- [x] **Step 1: Write failing restore tests**
 
 Cover a successful backup from one Chinese/space workspace restored into another, current local secret preservation, newer-version/corrupt/checksum/traversal/case-conflict rejection, database migration/integrity failure before marker creation, failure during each rename with reverse rollback, stale temporary cleanup, and idempotent restart after an applied restore.
 
-- [ ] **Step 2: Run focused tests and confirm RED**
+- [x] **Step 2: Run focused tests and confirm RED**
 
 Run: `pnpm --filter @eaw/workspace exec vitest run src/restore.integration.test.ts`
 
 Expected: FAIL because restore APIs do not exist.
 
-- [ ] **Step 3: Implement validation and staging**
+- [x] **Step 3: Implement validation and staging**
 
 Read the archive through Task 1, extract each declared payload using exclusive file creation below a real staging directory, sync files, invoke `validateDatabase` against the staged SQLite, then atomically write a pending marker that contains only backup ID, stage directory name, created time and manifest hash.
 
-- [ ] **Step 4: Implement rollback-safe apply**
+- [x] **Step 4: Implement rollback-safe apply**
 
 Before workspace initialization/database open, revalidate the stage and database. Move existing `database`, `assets`, `rule-packs`, and `workspace.json` to a same-parent rollback directory, move staged replacements into place, and on any error reverse every completed rename. Never replace `.secrets.json`, `backups`, `exports`, `logs`, or locks. Persist a sanitized applied/failed status and make a repeated startup a no-op.
 
-- [ ] **Step 5: Run package gates and commit/push**
+- [x] **Step 5: Run package gates and commit/push**
 
 Run focused/full workspace tests, typecheck, lint, build, Prettier and `git diff --check`. Commit `feat: add transactional workspace restore`, push, and verify `0 0`.
 

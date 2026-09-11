@@ -668,3 +668,18 @@
 
 1. 提交并推送 Task 26.2，确认本地与 GitHub 一致。
 2. 进入 Task 26.3：解压到暂存目录、迁移/完整性预检，并在下次启动执行失败可逆的事务替换。
+
+## Session: 2026-09-11 — Task 26 staged transactional restore
+
+- **Status:** complete
+- RED：跨机器恢复集成测试因恢复 API 不存在失败；测试目标路径同时覆盖中文和空格。
+- GREEN：归档先解压到 `backups` 下的真实暂存目录，只在归档、manifest、文件哈希和数据库副本验证全部通过后发布 pending marker。
+- 下次启动再次验证暂存内容及数据库，然后只激活 `database`、`assets`、`rule-packs`、`workspace.json`；目标工作区 `.secrets.json` 和运行目录不被替换。
+- 四个激活阶段分别注入失败，已完成的 rename 均按逆序回滚；旧数据库、资产、规则、workspace metadata 和本机密钥全部保持可用，错误状态不泄露内部异常。
+- 重复启动在已应用后为无操作；高版本、损坏归档及数据库预检失败都不会创建 pending marker。
+- Workspace 6 个测试文件、80 项测试通过，typecheck、lint、build、Prettier 和 `git diff --check` 通过。
+
+### Next action
+
+1. 提交并推送 Task 26.3，确认本地与 GitHub 一致。
+2. 进入 Task 26.4：建立数据管理应用用例、严格 HTTP 合同、Fastify 路由，并在生产启动早期应用 pending restore。

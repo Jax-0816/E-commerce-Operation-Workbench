@@ -135,6 +135,8 @@
 | manifest 同时绑定 ZIP CRC32 与 SHA-256          | CRC32 用于 ZIP 结构完整性，manifest 中的小写 SHA-256 和字节数用于业务级精确内容校验；两者都通过才返回文件                       |
 | WAL 备份使用 Node.js SQLite online backup       | 不直接复制正在写入的 `.sqlite`/`-wal`/`-shm`；`node:sqlite.backup()` 生成可独立打开且通过 integrity check 的单文件快照          |
 | 备份只从显式允许根收集常规文件                  | 只收集 workspace metadata、SQLite 快照、assets 和 rule-packs；每个文件在读取前后校验 identity/size/time，符号链接或变动立即失败 |
+| 恢复分为显式暂存与下次启动应用                  | 上传时先校验归档并在数据库副本上预检；启动时再次校验后同父目录 rename，任一目标失败即按逆序恢复旧工作区                         |
+| 恢复永不覆盖本机密钥与运行目录                  | 激活目标固定为 database、assets、rule-packs 和 workspace.json；`.secrets.json`、backups、exports、logs 留在目标机器             |
 
 ## Issues Encountered
 
