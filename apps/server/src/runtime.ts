@@ -209,16 +209,20 @@ export async function createProductionApp({
       }),
       strategies: strategy,
       titles: {
-        async generate(productId, platformId) {
-          return (await titles.generate(productId, platformId)).revision;
+        async generate(productId, platformId, workflowDependencyHash) {
+          return (await titles.generate(productId, platformId, workflowDependencyHash)).revision;
         },
       },
       content: {
-        async generateCreative(productId, platformId) {
-          return (await contentBuilders.generateCreative(productId, platformId)).revision;
+        async generateCreative(productId, platformId, workflowDependencyHash) {
+          return (
+            await contentBuilders.generateCreative(productId, platformId, workflowDependencyHash)
+          ).revision;
         },
-        async generateDetail(productId, platformId) {
-          return (await contentBuilders.generateDetail(productId, platformId)).revision;
+        async generateDetail(productId, platformId, workflowDependencyHash) {
+          return (
+            await contentBuilders.generateDetail(productId, platformId, workflowDependencyHash)
+          ).revision;
         },
       },
     });

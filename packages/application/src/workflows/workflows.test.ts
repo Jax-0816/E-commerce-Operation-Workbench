@@ -118,6 +118,77 @@ describe('workflows application preflight', () => {
     await expect(scheduled?.()).resolves.toBeUndefined();
   });
 
+  it('seeds matching strategy outputs and prefers current reusable content in a new run', async () => {
+    const product = createProduct({ id: createUuidV7(), name: '复用商品', now: new Date() });
+    const createdAt = new Date('2026-09-08T05:00:00.000Z');
+    const previous = {
+      ...workflowRun(product.id, new Date('2026-09-08T04:00:00.000Z')),
+      status: 'completed' as const,
+      nodes: contentWorkflowDefinition.nodes.map(({ key, taskType }, index) => ({
+        key,
+        taskType,
+        status: 'completed' as const,
+        dependencyHash: (index + 1).toString(16).repeat(64),
+        output: { assetType: taskType, assetId: createUuidV7(), revisionNo: 1 },
+        error: null,
+      })),
+    };
+    const lockedTitle = { assetType: 'title_asset', assetId: createUuidV7(), revisionNo: 2 };
+    let createInput: unknown;
+    const handlers = Object.fromEntries(
+      contentWorkflowDefinition.nodes.map((node, index) => [
+        node.taskType,
+        {
+          async inspect() {
+            return {
+              dependencyHash: (index + 1).toString(16).repeat(64),
+              ...(node.key === 'titles' ? { reusableOutput: lockedTitle } : {}),
+            };
+          },
+        } satisfies WorkflowPreflightInspector,
+      ]),
+    );
+    const repository = workflowRepository({
+      create: async (input) => {
+        createInput = input;
+        return { ...workflowRun(product.id, createdAt), ...input };
+      },
+      listByProduct: async () => [previous],
+    });
+    const application = createWorkflowsApplication({
+      products: productRepository(product),
+      competitors: emptyCompetitorRepository(),
+      handlers,
+      repository,
+      runner: workflowRunner({ run: async () => previous }),
+      now: () => createdAt,
+      schedule: () => undefined,
+    });
+
+    await application.start(product.id, 'pinduoduo');
+
+    expect(createInput).toMatchObject({
+      reusableNodes: [
+        {
+          key: 'competitor_analysis',
+          dependencyHash: '1'.repeat(64),
+          output: previous.nodes[0]!.output,
+        },
+        {
+          key: 'market_insight',
+          dependencyHash: '2'.repeat(64),
+          output: previous.nodes[1]!.output,
+        },
+        {
+          key: 'selling_points',
+          dependencyHash: '3'.repeat(64),
+          output: previous.nodes[2]!.output,
+        },
+        { key: 'titles', dependencyHash: '4'.repeat(64), output: lockedTitle },
+      ],
+    });
+  });
+
   it('rejects a run whose owning product is absent', async () => {
     const product = createProduct({ id: createUuidV7(), name: '当前商品', now: new Date() });
     const foreignRun = workflowRun(createUuidV7(), new Date());

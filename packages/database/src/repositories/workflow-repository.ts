@@ -29,6 +29,7 @@ export class SqliteWorkflowRepository {
   async create(input: CreateWorkflowRunInput): Promise<WorkflowRun> {
     const definition = createWorkflowDefinition(input.definition);
     if (!Number.isSafeInteger(input.createdAt.getTime())) throw new TypeError('Invalid date.');
+    const reusableNodes = reusableByKey(input, definition.nodes);
     this.database.sqlite.exec('BEGIN IMMEDIATE;');
     try {
       this.database.sqlite
@@ -50,14 +51,15 @@ export class SqliteWorkflowRepository {
         'INSERT INTO workflow_nodes (workflow_run_id,node_key,task_type,node_order,status,dependency_hash,output_json,error_json) VALUES (?,?,?,?,?,?,?,?)',
       );
       for (const node of definition.nodes) {
+        const reusable = reusableNodes.get(node.key);
         insertNode.run(
           input.id,
           node.key,
           node.taskType,
           node.order,
-          'not_started',
-          null,
-          null,
+          reusable?.status ?? 'not_started',
+          reusable?.dependencyHash ?? null,
+          reusable ? JSON.stringify(reusable.output) : null,
           null,
         );
       }
@@ -370,6 +372,27 @@ export class SqliteWorkflowRepository {
       .get(id) as Row;
     return positive(row.event_sequence);
   }
+}
+
+function reusableByKey(
+  input: CreateWorkflowRunInput,
+  definitions: readonly WorkflowNodeDefinition[],
+): ReadonlyMap<string, NonNullable<CreateWorkflowRunInput['reusableNodes']>[number]> {
+  const values = input.reusableNodes ?? [];
+  const result = new Map(values.map((value) => [value.key, value]));
+  if (
+    result.size !== values.length ||
+    values.some(
+      (value) =>
+        !definitions.some(({ key }) => key === value.key) ||
+        !['completed', 'locked', 'needs_review'].includes(value.status) ||
+        !/^[0-9a-f]{64}$/u.test(value.dependencyHash),
+    )
+  ) {
+    throw new TypeError('Reusable workflow nodes are invalid.');
+  }
+  for (const value of values) workflowOutput(value.output);
+  return result;
 }
 
 function toNode(row: Row, definition: WorkflowNodeDefinition): WorkflowNode {

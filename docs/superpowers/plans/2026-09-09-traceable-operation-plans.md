@@ -271,11 +271,11 @@ Expected: FAIL because the feature does not exist.
 
 Keep workflow progress above the plan panel. Use semantic lists/details for source trace, links to owning workspaces for blockers, buttons for explicit mutations, `aria-live` status, and generation tokens so late responses cannot overwrite another product/platform.
 
-- [ ] **Step 4: Add deterministic Playwright acceptance**
+- [x] **Step 4: Add deterministic Playwright acceptance**
 
 Extend the fake-provider fixture to build the content workflow, seed exact pricing, create a draft, resolve/lock required content, lock the plan, reload, and verify unchanged source IDs plus zero extra provider-log lines during draft/lock/history operations.
 
-- [ ] **Step 5: Run every release gate**
+- [x] **Step 5: Run every release gate**
 
 ```bash
 node scripts/check-versions.mjs
@@ -295,7 +295,7 @@ Expected: every gate passes under Node.js 24.19.0 / pnpm 11.22.0 with no real AI
 
 Also verify that Task 25 introduces no case-conflicting paths, hard-coded path separators, CRLF-sensitive parsing, symlink dependency, or machine-specific absolute path. The final Task 29 gate must repeat the complete workflow from a fresh GitHub clone on Windows and Ubuntu.
 
-- [ ] **Step 6: Update records, commit, and push**
+- [x] **Step 6: Update records, commit, and push**
 
 Mark Task 25 complete and Task 26 in progress. Record exact test counts, immutable-reference/restart evidence, blocker behavior, and provider call count.
 

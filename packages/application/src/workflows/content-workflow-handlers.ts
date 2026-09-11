@@ -32,14 +32,30 @@ export type ContentWorkflowInspectionInput = Pick<
 export function createContentWorkflowHandlers(dependencies: {
   readonly context: ContentWorkflowContextPort;
   readonly strategies: {
-    generate(productId: string, kind: StrategyAssetKind): Promise<GeneratedAsset>;
+    generate(
+      productId: string,
+      kind: StrategyAssetKind,
+      workflowDependencyHash?: string,
+    ): Promise<GeneratedAsset>;
   };
   readonly titles: {
-    generate(productId: string, platformId: PlatformId): Promise<GeneratedTitle>;
+    generate(
+      productId: string,
+      platformId: PlatformId,
+      workflowDependencyHash?: string,
+    ): Promise<GeneratedTitle>;
   };
   readonly content: {
-    generateCreative(productId: string, platformId: PlatformId): Promise<GeneratedAsset>;
-    generateDetail(productId: string, platformId: PlatformId): Promise<GeneratedAsset>;
+    generateCreative(
+      productId: string,
+      platformId: PlatformId,
+      workflowDependencyHash?: string,
+    ): Promise<GeneratedAsset>;
+    generateDetail(
+      productId: string,
+      platformId: PlatformId,
+      workflowDependencyHash?: string,
+    ): Promise<GeneratedAsset>;
   };
 }): { readonly handlers: Readonly<Record<string, WorkflowNodeHandler>> } {
   const create = (
@@ -57,24 +73,49 @@ export function createContentWorkflowHandlers(dependencies: {
       return execute(input);
     },
   });
+  const workflowHash = async (input: ContentWorkflowInspectionInput): Promise<string> => {
+    const inspection = await dependencies.context.inspect(input);
+    return sha256(canonicalJson(inspection.dependencies));
+  };
   const strategy = (kind: StrategyAssetKind) =>
-    create(async ({ productId }) =>
-      result(kind, await dependencies.strategies.generate(productId, kind)),
+    create(async (input) =>
+      result(
+        kind,
+        await dependencies.strategies.generate(input.productId, kind, await workflowHash(input)),
+      ),
     );
   return {
     handlers: {
       competitor_analysis: strategy('competitor_analysis'),
       market_insight: strategy('market_insight'),
       selling_point_set: strategy('selling_point_set'),
-      title_generation: create(async ({ productId, platformId }) => {
-        const generated = await dependencies.titles.generate(productId, platformId);
+      title_generation: create(async (input) => {
+        const generated = await dependencies.titles.generate(
+          input.productId,
+          input.platformId,
+          await workflowHash(input),
+        );
         return result('title_asset', generated, generated.locked ? 'locked' : undefined);
       }),
-      creative_plan: create(async ({ productId, platformId }) =>
-        result('creative_plan', await dependencies.content.generateCreative(productId, platformId)),
+      creative_plan: create(async (input) =>
+        result(
+          'creative_plan',
+          await dependencies.content.generateCreative(
+            input.productId,
+            input.platformId,
+            await workflowHash(input),
+          ),
+        ),
       ),
-      detail_page: create(async ({ productId, platformId }) =>
-        result('detail_page', await dependencies.content.generateDetail(productId, platformId)),
+      detail_page: create(async (input) =>
+        result(
+          'detail_page',
+          await dependencies.content.generateDetail(
+            input.productId,
+            input.platformId,
+            await workflowHash(input),
+          ),
+        ),
       ),
     },
   };

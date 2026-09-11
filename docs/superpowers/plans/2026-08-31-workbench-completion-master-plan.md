@@ -47,10 +47,11 @@
 | Task 22                               | complete    | 四类标题、事实守卫、本地规则、不可变修订、锁定、stale 原因和真实运行时持久化均已完成      |
 | Task 23                               | complete    | 五图结构化方案、详情页架构、证据守卫、单项重生成、锁定、稳定重排和不可变历史均已完成      |
 | Task 24                               | complete    | 持久 DAG、revision CAS、幂等恢复、取消、durable SSE、可访问 UI 与 Phase 10 E2E 已通过     |
-| Task 25                               | in_progress | 进入只引用精确上游修订的可追踪、可锁定运营方案                                            |
-| Task 26–29                            | pending     | 完成运营方案后进入可靠性、Windows 交付和发布收口                                          |
+| Task 25                               | complete    | 精确来源、稳定 blocker、不可变历史、UI 与 Phase 11 E2E 已完成                             |
+| Task 26                               | in_progress | 进入 WAL 一致备份、安全归档与事务恢复                                                     |
+| Task 27–29                            | pending     | 继续完成 Windows 交付、产品收口与发布验收                                                 |
 
-当前主线完成度按原计划 29 个任务计为 `24/29 ≈ 83%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 24 已完成，当前进入 Task 25。
+当前主线完成度按原计划 29 个任务计为 `25/29 ≈ 86%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 25 已完成，当前进入 Task 26。
 
 ## Dependency Order
 
@@ -281,10 +282,10 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 
 **Files:** operation-plan domain/schema/repository/use cases/contracts/routes/UI/history。
 
-- [ ] 测试成功聚合及跨商品、缺失、过期、未锁定、不兼容引用拒绝。
-- [ ] 实现只引用精确上游 revision/result/snapshot ID 的方案聚合与锁定。
-- [ ] 展示历史与可追踪来源；不得额外请求 AI 生成“总结”。
-- [ ] 提交 `feat: aggregate traceable operation plans`。
+- [x] 测试成功聚合及跨商品、缺失、过期、未锁定、不兼容引用拒绝。
+- [x] 实现只引用精确上游 revision/result/snapshot ID 的方案聚合与锁定。
+- [x] 展示历史与可追踪来源；不得额外请求 AI 生成“总结”。
+- [x] 提交 `feat: aggregate traceable operation plans`。
 
 ## Wave 6 — 工作区可靠性与 Windows 交付
 

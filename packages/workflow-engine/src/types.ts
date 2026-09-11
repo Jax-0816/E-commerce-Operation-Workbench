@@ -90,6 +90,12 @@ export interface CreateWorkflowRunInput {
   readonly platformId: import('@eaw/domain').PlatformId;
   readonly definition: WorkflowDefinition;
   readonly createdAt: Date;
+  readonly reusableNodes?: readonly {
+    readonly key: string;
+    readonly status: 'completed' | 'locked' | 'needs_review';
+    readonly dependencyHash: string;
+    readonly output: WorkflowNodeOutputReference;
+  }[];
 }
 
 export interface WorkflowEvent {

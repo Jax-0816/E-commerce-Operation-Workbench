@@ -129,4 +129,64 @@ describe('content workflow handlers', () => {
       ['needs_review', { assetType: 'detail_page', assetId: ids[5], revisionNo: 6 }],
     ]);
   });
+
+  it('passes the exact workflow dependency hash into generated assets', async () => {
+    const dependencyHash = '919a70ac3c233d49b2cb8a53156b1552791ba5919a82079ab05fa5225b5550a8';
+    const received: string[] = [];
+    const { handlers } = createContentWorkflowHandlers({
+      context: {
+        async inspect() {
+          return { dependencies: { exact: 'workflow-input' } };
+        },
+      },
+      strategies: {
+        async generate(_owner, _kind, workflowHash) {
+          received.push(`strategy:${workflowHash}`);
+          return { id: createUuidV7(), revisionNo: 1, status: 'verified' };
+        },
+      },
+      titles: {
+        async generate(_owner, _platform, workflowHash) {
+          received.push(`title:${workflowHash}`);
+          return { id: createUuidV7(), revisionNo: 1, status: 'verified', locked: false };
+        },
+      },
+      content: {
+        async generateCreative(_owner, _platform, workflowHash) {
+          received.push(`creative:${workflowHash}`);
+          return { id: createUuidV7(), revisionNo: 1, status: 'verified' };
+        },
+        async generateDetail(_owner, _platform, workflowHash) {
+          received.push(`detail:${workflowHash}`);
+          return { id: createUuidV7(), revisionNo: 1, status: 'verified' };
+        },
+      },
+    });
+    const input = {
+      workflowRunId: createUuidV7(),
+      productId: createUuidV7(),
+      platformId: 'pinduoduo' as const,
+      signal: new AbortController().signal,
+    };
+
+    for (const nodeKey of ['competitor_analysis', 'titles', 'creative', 'detail_page'] as const) {
+      const taskType = {
+        competitor_analysis: 'competitor_analysis',
+        titles: 'title_generation',
+        creative: 'creative_plan',
+        detail_page: 'detail_page',
+      }[nodeKey];
+      await handlers[taskType]!.execute({
+        ...input,
+        nodeKey,
+      });
+    }
+
+    expect(received).toEqual([
+      `strategy:${dependencyHash}`,
+      `title:${dependencyHash}`,
+      `creative:${dependencyHash}`,
+      `detail:${dependencyHash}`,
+    ]);
+  });
 });

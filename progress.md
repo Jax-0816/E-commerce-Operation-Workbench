@@ -615,3 +615,28 @@
 
 1. 提交并推送运营方案面板小任务，确认本地与远端一致。
 2. 添加 Phase 11 确定性 Playwright，验证草稿、blocker 处理、锁定、重载后的精确来源与零额外 provider 调用。
+
+## Session: 2026-09-11 — Task 25 Phase 11 acceptance and closeout
+
+- **Status:** complete
+- Phase 11 在真实 API/UI 上建立商品、竞品快照、已确认事实、SKU 成本和定价结果，验证首个草稿稳定显示 3 项锁定 blocker。
+- E2E 暴露并修复了跨 run 复用缺口：新 run 现在只播种 dependency hash 完全相同的已完成输出，标题、创意和详情资产持久化精确 workflow hash，不再重生成并覆盖用户锁定的修订。
+- 确定性 fake provider 从编译后上下文读取精确竞品/事实证据，JSONL 日志增加 productId 隔离；Phase 10 和 Phase 11 并发执行稳定通过。
+- 锁定标题、创意项和详情模块后，最终方案草稿无 blocker；锁定和重载后的 source IDs/source hash 完全一致，草稿/锁定/历史操作额外 provider 调用为 0。
+
+### Fresh verification evidence
+
+| Gate                                          | Result                                |
+| --------------------------------------------- | ------------------------------------- |
+| Runtime / frozen install                      | Node.js 24.19.0 + pnpm 11.22.0 passed |
+| Root unit/integration tests                   | 141 files, 498 passed, 0 failed       |
+| Playwright golden paths                       | Phase 2/3/10/11: 4 passed, 0 failed   |
+| Root format/typecheck/lint/build              | passed                                |
+| Prompt/rule-pack validation                   | 7 prompts + 1 rule pack passed        |
+| Changed-file lint/format + `git diff --check` | passed                                |
+| Real paid AI calls                            | 0                                     |
+
+### Next action
+
+1. 提交并推送 Task 25 Phase 11 收口，确认 `HEAD...origin/codex/phase-0` 为 `0 0`。
+2. 进入 Wave 6 / Task 26：WAL 活跃时一致备份、归档安全和失败不破坏旧工作区的事务恢复。

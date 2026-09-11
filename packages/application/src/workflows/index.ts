@@ -71,6 +71,8 @@ export interface ApplicationWorkflowRepository extends WorkflowRepository {
 export type WorkflowScheduler = (task: () => Promise<void>) => void;
 export type WorkflowEventListener = (event: WorkflowEvent) => void;
 
+const STRATEGY_NODE_KEYS = new Set(['competitor_analysis', 'market_insight', 'selling_points']);
+
 interface WorkflowSubscription {
   sequence: number;
   readonly listener: WorkflowEventListener;
@@ -187,12 +189,48 @@ export function createWorkflowsApplication(dependencies: {
       const productId = await owner(productIdValue);
       const { repository, runner } = runtime();
       const now = (dependencies.now ?? (() => new Date()))();
+      const previous = (await repository.listByProduct(productId)).find(
+        (candidate) => candidate.platformId === platformId && candidate.status === 'completed',
+      );
+      const reusableNodes: Array<NonNullable<CreateWorkflowRunInput['reusableNodes']>[number]> = [];
+      for (const definition of contentWorkflowDefinition.nodes) {
+        const handler = dependencies.handlers[definition.taskType];
+        if (!handler) {
+          throw new DomainError('CAPABILITY_UNAVAILABLE', 'Workflow handler is unavailable.');
+        }
+        const inspection = await handler.inspect({
+          productId,
+          platformId,
+          nodeKey: definition.key,
+        });
+        const prior = previous?.nodes.find(({ key }) => key === definition.key);
+        const reusable = inspection.reusableOutput
+          ? { status: 'completed' as const, output: inspection.reusableOutput }
+          : STRATEGY_NODE_KEYS.has(definition.key) &&
+              prior?.output &&
+              prior.dependencyHash === inspection.dependencyHash &&
+              ['completed', 'locked', 'needs_review'].includes(prior.status)
+            ? {
+                status: prior.status as 'completed' | 'locked' | 'needs_review',
+                output: prior.output,
+              }
+            : undefined;
+        if (reusable) {
+          reusableNodes.push({
+            key: definition.key,
+            status: reusable.status,
+            dependencyHash: inspection.dependencyHash,
+            output: reusable.output,
+          });
+        }
+      }
       const run = await repository.create({
         id: (dependencies.idFactory ?? createUuidV7)(now),
         productId,
         platformId,
         definition: contentWorkflowDefinition,
         createdAt: now,
+        reusableNodes,
       });
       schedule(run.id, () => runner.run(run.id, run.revision));
       return run;

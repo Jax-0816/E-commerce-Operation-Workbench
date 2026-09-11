@@ -66,13 +66,8 @@ test('fails once, reloads, explicitly resumes, and reuses completed workflow nod
 
   const callLogPath = process.env.EAW_E2E_CALL_LOG;
   expect(callLogPath).toBeTruthy();
-  await expect
-    .poll(async () => (await readFile(callLogPath!, 'utf8')).trim().split('\n').length)
-    .toBe(7);
-  const calls = (await readFile(callLogPath!, 'utf8'))
-    .trim()
-    .split('\n')
-    .map((line) => (JSON.parse(line) as { task: string }).task);
+  await expect.poll(async () => (await providerCalls(callLogPath!, product.id)).length).toBe(7);
+  const calls = (await providerCalls(callLogPath!, product.id)).map(({ task }) => task);
   expect(calls).toEqual([
     'competitor_analysis',
     'market_insight',
@@ -83,3 +78,12 @@ test('fails once, reloads, explicitly resumes, and reuses completed workflow nod
     'detail_page',
   ]);
 });
+
+async function providerCalls(path: string, productId: string) {
+  return (await readFile(path, 'utf8'))
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as { task: string; productId: string })
+    .filter((call) => call.productId === productId);
+}

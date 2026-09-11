@@ -67,7 +67,11 @@ export interface ContentGenerationPort {
   ): Promise<Readonly<Record<string, string>>>;
 }
 export interface ContentBuildersApplication {
-  generateCreative(productId: string, platformId: PlatformId): Promise<CreativePlanView>;
+  generateCreative(
+    productId: string,
+    platformId: PlatformId,
+    workflowDependencyHash?: string,
+  ): Promise<CreativePlanView>;
   regenerateCreativeItem(
     productId: string,
     platformId: PlatformId,
@@ -84,7 +88,11 @@ export interface ContentBuildersApplication {
     orderedIds: readonly string[],
   ): Promise<CreativePlanView>;
   listCreative(productId: string, platformId: PlatformId): Promise<readonly CreativePlanView[]>;
-  generateDetail(productId: string, platformId: PlatformId): Promise<DetailPageView>;
+  generateDetail(
+    productId: string,
+    platformId: PlatformId,
+    workflowDependencyHash?: string,
+  ): Promise<DetailPageView>;
   lockDetailSection(
     productId: string,
     platformId: PlatformId,
@@ -113,7 +121,7 @@ export function createContentBuildersApplication(dependencies: {
   const detailView = async (revision: DetailPageRevision) =>
     view(revision, dependencies.generation);
   return {
-    async generateCreative(value, platformId) {
+    async generateCreative(value, platformId, workflowDependencyHash) {
       const productId = await owner(value, dependencies.products);
       const generation = requiredGeneration(dependencies.generation);
       const previous = await dependencies.creative.latest(productId, platformId);
@@ -130,6 +138,10 @@ export function createContentBuildersApplication(dependencies: {
           platformId,
           origin: 'generated',
           ...generated,
+          dependencyHashes: {
+            ...generated.dependencyHashes,
+            ...(workflowDependencyHash ? { workflow: workflowDependencyHash } : {}),
+          },
           items,
           createdAt: now(),
         }),
@@ -190,7 +202,7 @@ export function createContentBuildersApplication(dependencies: {
         (await dependencies.creative.list(productId, platformId)).map(creativeView),
       );
     },
-    async generateDetail(value, platformId) {
+    async generateDetail(value, platformId, workflowDependencyHash) {
       const productId = await owner(value, dependencies.products);
       const generation = requiredGeneration(dependencies.generation);
       const previous = await dependencies.detail.latest(productId, platformId);
@@ -210,6 +222,10 @@ export function createContentBuildersApplication(dependencies: {
           platformId,
           origin: 'generated',
           ...generated,
+          dependencyHashes: {
+            ...generated.dependencyHashes,
+            ...(workflowDependencyHash ? { workflow: workflowDependencyHash } : {}),
+          },
           sections,
           createdAt: now(),
         }),

@@ -56,6 +56,40 @@ describe('SQLite workflow repository', () => {
     ).toThrow(/immutable/u);
   });
 
+  it('creates a new run with validated reusable node outputs', async () => {
+    const repository = new SqliteWorkflowRepository(database);
+    const output = {
+      assetType: 'competitor_analysis',
+      assetId: createUuidV7(),
+      revisionNo: 3,
+    } as const;
+    const run = await repository.create({
+      id: createUuidV7(),
+      productId,
+      platformId: 'pinduoduo',
+      definition: contentWorkflowDefinition,
+      createdAt: new Date('2026-09-08T01:30:00.000Z'),
+      reusableNodes: [
+        {
+          key: 'competitor_analysis',
+          status: 'completed',
+          dependencyHash: 'a'.repeat(64),
+          output,
+        },
+      ],
+    });
+
+    expect(run.nodes[0]).toEqual({
+      key: 'competitor_analysis',
+      taskType: 'competitor_analysis',
+      status: 'completed',
+      dependencyHash: 'a'.repeat(64),
+      output,
+      error: null,
+    });
+    expect(run.nodes.slice(1).every(({ status }) => status === 'not_started')).toBe(true);
+  });
+
   it('commits node state, attempt history, events, and revision checks together', async () => {
     const repository = new SqliteWorkflowRepository(database);
     const now = new Date('2026-09-08T01:00:00.000Z');

@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 5 — Task 25：可追踪、可锁定运营方案（in_progress）
+Wave 6 — Task 26：一致性备份与事务恢复（in_progress）
 
 ## Phases
 
@@ -49,14 +49,14 @@ Wave 5 — Task 25：可追踪、可锁定运营方案（in_progress）
 ### Wave 5: 工作流与运营方案
 
 - [x] Task 24：持久化工作流 DAG 与 SSE（complete）
-- [ ] Task 25：可追踪、可锁定运营方案（in_progress）
-- **Status:** in_progress
+- [x] Task 25：可追踪、可锁定运营方案（complete）
+- **Status:** complete
 
 ### Wave 6: 工作区可靠性与 Windows 交付
 
-- [ ] Task 26：一致性备份与事务恢复
+- [ ] Task 26：一致性备份与事务恢复（in_progress）
 - [ ] Task 27：幂等 Windows 安装启动
-- **Status:** pending
+- **Status:** in_progress
 
 ### Wave 7: 产品收口与发布验收
 

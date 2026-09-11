@@ -26,7 +26,11 @@ import type { ActivePromptPort } from '../strategy/index.js';
 const TEMPLATE_ID = 'title-generation';
 
 export interface TitlesApplication {
-  generate(productId: string, platformId: PlatformId): Promise<TitleAssetView>;
+  generate(
+    productId: string,
+    platformId: PlatformId,
+    workflowDependencyHash?: string,
+  ): Promise<TitleAssetView>;
   edit(
     productId: string,
     platformId: PlatformId,
@@ -68,7 +72,7 @@ export function createTitlesApplication(dependencies: {
       (await current(revision.productId, revision.platformId)).hashes,
     );
   return {
-    async generate(productIdValue, platformId) {
+    async generate(productIdValue, platformId, workflowDependencyHash) {
       const productId = await owner(productIdValue, dependencies.products);
       const context = await current(productId, platformId);
       const stored = await dependencies.prompts.findActive(TEMPLATE_ID);
@@ -120,7 +124,11 @@ export function createTitlesApplication(dependencies: {
           locked: false,
           titles: generated.value.titles,
           validationIssues,
-          dependencyHashes: { ...context.hashes, prompt: stored.templateHash },
+          dependencyHashes: {
+            ...context.hashes,
+            prompt: stored.templateHash,
+            ...(workflowDependencyHash ? { workflow: workflowDependencyHash } : {}),
+          },
           generationId,
           createdAt: now(),
         }),
