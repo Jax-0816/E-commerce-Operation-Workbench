@@ -98,8 +98,26 @@ function readArgument(name) {
   return index === -1 ? undefined : process.argv[index + 1];
 }
 
+/**
+ * @param {{ platform: NodeJS.Platform; comSpec?: string }} environment
+ */
+export function getPnpmVersionCommand({ platform, comSpec }) {
+  if (platform === 'win32') {
+    return {
+      file: comSpec || 'cmd.exe',
+      args: ['/d', '/s', '/c', 'pnpm.cmd --version'],
+    };
+  }
+
+  return { file: 'pnpm', args: ['--version'] };
+}
+
 function installedPnpmVersion() {
-  return execFileSync(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', ['--version'], {
+  const command = getPnpmVersionCommand({
+    platform: process.platform,
+    comSpec: process.env.ComSpec,
+  });
+  return execFileSync(command.file, command.args, {
     encoding: 'utf8',
   }).trim();
 }

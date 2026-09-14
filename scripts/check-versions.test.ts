@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest';
 
-import { checkRuntimeVersions } from './check-versions.mjs';
+import { checkRuntimeVersions, getPnpmVersionCommand } from './check-versions.mjs';
+
+describe('getPnpmVersionCommand', () => {
+  it('uses ComSpec to execute the fixed pnpm.cmd command on Windows', () => {
+    expect(
+      getPnpmVersionCommand({
+        comSpec: 'C:\\Windows\\System32\\cmd.exe',
+        platform: 'win32',
+      }),
+    ).toEqual({
+      args: ['/d', '/s', '/c', 'pnpm.cmd --version'],
+      file: 'C:\\Windows\\System32\\cmd.exe',
+    });
+  });
+
+  it('executes pnpm directly on non-Windows platforms', () => {
+    expect(getPnpmVersionCommand({ platform: 'linux' })).toEqual({
+      args: ['--version'],
+      file: 'pnpm',
+    });
+  });
+});
 
 describe('checkRuntimeVersions', () => {
   it('accepts the supported Node and pnpm releases', () => {
