@@ -194,10 +194,206 @@ function Invoke-WorkbenchSetup {
   return $resolvedWorkspace
 }
 
+function Test-WorkbenchPortInUse {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [ValidateRange(1, 65535)]
+    [int] $Port
+  )
+
+  $client = [Net.Sockets.TcpClient]::new()
+  try {
+    $connection = $client.ConnectAsync('127.0.0.1', $Port)
+    return $connection.Wait(500) -and $client.Connected
+  }
+  catch {
+    return $false
+  }
+  finally {
+    $client.Dispose()
+  }
+}
+
+function Start-WorkbenchServer {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string] $RepositoryRoot,
+
+    [string] $WorkspacePath,
+
+    [ValidateRange(1, 65535)]
+    [int] $Port = 3210,
+
+    [ValidateRange(1, [int]::MaxValue)]
+    [int] $HealthTimeoutSeconds = 30,
+
+    [switch] $NoBrowser
+  )
+
+  $resolvedRepository = [IO.Path]::GetFullPath($RepositoryRoot)
+  $resolvedWorkspace = Resolve-WorkbenchWorkspacePath `
+    -RepositoryRoot $resolvedRepository `
+    -WorkspacePath $WorkspacePath
+  Assert-WorkbenchRuntime -RepositoryRoot $resolvedRepository | Out-Null
+
+  $serverEntry = Join-Path $resolvedRepository 'apps\server\dist\index.js'
+  if (-not (Test-Path -LiteralPath $serverEntry -PathType Leaf)) {
+    throw 'Production build is missing. Run scripts/setup.ps1 first.'
+  }
+
+  $manifest = Get-Content -Raw -LiteralPath (
+    Join-Path $resolvedRepository 'package.json'
+  ) | ConvertFrom-Json
+  $appVersion = [string] $manifest.version
+  $url = "http://127.0.0.1:$Port"
+  $healthUri = [uri] "$url/api/v1/health"
+  $logsPath = Join-Path $resolvedWorkspace 'logs'
+  $markerPath = Join-Path $logsPath 'workbench-server.json'
+
+  if (Test-Path -LiteralPath $markerPath -PathType Leaf) {
+    $marker = $null
+    try {
+      $marker = Get-Content -Raw -LiteralPath $markerPath | ConvertFrom-Json
+      $markerProcess = Get-Process -Id ([int] $marker.processId) -ErrorAction Stop
+      $markerPort = [int] $marker.port
+      if ($markerPort -lt 1 -or $markerPort -gt 65535) {
+        throw 'Invalid workbench process marker port.'
+      }
+      $validatedMarkerUrl = "http://127.0.0.1:$markerPort"
+      if (
+        [string] $marker.url -ne $validatedMarkerUrl -or
+        [string] $marker.appVersion -ne $appVersion
+      ) {
+        throw 'Invalid workbench process marker metadata.'
+      }
+      $markerHealth = Test-WorkbenchHealth `
+        -Uri ([uri] "$validatedMarkerUrl/api/v1/health") `
+        -ExpectedVersion $appVersion `
+        -TimeoutSeconds ([Math]::Min(2, $HealthTimeoutSeconds))
+
+      if ($markerPort -eq $Port) {
+        if (-not $NoBrowser) {
+          Start-Process -FilePath $url | Out-Null
+        }
+        return [pscustomobject]@{
+          Url = $url
+          ProcessId = $markerProcess.Id
+          Reused = $true
+        }
+      }
+
+      throw "Workbench is already running at $validatedMarkerUrl."
+    }
+    catch {
+      if ($_.Exception.Message -like 'Workbench is already running at *') {
+        throw
+      }
+      Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+    }
+  }
+
+  if (Test-WorkbenchPortInUse -Port $Port) {
+    throw "Port $Port on 127.0.0.1 is already in use."
+  }
+
+  New-Item -ItemType Directory -Path $logsPath -Force | Out-Null
+  $stdoutPath = Join-Path $logsPath 'workbench-server.out.log'
+  $stderrPath = Join-Path $logsPath 'workbench-server.err.log'
+  $temporaryMarkerPath = Join-Path $logsPath (
+    ".workbench-server.$([guid]::NewGuid().ToString('N')).tmp"
+  )
+  $process = $null
+
+  $environmentNames = @('HOST', 'PORT', 'EAW_WORKSPACE_PATH')
+  $previousEnvironment = @{}
+  foreach ($name in $environmentNames) {
+    $environmentPath = "Env:$name"
+    $previousEnvironment[$name] = [pscustomobject]@{
+      Exists = Test-Path -LiteralPath $environmentPath
+      Value = if (Test-Path -LiteralPath $environmentPath) {
+        (Get-Item -LiteralPath $environmentPath).Value
+      }
+      else {
+        $null
+      }
+    }
+  }
+
+  try {
+    $env:HOST = '127.0.0.1'
+    $env:PORT = [string] $Port
+    $env:EAW_WORKSPACE_PATH = $resolvedWorkspace
+    $nodePath = (Get-Command node -ErrorAction Stop).Source
+    $process = Start-Process `
+      -FilePath $nodePath `
+      -ArgumentList @('apps/server/dist/index.js') `
+      -WorkingDirectory $resolvedRepository `
+      -RedirectStandardOutput $stdoutPath `
+      -RedirectStandardError $stderrPath `
+      -PassThru
+  }
+  finally {
+    foreach ($name in $environmentNames) {
+      $environmentPath = "Env:$name"
+      if ($previousEnvironment[$name].Exists) {
+        Set-Item -LiteralPath $environmentPath -Value $previousEnvironment[$name].Value
+      }
+      else {
+        Remove-Item -LiteralPath $environmentPath -ErrorAction SilentlyContinue
+      }
+    }
+  }
+
+  try {
+    $health = Test-WorkbenchHealth `
+      -Uri $healthUri `
+      -ExpectedVersion $appVersion `
+      -TimeoutSeconds $HealthTimeoutSeconds
+    if ($health.status -ne 'ok') {
+      throw 'Workbench returned an invalid health response.'
+    }
+
+    $markerJson = [ordered]@{
+      processId = $process.Id
+      port = $Port
+      url = $url
+      appVersion = $appVersion
+    } | ConvertTo-Json -Compress
+    [IO.File]::WriteAllText(
+      $temporaryMarkerPath,
+      $markerJson,
+      [Text.UTF8Encoding]::new($false)
+    )
+    [IO.File]::Move($temporaryMarkerPath, $markerPath, $true)
+
+    if (-not $NoBrowser) {
+      Start-Process -FilePath $url | Out-Null
+    }
+
+    return [pscustomobject]@{
+      Url = $url
+      ProcessId = $process.Id
+      Reused = $false
+    }
+  }
+  catch {
+    if ($process -and -not $process.HasExited) {
+      Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+      $process.WaitForExit(5000) | Out-Null
+    }
+    Remove-Item -LiteralPath $temporaryMarkerPath -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+    throw "Workbench server failed to become healthy at $url. $($_.Exception.Message)"
+  }
+}
+
 Export-ModuleMember -Function @(
   'Invoke-WorkbenchNative',
   'Assert-WorkbenchRuntime',
   'Resolve-WorkbenchWorkspacePath',
   'Test-WorkbenchHealth',
-  'Invoke-WorkbenchSetup'
+  'Invoke-WorkbenchSetup',
+  'Start-WorkbenchServer'
 )

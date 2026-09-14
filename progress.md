@@ -804,3 +804,18 @@
 
 1. 提交并推送 Task 27.3，确认本地与 GitHub 为 `0 0`。
 2. 进入 Task 27.4：以真实进程测试驱动仅回环地址绑定、健康等待、进程 marker 复用及超时清理。
+
+## Session: 2026-09-14 — Task 27.4 healthy loopback Windows start
+
+- **Status:** complete
+- RED：真实启动与端口冲突测试因 `scripts/start.ps1` / `Start-WorkbenchServer` 不存在失败；首次 GREEN 暴露 marker 根 URL 被误当健康端点，根因修正为固定 `/api/v1/health`。
+- 生产子进程只获得 `HOST=127.0.0.1`、指定 PORT 和解析后工作区；父进程的三个环境值在 spawn 后精确恢复。
+- 健康成功后才以 UTF-8 原子发布 `logs/workbench-server.json`，记录 PID/port/loopback URL/version；复用前先校验 marker metadata 为回环地址，再校验活进程与精确健康版本。
+- 真实 API 写入的“启动路径商品”在指定中文/空格工作区 SQLite 中可见；第二次启动复用同一 PID，从非仓库 cwd 调用不受影响。
+- 已启动子进程因 workspace lock 立即失败时，2 秒时限内清理 marker 且端口可立即重新绑定；无关监听端口不启动新进程并在 1 秒内失败。
+- 完整 PowerShell 套件 3 文件/12 项通过；加强后启动聚焦测试 3/3 通过，确认日志不包含子进程继承的测试密钥，AfterAll 等待并断言精确 PID 退出。
+
+### Next action
+
+1. 提交并推送 Task 27.4，确认本地与 GitHub 为 `0 0`。
+2. 进入 Task 27.5：在 GitHub Windows runner 验证干净检出，完成 README/主计划文档和 Task 27 发布门禁收口。

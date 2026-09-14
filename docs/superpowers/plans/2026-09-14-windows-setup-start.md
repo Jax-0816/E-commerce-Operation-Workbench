@@ -230,7 +230,7 @@
 - Produces: `Start-WorkbenchServer -RepositoryRoot <string> -WorkspacePath <string?> -Port <int> -HealthTimeoutSeconds <int> -NoBrowser <switch>` and `scripts/start.ps1` with the same user-facing options.
 - Consumes: built `apps/server/dist/index.js`, `Test-WorkbenchHealth`, child environment `HOST/PORT/EAW_WORKSPACE_PATH`, and `/api/v1/health`.
 
-- [ ] **Step 1: Write failing real start tests**
+- [x] **Step 1: Write failing real start tests**
 
   After setup, allocate an available loopback port and invoke start with `-NoBrowser`. Assert the returned URL uses `127.0.0.1`, the real health payload is correct, the server sees the requested Chinese/space workspace, and a second start reuses the healthy PID recorded in the workspace run marker instead of creating another Node process. Add a failure case using an occupied/non-workbench port or an immediately exiting child; assert a bounded error and no surviving started PID.
 
@@ -241,11 +241,11 @@
   $second.ProcessId | Should -Be $first.ProcessId
   ```
 
-- [ ] **Step 2: Run Pester and verify RED**
+- [x] **Step 2: Run Pester and verify RED**
 
   Expected: FAIL because `Start-WorkbenchServer` and `scripts/start.ps1` do not exist.
 
-- [ ] **Step 3: Implement minimal process and health orchestration**
+- [x] **Step 3: Implement minimal process and health orchestration**
 
   Reject ports outside `1..65535` and nonpositive timeouts. Reuse only a live PID from an atomic workspace marker whose port/version match and whose URL returns matching health; remove stale markers and reject unrelated occupied ports. Otherwise start the Node entry directly with loopback-only environment, redirect stdout/stderr to separate workspace `logs` files, and poll until health or deadline. On child exit/timeout, stop the exact started process, remove its marker, and throw. After health succeeds, atomically publish the PID/port/URL/version marker; only call `Start-Process $url` when `-NoBrowser` is absent.
 
@@ -258,11 +258,11 @@
 
   Restore the parent process environment in `finally` immediately after spawning so repeated shell use is not contaminated.
 
-- [ ] **Step 4: Verify GREEN and cleanup**
+- [x] **Step 4: Verify GREEN and cleanup**
 
   Run start Pester, then all script Pester tests. Assert test cleanup terminates the started server, ports are released, logs contain no secret fixture, and changing the caller current directory does not affect startup.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
   ```bash
   git add scripts/start.ps1 scripts/windows/Workbench.psm1 tests/scripts/start.Tests.ps1 tests/scripts/run-pester.ps1
