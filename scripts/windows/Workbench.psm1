@@ -145,9 +145,59 @@ function Test-WorkbenchHealth {
   throw "Workbench did not become healthy within $TimeoutSeconds seconds."
 }
 
+function Invoke-WorkbenchSetup {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)]
+    [string] $RepositoryRoot,
+
+    [string] $WorkspacePath
+  )
+
+  $resolvedWorkspace = Resolve-WorkbenchWorkspacePath `
+    -RepositoryRoot $RepositoryRoot `
+    -WorkspacePath $WorkspacePath
+
+  Assert-WorkbenchRuntime -RepositoryRoot $RepositoryRoot | Out-Null
+
+  $hadCiEnvironment = Test-Path -LiteralPath 'Env:CI'
+  $previousCiEnvironment = if ($hadCiEnvironment) { $env:CI } else { $null }
+  try {
+    $env:CI = 'true'
+    Invoke-WorkbenchNative `
+      -FilePath 'pnpm' `
+      -ArgumentList @('install', '--frozen-lockfile') `
+      -WorkingDirectory $RepositoryRoot *> $null
+    Invoke-WorkbenchNative `
+      -FilePath 'pnpm' `
+      -ArgumentList @('build') `
+      -WorkingDirectory $RepositoryRoot *> $null
+  }
+  finally {
+    if ($hadCiEnvironment) {
+      $env:CI = $previousCiEnvironment
+    }
+    else {
+      Remove-Item -LiteralPath 'Env:CI' -ErrorAction SilentlyContinue
+    }
+  }
+
+  Invoke-WorkbenchNative `
+    -FilePath 'node' `
+    -ArgumentList @(
+      'apps/server/dist/bootstrap.js',
+      '--workspace',
+      $resolvedWorkspace
+    ) `
+    -WorkingDirectory $RepositoryRoot *> $null
+
+  return $resolvedWorkspace
+}
+
 Export-ModuleMember -Function @(
   'Invoke-WorkbenchNative',
   'Assert-WorkbenchRuntime',
   'Resolve-WorkbenchWorkspacePath',
-  'Test-WorkbenchHealth'
+  'Test-WorkbenchHealth',
+  'Invoke-WorkbenchSetup'
 )

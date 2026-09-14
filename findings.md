@@ -147,19 +147,21 @@
 | 内置不完整规则包只安装不自动启用                | setup 通过版本/checksum 幂等安装，用户仍需显式激活；避免把 `needs_review` 费率在新工作区中伪装成已确认规则                      |
 | Windows 脚本共享四个可测安全边界                | 命令退出、精确工具链、数据目录隔离和有界健康等待集中于 `Workbench.psm1`；setup/start 入口不复制这些逻辑                         |
 | Windows CI 固定 Pester 6.2.0                    | 与实施时 PSGallery 稳定版一致，避免 runner 预装模块漂移；测试在 PowerShell 7.6.6 x64 和中文/空格仓库路径上验证                  |
+| setup 在局部 CI 环境中运行两个 pnpm 阶段        | pnpm 11.22.0 无 TTY 且需重建 modules 时会安全拒绝；仅 install/build 临时 `CI=true`，在 `finally` 精确恢复父进程环境             |
 
 ## Issues Encountered
 
-| Issue                                                      | Resolution                                                                                              |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| graphify 知识图陈旧且只覆盖设计文档                        | 保留为架构参考，当前进度以源码/提交/测试为准                                                            |
-| 根级 `pnpm test` 受工具链版本与依赖准备影响                | 不宣称完整门禁通过；实施前恢复精确工具链                                                                |
-| 根目录直接运行全部 Vitest 会破坏 workspace cwd 假设        | 后续只用 package scripts 或明确的 workspace cwd                                                         |
-| 重连后精确 pnpm 临时目录被系统清理                         | 网络受限首次恢复失败；获准联网后重新安装 pnpm 11.22.0，并重新执行受影响门禁                             |
-| Windows 审计的首个换行正则包含非法字面换行                 | 改用固定字符串搜索；命中仅位于 JSONL 测试，JSON.parse 可接受行尾 CR，不影响生产解析                     |
-| pnpm 依赖状态自检在中断后循环触发 install                  | 保留损坏目录到 `/private/tmp` 后从锁文件完整重建；聚焦门禁直接调用仓库二进制，最终再运行 frozen install |
-| Prettier 展开了整个 pnpm lockfile                          | 从本轮开始前的 HEAD 机械恢复原文件，再只用 `apply_patch` 加入 3 行真实 workspace 依赖                   |
-| Homebrew 只提供 PowerShell preview，且首个官方包架构不匹配 | 不用预览版；检查 `uname -m` 后改用 Microsoft 官方 7.6.6 x64 tarball，并在解压前校验 SHA-256             |
+| Issue                                                        | Resolution                                                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| graphify 知识图陈旧且只覆盖设计文档                          | 保留为架构参考，当前进度以源码/提交/测试为准                                                            |
+| 根级 `pnpm test` 受工具链版本与依赖准备影响                  | 不宣称完整门禁通过；实施前恢复精确工具链                                                                |
+| 根目录直接运行全部 Vitest 会破坏 workspace cwd 假设          | 后续只用 package scripts 或明确的 workspace cwd                                                         |
+| 重连后精确 pnpm 临时目录被系统清理                           | 网络受限首次恢复失败；获准联网后重新安装 pnpm 11.22.0，并重新执行受影响门禁                             |
+| Windows 审计的首个换行正则包含非法字面换行                   | 改用固定字符串搜索；命中仅位于 JSONL 测试，JSON.parse 可接受行尾 CR，不影响生产解析                     |
+| pnpm 依赖状态自检在中断后循环触发 install                    | 保留损坏目录到 `/private/tmp` 后从锁文件完整重建；聚焦门禁直接调用仓库二进制，最终再运行 frozen install |
+| Prettier 展开了整个 pnpm lockfile                            | 从本轮开始前的 HEAD 机械恢复原文件，再只用 `apply_patch` 加入 3 行真实 workspace 依赖                   |
+| Homebrew 只提供 PowerShell preview，且首个官方包架构不匹配   | 不用预览版；检查 `uname -m` 后改用 Microsoft 官方 7.6.6 x64 tarball，并在解压前校验 SHA-256             |
+| 无 TTY 的 setup 冻结安装和构建都触发 pnpm modules purge 拒绝 | 先单独复现两个阶段，确认同一根因；将官方建议的 `CI=true` 限定在 pnpm 子调用期间，并用测试确认恢复原值   |
 
 ## Resources
 

@@ -176,7 +176,7 @@
 - Produces: `Invoke-WorkbenchSetup -RepositoryRoot <string> -WorkspacePath <string?>` and the root `scripts/setup.ps1 [-WorkspacePath <string>]` entry point.
 - Consumes: `Assert-WorkbenchRuntime`, `Resolve-WorkbenchWorkspacePath`, `pnpm install --frozen-lockfile`, `pnpm build`, and `node apps/server/dist/bootstrap.js --workspace <path>`.
 
-- [ ] **Step 1: Write the failing real setup test**
+- [x] **Step 1: Write the failing real setup test**
 
   Invoke `scripts/setup.ps1` from a different current directory against a temporary `工作台 安装` workspace. After the first run, add `keep.txt`; run setup again and assert the file contents, workspace metadata, database, and default resources remain. A separate fixture puts the workspace under the repository and expects failure before creation.
 
@@ -187,11 +187,11 @@
   (Get-Content -Raw -LiteralPath (Join-Path $workspace 'keep.txt')).Trim() | Should -Be 'keep'
   ```
 
-- [ ] **Step 2: Run Pester and verify RED**
+- [x] **Step 2: Run Pester and verify RED**
 
   Expected: FAIL because `scripts/setup.ps1` and `Invoke-WorkbenchSetup` do not exist.
 
-- [ ] **Step 3: Implement the minimal setup flow**
+- [x] **Step 3: Implement the minimal setup flow**
 
   `setup.ps1` imports the module via `$PSScriptRoot`, resolves the repository root, invokes setup, prints only the resolved workspace and success status, and exits nonzero on errors. The module executes exactly four stages in order and passes the workspace as one argument.
 
@@ -202,11 +202,11 @@
   Invoke-WorkbenchNative node @('apps/server/dist/bootstrap.js', '--workspace', $resolved) $RepositoryRoot
   ```
 
-- [ ] **Step 4: Verify GREEN twice**
+- [x] **Step 4: Verify GREEN twice**
 
   Run focused Pester twice against the same workspace, Server bootstrap integration tests, root `typecheck`, and `git diff --check`. Confirm the source tree has no generated workspace or modified tracked file.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
   ```bash
   git add scripts/setup.ps1 scripts/windows/Workbench.psm1 tests/scripts/setup.Tests.ps1 tests/scripts/run-pester.ps1

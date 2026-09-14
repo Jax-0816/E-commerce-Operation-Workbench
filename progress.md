@@ -790,3 +790,17 @@
 
 1. 提交并推送 Task 27.2，确认本地与 GitHub 为 `0 0`。
 2. 进入 Task 27.3：先以真实重复执行测试驱动幂等 `scripts/setup.ps1`，并验证已有工作区数据不被覆盖。
+
+## Session: 2026-09-14 — Task 27.3 idempotent Windows setup
+
+- **Status:** complete
+- RED：2 项 setup 行为测试因 `scripts/setup.ps1` 不存在失败；实现后从不同 cwd 对 `工作台 安装` 路径连续执行两次完整 setup，2/2 通过。
+- `scripts/setup.ps1` 只解析自身相对路径、导入公共模块并输出解析后工作区/成功两行；实际阶段固定为版本检查、`pnpm install --frozen-lockfile`、全仓构建、编译后 bootstrap。
+- 两次之间写入的 `keep.txt` 和 SQLite sentinel 均保留；数据库仍包含 7 个提示词、7 个 activation 和 1 个未激活规则包。
+- 仓库子目录在任何命令或创建之前失败关闭；无 TTY 时两个 pnpm 阶段临时设置 `CI=true`，结束后精确恢复调用者原有环境。
+- 安全模块回归 7/7、Server bootstrap 集成 2/2、全仓 typecheck、构建与 `git diff --check` 通过；源码树未产生工作区数据。
+
+### Next action
+
+1. 提交并推送 Task 27.3，确认本地与 GitHub 为 `0 0`。
+2. 进入 Task 27.4：以真实进程测试驱动仅回环地址绑定、健康等待、进程 marker 复用及超时清理。
