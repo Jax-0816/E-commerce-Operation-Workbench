@@ -739,22 +739,18 @@ describe('production app composition', () => {
         })
       ).statusCode,
     ).toBe(200);
-    const packDirectory = fileURLToPath(
-      new URL('../../../default-rule-packs/pinduoduo-cn/', import.meta.url),
-    );
-    const manifest = JSON.parse(await readFile(join(packDirectory, 'manifest.json'), 'utf8'));
-    const rules = JSON.parse(await readFile(join(packDirectory, 'rules.json'), 'utf8'));
-    const imported = await first.inject({
-      method: 'POST',
-      url: '/api/v1/rule-packs/import',
-      payload: { format: 'json', contents: JSON.stringify({ manifest, rules }) },
+    const installed = await first.inject({
+      method: 'GET',
+      url: '/api/v1/rule-packs?platformId=pinduoduo&region=CN',
     });
-    expect(imported.statusCode).toBe(201);
+    expect(installed.statusCode).toBe(200);
+    expect(installed.json().items).toHaveLength(1);
+    expect(installed.json().items[0]).toMatchObject({ active: false });
     expect(
       (
         await first.inject({
           method: 'POST',
-          url: `/api/v1/rule-packs/${imported.json().id as string}/activate`,
+          url: `/api/v1/rule-packs/${installed.json().items[0].id as string}/activate`,
         })
       ).statusCode,
     ).toBe(200);

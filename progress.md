@@ -761,3 +761,18 @@
 
 1. 提交并推送 Task 26 收口，确认 `HEAD...origin/codex/phase-0` 为 `0 0`。
 2. 进入 Task 27：先审计现有启动、迁移和 CI 边界，再以失败测试驱动幂等 Windows setup/start 工作流。
+
+## Session: 2026-09-14 — Task 27.1 production bootstrap and default resources
+
+- **Status:** complete
+- 已写入并推送 Windows setup/start 设计与五段详细实施计划，选择“PowerShell 负责 OS 编排、TypeScript 生产组合负责业务 bootstrap”的单一权威路径。
+- RED：默认规则测试先因模块不存在失败；GREEN 后证明首次安装、重复无追加、保留既有 metadata、同版本 checksum 漂移失败关闭，且默认包保持 inactive。
+- RED：bootstrap 集成测试先因入口不存在失败；实现严格 `--workspace` 参数、生产组合 ready/close 后，在 `工作台 空格` 路径连续执行两次并保留中间写入的商品。
+- bootstrap 后数据库固定包含 16 个迁移、7 个提示词、7 个 activation、1 个未启用 bundled 规则包；编译后 CLI 连续运行成功，非法参数非零失败。
+- 新默认安装行为暴露旧促销集成测试重复导入假设；改为从真实列表取得 bundled pack 后显式激活，Server 22 个文件、59 项测试通过。
+- Server typecheck、lint、build、变更文件格式、`git diff --check` 和联网 frozen-lockfile 安装通过；无真实 provider 调用。
+
+### Next action
+
+1. 提交并推送 Task 27.1，确认本地与 GitHub 为 `0 0`。
+2. 进入 Task 27.2：安装/调用 PowerShell 7，先运行缺失模块的 Pester RED，再实现命令、版本、路径和健康等待安全边界。

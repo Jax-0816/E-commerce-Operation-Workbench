@@ -33,13 +33,14 @@
 - Create: `apps/server/src/bootstrap.integration.test.ts`
 - Modify: `apps/server/src/runtime.ts`
 - Modify: `apps/server/package.json`
+- Modify: `pnpm-lock.yaml`
 
 **Interfaces:**
 
 - Consumes: `RulePacksApplication.list/import`, `createProductionApp`, `createServerStartupOptions`, committed `default-rule-packs/pinduoduo-cn/{manifest,rules}.json`.
 - Produces: `ensureDefaultRulePacks(rules: Pick<RulePacksApplication, 'list' | 'import'>): Promise<void>` and `bootstrapWorkspace(input: { moduleUrl: string; workspacePath?: string; environment?: WorkspaceEnvironment; platform?: WorkspacePlatform }): Promise<void>`.
 
-- [ ] **Step 1: Write failing default-resource tests**
+- [x] **Step 1: Write failing default-resource tests**
 
   Add tests with a real in-memory application port that prove a fresh call imports the committed pack once, a second call imports nothing, an existing exact version/checksum remains unchanged, and an existing same version with a different checksum fails instead of overwriting history. The mutation each test catches is an unconditional import, silent checksum drift, or automatic activation.
 
@@ -50,13 +51,13 @@
   expect((await rules.list('pinduoduo', 'CN'))[0]?.active).toBe(false);
   ```
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
   Run: `pnpm --filter @eaw/server exec vitest run src/default-rule-packs.test.ts`
 
   Expected: FAIL because `default-rule-packs.ts` does not exist.
 
-- [ ] **Step 3: Implement minimal default installation and compose it**
+- [x] **Step 3: Implement minimal default installation and compose it**
 
   Read and strictly parse both committed JSON files, list by `pinduoduo/CN`, compare version and checksum, import only when absent, and throw on same-version checksum drift. Call it immediately after `createRulePacksApplication` in `createProductionApp`; never call `activate`.
 
@@ -70,7 +71,7 @@
   if (!sameVersion) await rules.import(JSON.stringify(bundled));
   ```
 
-- [ ] **Step 4: Write and verify failing bootstrap integration tests**
+- [x] **Step 4: Write and verify failing bootstrap integration tests**
 
   Run the wished-for `bootstrapWorkspace` twice against a real temporary workspace whose path contains `工作台 空格`. Assert `workspace.json`, `database/workbench.sqlite`, all current migrations, seven active prompts, and one inactive default rule pack; insert a sentinel product between calls and assert it survives. Also assert malformed CLI arguments exit nonzero without creating a workspace.
 
@@ -78,7 +79,7 @@
 
   Expected: FAIL because `bootstrapWorkspace` and its CLI do not exist.
 
-- [ ] **Step 5: Implement and verify the bootstrap CLI**
+- [x] **Step 5: Implement and verify the bootstrap CLI**
 
   Implement argument parsing for only `--workspace <path>`, resolve migrations from the compiled module URL, call `createProductionApp`, and always close in `finally`. Add `"bootstrap": "node dist/bootstrap.js"` to the server package.
 
@@ -93,10 +94,10 @@
 
   Run the two focused tests, then Server tests/typecheck/lint/build and `git diff --check`.
 
-- [ ] **Step 6: Commit and push**
+- [x] **Step 6: Commit and push**
 
   ```bash
-  git add apps/server/src/default-rule-packs.ts apps/server/src/default-rule-packs.test.ts apps/server/src/bootstrap.ts apps/server/src/bootstrap.integration.test.ts apps/server/src/runtime.ts apps/server/package.json
+  git add apps/server/src/default-rule-packs.ts apps/server/src/default-rule-packs.test.ts apps/server/src/bootstrap.ts apps/server/src/bootstrap.integration.test.ts apps/server/src/runtime.ts apps/server/src/runtime.integration.test.ts apps/server/package.json pnpm-lock.yaml
   git commit -m "feat: add idempotent workspace bootstrap"
   git push origin codex/phase-0
   ```

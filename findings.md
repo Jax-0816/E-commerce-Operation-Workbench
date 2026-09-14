@@ -143,16 +143,20 @@
 | 共享服务器且会重启的 E2E 套件固定单 worker      | `fullyParallel: false` 不会禁止测试文件并行；Phase 12 重启会打断其他文件，单 worker 保证跨阶段共享状态和服务生命周期确定性      |
 | Task 26 发布门禁必须使用精确锁定工具链          | 重连会清理 `/private/tmp` 临时安装；从 Codex runtime 取 Node 24.19.0，再临时恢复 pnpm 11.22.0，绝不以错误版本代替发布证据       |
 | Windows 归档能力不调用外部命令                  | 生产备份/恢复使用 Node 文件、路径、SQLite 与内建 ZIP API；只保留跨平台 `pnpm.cmd` 版本探测，不依赖 Bash、PowerShell 或系统 ZIP  |
+| Windows setup 复用生产 bootstrap 组合           | 初始化、pending restore、锁、迁移、工作流恢复和默认资源只保留一条 TypeScript 权威路径；PowerShell 不复刻业务规则                |
+| 内置不完整规则包只安装不自动启用                | setup 通过版本/checksum 幂等安装，用户仍需显式激活；避免把 `needs_review` 费率在新工作区中伪装成已确认规则                      |
 
 ## Issues Encountered
 
-| Issue                                               | Resolution                                                                          |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| graphify 知识图陈旧且只覆盖设计文档                 | 保留为架构参考，当前进度以源码/提交/测试为准                                        |
-| 根级 `pnpm test` 受工具链版本与依赖准备影响         | 不宣称完整门禁通过；实施前恢复精确工具链                                            |
-| 根目录直接运行全部 Vitest 会破坏 workspace cwd 假设 | 后续只用 package scripts 或明确的 workspace cwd                                     |
-| 重连后精确 pnpm 临时目录被系统清理                  | 网络受限首次恢复失败；获准联网后重新安装 pnpm 11.22.0，并重新执行受影响门禁         |
-| Windows 审计的首个换行正则包含非法字面换行          | 改用固定字符串搜索；命中仅位于 JSONL 测试，JSON.parse 可接受行尾 CR，不影响生产解析 |
+| Issue                                               | Resolution                                                                                              |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| graphify 知识图陈旧且只覆盖设计文档                 | 保留为架构参考，当前进度以源码/提交/测试为准                                                            |
+| 根级 `pnpm test` 受工具链版本与依赖准备影响         | 不宣称完整门禁通过；实施前恢复精确工具链                                                                |
+| 根目录直接运行全部 Vitest 会破坏 workspace cwd 假设 | 后续只用 package scripts 或明确的 workspace cwd                                                         |
+| 重连后精确 pnpm 临时目录被系统清理                  | 网络受限首次恢复失败；获准联网后重新安装 pnpm 11.22.0，并重新执行受影响门禁                             |
+| Windows 审计的首个换行正则包含非法字面换行          | 改用固定字符串搜索；命中仅位于 JSONL 测试，JSON.parse 可接受行尾 CR，不影响生产解析                     |
+| pnpm 依赖状态自检在中断后循环触发 install           | 保留损坏目录到 `/private/tmp` 后从锁文件完整重建；聚焦门禁直接调用仓库二进制，最终再运行 frozen install |
+| Prettier 展开了整个 pnpm lockfile                   | 从本轮开始前的 HEAD 机械恢复原文件，再只用 `apply_patch` 加入 3 行真实 workspace 依赖                   |
 
 ## Resources
 

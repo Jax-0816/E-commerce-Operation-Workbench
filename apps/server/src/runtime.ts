@@ -70,6 +70,7 @@ import {
 import { buildApp } from './app.js';
 import { createAppContext } from './context.js';
 import { ensureStrategyPrompts } from './strategy-prompts.js';
+import { ensureDefaultRulePacks } from './default-rule-packs.js';
 
 export interface CreateProductionAppOptions {
   readonly migrationsDirectory: string;
@@ -139,6 +140,7 @@ export async function createProductionApp({
       appVersion: APP_VERSION,
       idFactory: createUuidV7,
     });
+    await ensureDefaultRulePacks(rules);
     const promotionRepository = new DrizzlePromotionRepository(database);
     const promotions = createPromotionApplication({
       costs: costRepository,

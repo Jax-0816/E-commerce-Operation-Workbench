@@ -62,6 +62,9 @@ importers:
       '@eaw/prompt-engine':
         specifier: workspace:*
         version: link:../../packages/prompt-engine
+      '@eaw/rule-engine':
+        specifier: workspace:*
+        version: link:../../packages/rule-engine
       '@eaw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
