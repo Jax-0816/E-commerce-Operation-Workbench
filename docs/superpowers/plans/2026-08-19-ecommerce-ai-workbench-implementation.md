@@ -543,11 +543,11 @@ docs/adr/                     architecture decisions
 - Produces: `createBackup(context): BackupManifest`, `validateBackup`, `restoreBackup`.
 - Consumes: SQLite backup API, workspace paths, installed rule/prompt versions.
 
-- [ ] **Step 1: Test active-WAL consistency, full referenced data, no secrets/absolute paths, corrupt archive rejection, and old workspace preservation on failure**.
-- [ ] **Step 2: Confirm failure**.
-- [ ] **Step 3: Implement safe snapshot/archive/staged restore/integrity/migration/swap**.
-- [ ] **Step 4: Run integration and simulated Windows cross-machine restore tests**.
-- [ ] **Step 5: Commit** `feat: add safe portable workspace backup`.
+- [x] **Step 1: Test active-WAL consistency, full referenced data, no secrets/absolute paths, corrupt archive rejection, and old workspace preservation on failure**.
+- [x] **Step 2: Confirm failure**.
+- [x] **Step 3: Implement safe snapshot/archive/staged restore/integrity/migration/swap**.
+- [x] **Step 4: Run integration and simulated Windows cross-machine restore tests**.
+- [x] **Step 5: Commit** `feat: add safe portable workspace backup`.
 
 ### Task 27: Idempotent Windows setup and start
 

@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 6 — Task 26：一致性备份与事务恢复（in_progress）
+Wave 6 — Task 27：幂等 Windows 安装启动（in_progress）
 
 ## Phases
 
@@ -54,8 +54,8 @@ Wave 6 — Task 26：一致性备份与事务恢复（in_progress）
 
 ### Wave 6: 工作区可靠性与 Windows 交付
 
-- [ ] Task 26：一致性备份与事务恢复（in_progress）
-- [ ] Task 27：幂等 Windows 安装启动
+- [x] Task 26：一致性备份与事务恢复（complete）
+- [ ] Task 27：幂等 Windows 安装启动（in_progress）
 - **Status:** in_progress
 
 ### Wave 7: 产品收口与发布验收

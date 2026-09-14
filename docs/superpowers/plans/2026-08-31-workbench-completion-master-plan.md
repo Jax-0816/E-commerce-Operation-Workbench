@@ -48,10 +48,11 @@
 | Task 23                               | complete    | 五图结构化方案、详情页架构、证据守卫、单项重生成、锁定、稳定重排和不可变历史均已完成      |
 | Task 24                               | complete    | 持久 DAG、revision CAS、幂等恢复、取消、durable SSE、可访问 UI 与 Phase 10 E2E 已通过     |
 | Task 25                               | complete    | 精确来源、稳定 blocker、不可变历史、UI 与 Phase 11 E2E 已完成                             |
-| Task 26                               | in_progress | 进入 WAL 一致备份、安全归档与事务恢复                                                     |
-| Task 27–29                            | pending     | 继续完成 Windows 交付、产品收口与发布验收                                                 |
+| Task 26                               | complete    | WAL 一致快照、安全归档、事务恢复、数据管理 UI 与 Phase 12 E2E 已通过                      |
+| Task 27                               | in_progress | 进入幂等 Windows 安装、迁移、启动与健康等待                                               |
+| Task 28–29                            | pending     | 继续完成产品收口与跨平台发布验收                                                          |
 
-当前主线完成度按原计划 29 个任务计为 `25/29 ≈ 86%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 25 已完成，当前进入 Task 26。
+当前主线完成度按原计划 29 个任务计为 `26/29 ≈ 90%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 26 已完成，当前进入 Task 27。
 
 ## Dependency Order
 
@@ -293,10 +294,10 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 
 **Files:** `packages/workspace/src/{backup,restore,manifest,archive-security}.ts` 及 data-management API/UI。
 
-- [ ] 测试 WAL 活跃时一致性、checksum、ZIP traversal、兼容性、损坏归档和失败回滚。
-- [ ] 实现 SQLite 安全快照、相对路径 manifest、暂存恢复、完整性检查、迁移和原子替换。
-- [ ] 证明备份不含密钥和绝对路径，恢复失败时旧工作区保持可用。
-- [ ] 提交 `feat: add safe portable workspace backup`。
+- [x] 测试 WAL 活跃时一致性、checksum、ZIP traversal、兼容性、损坏归档和失败回滚。
+- [x] 实现 SQLite 安全快照、相对路径 manifest、暂存恢复、完整性检查、迁移和原子替换。
+- [x] 证明备份不含密钥和绝对路径，恢复失败时旧工作区保持可用。
+- [x] 提交 `feat: add safe portable workspace backup`。
 
 ### Task 27: Idempotent Windows setup and start
 

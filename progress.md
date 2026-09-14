@@ -734,3 +734,30 @@
 
 1. 提交并推送 Task 26.5，确认本地与 GitHub 一致。
 2. 进入 Task 26.6：运行全仓发布门禁、更新主计划状态并将 Task 27 设为 in progress。
+
+## Session: 2026-09-14 — Task 26 release gates and closeout
+
+- **Status:** complete
+- 精确运行时检查和离线冻结安装通过：Node.js 24.19.0、pnpm 11.22.0，18 个 workspace 项目依赖无漂移。
+- 全仓格式、typecheck、lint 和生产构建通过；完整单元/集成测试共 149 个文件、541 项测试，0 失败。
+- 7 个版本化提示词和 1 个拼多多规则包校验通过；Phase 2/3/10/11/12 共 5 条 Playwright 黄金路径在当前实现上通过，备份流程未产生真实付费 provider 调用。
+- WAL 在线备份测试证明独立 SQLite 快照 `integrity_check = ok`；严格 ZIP 校验覆盖 traversal、绝对/反斜杠路径、重复/大小写冲突、符号链接、CRC32、SHA-256 和资源上限。
+- 备份仅含相对路径白名单，不含 `.secrets.json`、密钥值、源工作区绝对路径、WAL/SHM 或日志；中文/空格目标工作区可恢复，损坏归档及四阶段注入失败均保持旧工作区和本机密钥可用。
+- Windows 可移植性审计通过：无大小写冲突跟踪路径、无跟踪符号链接、无生产 CRLF 敏感解析、无机器绝对路径、无外部归档命令或 POSIX-only 替换假设；win32 drive/UNC/反斜杠测试继续通过。
+
+### Fresh verification evidence
+
+| Gate                             | Result                                 |
+| -------------------------------- | -------------------------------------- |
+| Runtime / frozen offline install | Node 24.19.0 + pnpm 11.22.0 passed     |
+| Root unit/integration tests      | 149 files, 541 passed, 0 failed        |
+| Playwright golden paths          | Phase 2/3/10/11/12: 5 passed, 0 failed |
+| Root format/typecheck/lint/build | passed                                 |
+| Prompt/rule-pack validation      | 7 prompts + 1 rule pack passed         |
+| Windows portability / diff audit | passed                                 |
+| Real paid AI calls               | 0                                      |
+
+### Next action
+
+1. 提交并推送 Task 26 收口，确认 `HEAD...origin/codex/phase-0` 为 `0 0`。
+2. 进入 Task 27：先审计现有启动、迁移和 CI 边界，再以失败测试驱动幂等 Windows setup/start 工作流。

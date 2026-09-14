@@ -225,7 +225,7 @@ Run Web tests/typecheck/lint/build, changed-file Prettier, Phase 2/3/10/11/12 Pl
 
 **Interfaces:** None beyond the completed Task 26 deliverable.
 
-- [ ] **Step 1: Run every release gate under exact tools**
+- [x] **Step 1: Run every release gate under exact tools**
 
 ```bash
 node scripts/check-versions.mjs
@@ -243,10 +243,10 @@ git diff --check
 
 Expected: every gate passes under Node.js 24.19.0 / pnpm 11.22.0 with zero paid AI calls.
 
-- [ ] **Step 2: Run the Windows portability audit**
+- [x] **Step 2: Run the Windows portability audit**
 
 Verify no case-conflicting tracked paths, tracked symlinks, CRLF-sensitive parser, machine-specific absolute path, external archive command, or POSIX-only replacement assumption. Repeat the cross-machine restore test with `win32` path fixtures; Task 29 will repeat the complete project from a fresh GitHub clone on real Windows and Ubuntu.
 
-- [ ] **Step 3: Update records and commit/push**
+- [x] **Step 3: Update records and commit/push**
 
 Mark Task 26 complete and Task 27 in progress. Record exact test counts, WAL snapshot/integrity evidence, archive attack rejection, secret/path exclusion, cross-machine success, rollback behavior, and GitHub sync. Commit `feat: add safe portable workspace backup`, push, and verify `0 0`.
