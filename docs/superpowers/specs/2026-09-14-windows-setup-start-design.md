@@ -20,7 +20,7 @@ Default prompts remain active as today. The bundled incomplete Pinduoduo rule pa
 
 ### `scripts/setup.ps1`
 
-- Accepts an optional `-WorkspacePath`; otherwise uses `%LOCALAPPDATA%\EcommerceWorkbench\workspace` through the application resolver.
+- Accepts an optional `-WorkspacePath`; otherwise resolves the same `%LOCALAPPDATA%\EcommerceWorkbench\workspace` default as the application.
 - Sets strict PowerShell error behavior and resolves every repository file relative to `$PSScriptRoot`.
 - Runs `node scripts/check-versions.mjs`, `pnpm install --frozen-lockfile`, `pnpm build`, then the compiled bootstrap CLI.
 - Passes paths as argument-array elements rather than building command strings.
@@ -33,7 +33,7 @@ Default prompts remain active as today. The bundled incomplete Pinduoduo rule pa
 - Starts `node apps/server/dist/index.js` with `HOST=127.0.0.1`, `PORT`, and optional `EAW_WORKSPACE_PATH` inherited only by the child process.
 - Polls `http://127.0.0.1:<port>/api/v1/health` until it returns the expected `status: ok` and application version.
 - Opens the browser only after health succeeds. Startup exit or timeout returns a nonzero error and terminates the started Node process.
-- If the target port already serves a healthy matching workbench, it reuses that instance instead of starting a duplicate.
+- After health succeeds it atomically records PID, port, URL, and app version under the workspace `logs` directory. A later start reuses the instance only when that marker still names a live process and the matching health endpoint succeeds; stale markers are removed, and an unrelated listener is rejected.
 
 Shared PowerShell functions live in `scripts/windows/Workbench.psm1`; the two root scripts are thin parameter/exit-code entry points.
 
