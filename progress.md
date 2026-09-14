@@ -776,3 +776,17 @@
 
 1. 提交并推送 Task 27.1，确认本地与 GitHub 为 `0 0`。
 2. 进入 Task 27.2：安装/调用 PowerShell 7，先运行缺失模块的 Pester RED，再实现命令、版本、路径和健康等待安全边界。
+
+## Session: 2026-09-14 — Task 27.2 Windows command and path safety
+
+- **Status:** complete
+- 从 Microsoft 官方 GitHub release 取得 PowerShell 7.6.6 x64，压缩包 SHA-256 与官方 `hashes.sha256` 完全一致；官方 PSGallery 当前稳定 Pester 6.2.0 被固定为本地与 Windows CI 版本。
+- RED：Pester 发现 7 项行为测试，因 `scripts/windows/Workbench.psm1` 不存在失败；GREEN 后 7/7 通过。
+- 模块只导出四个边界：原生命令非零退出码终止、复用项目 Node/pnpm 版本检查器、工作区默认位于 `LOCALAPPDATA` 且拒绝源码子目录、健康轮询只接受匹配的 status/version 并在单调时限内失败。
+- 从 `/private/tmp` 作为当前目录执行同一 Pester 入口仍 7/7 通过，证明中文/空格仓库路径及非仓库 cwd 不会破坏导入。
+- 根级脚本 Vitest 1 文件/3 项通过；CI YAML Prettier 和 `git diff --check` 通过。
+
+### Next action
+
+1. 提交并推送 Task 27.2，确认本地与 GitHub 为 `0 0`。
+2. 进入 Task 27.3：先以真实重复执行测试驱动幂等 `scripts/setup.ps1`，并验证已有工作区数据不被覆盖。

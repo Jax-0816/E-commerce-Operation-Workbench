@@ -120,7 +120,7 @@
 - Produces: `Invoke-WorkbenchNative`, `Assert-WorkbenchRuntime`, `Resolve-WorkbenchWorkspacePath`, and `Test-WorkbenchHealth` exported by `Workbench.psm1`.
 - Consumes: root `package.json`, `scripts/check-versions.mjs`, `System.IO.Path`, and `Invoke-RestMethod`.
 
-- [ ] **Step 1: Add the Windows Pester entry and failing behavior tests**
+- [x] **Step 1: Add the Windows Pester entry and failing behavior tests**
 
   Add a Windows-only CI step using the runner's PowerShell and Pester. Tests execute functions rather than inspect source text. Cover: unsupported Node/pnpm raises before a marker command runs; a child exit code becomes a terminating error; default workspace resolves below `LOCALAPPDATA`; explicit Chinese/space path remains exact; repository descendants are rejected; health accepts only `{ status: 'ok', appVersion: '0.1.0' }` and stops at a bounded deadline.
 
@@ -131,13 +131,13 @@
   }
   ```
 
-- [ ] **Step 2: Run Pester and verify RED**
+- [x] **Step 2: Run Pester and verify RED**
 
   Run: `pwsh -NoLogo -NoProfile -File tests/scripts/run-pester.ps1` (or `Invoke-Pester tests/scripts/Workbench.Tests.ps1 -CI` on Windows).
 
   Expected: FAIL because `scripts/windows/Workbench.psm1` does not exist.
 
-- [ ] **Step 3: Implement the minimal module**
+- [x] **Step 3: Implement the minimal module**
 
   Use `& $FilePath @ArgumentList`, inspect `$LASTEXITCODE`, and throw a stable stage error. Normalize with `[IO.Path]::GetFullPath`; compare repository containment with `OrdinalIgnoreCase`. Runtime validation delegates to the existing version checker. Health polling accepts injected request/sleep script blocks only as public orchestration dependencies; tests assert returned health values and elapsed/attempt behavior, never mock call existence.
 
@@ -148,11 +148,11 @@
   }
   ```
 
-- [ ] **Step 4: Verify GREEN and PowerShell portability**
+- [x] **Step 4: Verify GREEN and PowerShell portability**
 
   Run Pester on PowerShell 7, then root script Vitest, formatting, and `git diff --check`. Confirm module import works when the repository path and current directory differ.
 
-- [ ] **Step 5: Commit and push**
+- [x] **Step 5: Commit and push**
 
   ```bash
   git add scripts/windows/Workbench.psm1 tests/scripts/Workbench.Tests.ps1 tests/scripts/run-pester.ps1 .github/workflows/ci.yml

@@ -23,6 +23,13 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Test Windows scripts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -RequiredVersion 6.2.0 -Scope CurrentUser -Force
+          ./tests/scripts/run-pester.ps1
       - name: Check runtime versions
         run: node scripts/check-versions.mjs
       - name: Typecheck
