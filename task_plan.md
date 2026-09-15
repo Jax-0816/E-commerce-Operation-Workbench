@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 6 — Task 27：幂等 Windows 安装启动（in_progress）
+Wave 7 — Task 28：总控台、设置、离线和无障碍体验（in_progress）
 
 ## Phases
 
@@ -55,14 +55,14 @@ Wave 6 — Task 27：幂等 Windows 安装启动（in_progress）
 ### Wave 6: 工作区可靠性与 Windows 交付
 
 - [x] Task 26：一致性备份与事务恢复（complete）
-- [ ] Task 27：幂等 Windows 安装启动（in_progress）
-- **Status:** in_progress
+- [x] Task 27：幂等 Windows 安装启动（complete）
+- **Status:** complete
 
 ### Wave 7: 产品收口与发布验收
 
-- [ ] Task 28：总控台、设置、离线和无障碍体验
+- [ ] Task 28：总控台、设置、离线和无障碍体验（in_progress）
 - [ ] Task 29：完整 Playwright 黄金路径与发布门禁
-- **Status:** pending
+- **Status:** in_progress
 
 ## Key Questions
 
@@ -96,6 +96,8 @@ Wave 6 — Task 27：幂等 Windows 安装启动（in_progress）
 | 初版定价 solver 对公式分段作单调性假设                    |       1 | 独立审查复现漏选全局最低价；改为有复合工作预算的有界穷举，并覆盖六种比较符、有理阈值和非单调窗口 |
 | 全仓并发密钥测试偶发读取已原子改名的 owner 文件           |       1 | 锁状态读取遇到瞬时 `ENOENT` 时重新扫描目录；连续三轮 workspace 测试及全仓测试通过                |
 | 浏览器驱动不支持 `networkidle` 等待条件                   |       1 | 改用 `domcontentloaded` 并通过真实 DOM、接口结果与历史记录完成页面验收                           |
+| Node 24 在 Windows 直接执行 `pnpm.cmd` 返回 `EINVAL`      |       1 | 固定经 `ComSpec /d /s /c` 调用静态版本命令，并由单元测试锁定 Windows 参数                        |
+| Windows 活跃服务日志被重定向写句柄占用                    |       1 | Pester 使用 `FileShare.ReadWrite` 只读流验收脱敏日志；真实 Windows runner 已通过                 |
 
 ## Notes
 

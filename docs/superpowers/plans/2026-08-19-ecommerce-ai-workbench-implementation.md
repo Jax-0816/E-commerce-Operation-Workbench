@@ -561,11 +561,11 @@ docs/adr/                     architecture decisions
 - Produces: repeatable setup/migrate/default installation and loopback start/health/browser flow.
 - Consumes: version checker and workspace bootstrap CLI.
 
-- [ ] **Step 1: Write Pester/static failing tests** for version errors, idempotency, data preservation, loopback binding, health timeout, and quoted paths with spaces/Chinese text.
-- [ ] **Step 2: Confirm failure on Windows CI**.
-- [ ] **Step 3: Implement scripts with `$ErrorActionPreference = 'Stop'`, explicit exits, and no source edits**.
-- [ ] **Step 4: Run Windows CI script tests twice against the same workspace**.
-- [ ] **Step 5: Commit** `feat: add windows setup and start workflow`.
+- [x] **Step 1: Write Pester/static failing tests** for version errors, idempotency, data preservation, loopback binding, health timeout, and quoted paths with spaces/Chinese text.
+- [x] **Step 2: Confirm failure on Windows CI**.
+- [x] **Step 3: Implement scripts with `$ErrorActionPreference = 'Stop'`, explicit exits, and no source edits**.
+- [x] **Step 4: Run Windows CI script tests twice against the same workspace**.
+- [x] **Step 5: Commit** `feat: add windows setup and start workflow`.
 
 ---
 

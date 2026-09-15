@@ -287,15 +287,15 @@
 
 **Interfaces:** None beyond the completed Task 27 commands.
 
-- [ ] **Step 1: Run the Windows CI acceptance from a fresh checkout**
+- [x] **Step 1: Run the Windows CI acceptance from a fresh checkout**
 
   Windows CI must install exact tools/dependencies, run the normal quality/build gates, run Pester, invoke setup twice against the same path containing Chinese text and spaces, launch with `-NoBrowser`, verify health, and terminate the test server. Ubuntu retains the same root quality gates.
 
-- [ ] **Step 2: Update README with actual v0.1 capabilities and commands**
+- [x] **Step 2: Update README with actual v0.1 capabilities and commands**
 
   Replace the obsolete Phase 0 description. Document cloning, exact prerequisites, `powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1`, `powershell -ExecutionPolicy Bypass -File .\scripts\start.ps1`, default workspace, custom workspace, loopback URL, data preservation, backup/restore, and safe troubleshooting for version/health errors.
 
-- [ ] **Step 3: Run every release gate**
+- [x] **Step 3: Run every release gate**
 
   ```bash
   node scripts/check-versions.mjs
@@ -313,11 +313,11 @@
 
   Also run Pester locally when PowerShell is available and verify GitHub's Windows job is green. Expected: all pass with zero paid AI calls.
 
-- [ ] **Step 4: Run the final portability audit**
+- [x] **Step 4: Run the final portability audit**
 
   Verify no tracked case conflicts/symlinks, machine absolute paths, source-tree workspace, string-built native command, public bind, unbounded health loop, leaked child process, CRLF-sensitive parser, or unquoted Chinese/space path. Confirm setup reruns do not change the sentinel and startup logs contain no secret.
 
-- [ ] **Step 5: Update records, commit, and push**
+- [x] **Step 5: Update records, commit, and push**
 
   Mark Task 27 complete and Task 28 in progress. Record exact Pester/root/E2E/Windows CI counts and commit:
 

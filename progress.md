@@ -819,3 +819,35 @@
 
 1. 提交并推送 Task 27.4，确认本地与 GitHub 为 `0 0`。
 2. 进入 Task 27.5：在 GitHub Windows runner 验证干净检出，完成 README/主计划文档和 Task 27 发布门禁收口。
+
+## Session: 2026-09-15 — Task 27.5 Windows release closeout
+
+- **Status:** complete
+- GitHub run `34920871679` 从全新检出验证通过：`windows-latest` 16m07s、`ubuntu-latest` 9m23s；Windows 完整执行重复 setup、中文/空格工作区、回环启动、健康检查和精确子进程终止。
+- 首轮 Windows CI 暴露 Node 24 直接 `execFileSync('pnpm.cmd')` 的 `EINVAL`；版本检查改为固定 `ComSpec /d /s /c` 静态命令后，聚焦 Vitest 5/5 通过。
+- 第二轮 Windows CI 暴露活跃日志写句柄与 `ReadAllText` 的共享冲突；测试改用 `FileShare.ReadWrite` 只读流后，本地启动 Pester 3/3、完整 Pester 12/12 和真实 Windows Pester 均通过。
+- 本地精确工具链为 Node.js 24.19.0、pnpm 11.22.0、PowerShell 7.6.6、Pester 6.2.0；冻结安装、格式、typecheck、lint、生产构建、7 个提示词和 1 个规则包校验均通过。
+- 全仓单元/集成测试为 151 个文件、548 项通过、0 失败；Phase 2/3/10/11/12 Playwright 为 5/5 通过，自动化未发起真实付费 AI 调用。
+- 可移植性审计覆盖 698 个跟踪文件：0 大小写冲突、0 Windows 非法名称、0 跟踪符号链接、0 机器路径泄漏；源码树未生成 workspace，原生命令参数、仅回环绑定、有界健康等待和失败 PID 清理均由行为测试覆盖。
+- 新增 `.gitattributes` 固定文本 LF 并标记常见二进制资产，避免 Windows `core.autocrlf` 产生脚本、JSON 或校验差异。
+- README 已替换过时 Phase 0 说明，写明 Windows 全新克隆、精确工具链、幂等 setup/start、默认及自定义工作区、数据保留、备份恢复和安全排障。
+- CI 增补格式与提示词校验，并将耗时 Windows Pester 放在普通质量门禁之后；Task 27 已完成，Task 28 进入 in progress。
+
+### Fresh verification evidence
+
+| Gate                             | Result                                 |
+| -------------------------------- | -------------------------------------- |
+| Runtime / frozen install         | Node 24.19.0 + pnpm 11.22.0 passed     |
+| Root unit/integration tests      | 151 files, 548 passed, 0 failed        |
+| PowerShell acceptance            | 3 files, 12 passed, 0 failed           |
+| Playwright golden paths          | Phase 2/3/10/11/12: 5 passed, 0 failed |
+| Root format/typecheck/lint/build | passed                                 |
+| Prompt/rule-pack validation      | 7 prompts + 1 rule pack passed         |
+| GitHub clean Windows/Ubuntu run  | `34920871679`: both jobs passed        |
+| Windows portability / diff audit | 698 tracked files audited; passed      |
+| Real paid AI calls               | 0                                      |
+
+### Next action
+
+1. 提交并推送 Task 27 收口，确认增强后的最终 CI 与 `HEAD...origin/codex/phase-0` 均为绿色/`0 0`。
+2. 进入 Task 28：先以失败测试定义总控台风险摘要、脱敏设置、离线能力边界与无障碍语义，再分小任务实现并逐次提交推送。

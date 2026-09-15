@@ -49,10 +49,11 @@
 | Task 24                               | complete    | 持久 DAG、revision CAS、幂等恢复、取消、durable SSE、可访问 UI 与 Phase 10 E2E 已通过     |
 | Task 25                               | complete    | 精确来源、稳定 blocker、不可变历史、UI 与 Phase 11 E2E 已完成                             |
 | Task 26                               | complete    | WAL 一致快照、安全归档、事务恢复、数据管理 UI 与 Phase 12 E2E 已通过                      |
-| Task 27                               | in_progress | 进入幂等 Windows 安装、迁移、启动与健康等待                                               |
-| Task 28–29                            | pending     | 继续完成产品收口与跨平台发布验收                                                          |
+| Task 27                               | complete    | 幂等 Windows 安装、迁移、回环启动、健康等待及真实 Windows CI 已通过                       |
+| Task 28                               | in_progress | 进入总控台、设置、离线与无障碍体验收口                                                    |
+| Task 29                               | pending     | 完成全链路黄金路径与跨平台发布验收                                                        |
 
-当前主线完成度按原计划 29 个任务计为 `26/29 ≈ 90%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 26 已完成，当前进入 Task 27。
+当前主线完成度按原计划 29 个任务计为 `27/29 ≈ 93%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 27 已完成，当前进入 Task 28。
 
 ## Dependency Order
 
@@ -303,10 +304,10 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 
 **Files:** `scripts/setup.ps1`、`scripts/start.ps1`、`scripts/windows/*.psm1`、Pester 测试。
 
-- [ ] 测试版本错误、重复执行、数据保留、loopback、健康超时及中文/空格路径。
-- [ ] 实现固定版本检查、安装、迁移、默认资源安装、启动、健康等待和浏览器打开。
-- [ ] 在同一工作区连续执行两次并通过 Windows CI。
-- [ ] 提交 `feat: add windows setup and start workflow`。
+- [x] 测试版本错误、重复执行、数据保留、loopback、健康超时及中文/空格路径。
+- [x] 实现固定版本检查、安装、迁移、默认资源安装、启动、健康等待和浏览器打开。
+- [x] 在同一工作区连续执行两次并通过 Windows CI。
+- [x] 提交 `feat: add windows setup and start workflow`。
 
 ## Wave 7 — 产品收口与发布验收
 

@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+# Keep generated and binary artifacts byte-for-byte across platforms.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.sqlite binary
+*.zip binary
+*.xls binary
+*.xlsx binary
+*.woff binary
+*.woff2 binary
