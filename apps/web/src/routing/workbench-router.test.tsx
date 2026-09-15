@@ -100,6 +100,14 @@ describe('routed workbench', () => {
     root.unmount();
   });
 
+  it('opens the redacted system settings page', async () => {
+    const { container, root } = await render('/capabilities/settings');
+    expect(container.querySelector('h1')?.textContent).toBe('系统设置');
+    expect(container.textContent).toContain('仅限本机');
+    expect(container.textContent).not.toContain('当前能力尚未实现');
+    root.unmount();
+  });
+
   it('opens the implemented competitor import workspace', async () => {
     const { container, root } = await render(`/products/${product.id}/competitors`);
 
@@ -287,6 +295,20 @@ async function render(entry: string) {
                   href: '/products',
                 },
               ],
+            }),
+          }}
+          systemStatusApi={{
+            get: async () => ({
+              appVersion: '0.1.0',
+              localOnly: true,
+              bindAddress: '127.0.0.1',
+              ai: { provider: 'deepseek', model: 'deepseek-chat', configured: false },
+              prompts: { installedCount: 7, activeCount: 7 },
+              rules: {
+                installedCount: 1,
+                activePinduoduoCnVersion: null,
+                unresolvedActiveRuleCount: 0,
+              },
             }),
           }}
         />

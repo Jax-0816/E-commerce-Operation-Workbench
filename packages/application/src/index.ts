@@ -55,6 +55,15 @@ export type {
   DashboardAttentionItem,
   DashboardView,
 } from './dashboard/index.js';
+export {
+  createSystemStatusApplication,
+  SYSTEM_PROMPT_TEMPLATE_IDS,
+} from './system-status/index.js';
+export type {
+  SystemStatusApplication,
+  SystemStatusApplicationDependencies,
+  SystemStatusView,
+} from './system-status/index.js';
 export { createCompetitorsApplication } from './competitors/index.js';
 export type {
   CompetitorsApplication,

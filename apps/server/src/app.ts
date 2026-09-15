@@ -26,6 +26,7 @@ import { registerWorkflowRoutes } from './routes/workflows.js';
 import { registerOperationPlanRoutes } from './routes/operation-plans.js';
 import { registerDataManagementRoutes } from './routes/data-management.js';
 import { registerDashboardRoute } from './routes/dashboard.js';
+import { registerSystemStatusRoute } from './routes/system-status.js';
 
 export function buildApp(context: AppContext): FastifyInstance {
   const app = Fastify();
@@ -55,6 +56,7 @@ export function buildApp(context: AppContext): FastifyInstance {
   registerOperationPlanRoutes(app, context.operationPlans);
   registerDataManagementRoutes(app, context.dataManagement);
   registerDashboardRoute(app, context.dashboard);
+  registerSystemStatusRoute(app, context.systemStatus);
 
   if (context.webDistDir !== undefined && existsSync(context.webDistDir)) {
     app.register(fastifyStatic, {

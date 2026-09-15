@@ -36,6 +36,8 @@ export {
 } from './titles.js';
 export { HealthResponseSchema } from './health.js';
 export type { HealthResponse } from './health.js';
+export { SystemStatusResponseSchema } from './system-status.js';
+export type { SystemStatusResponse } from './system-status.js';
 export {
   DashboardAttentionCodeSchema,
   DashboardAttentionItemSchema,

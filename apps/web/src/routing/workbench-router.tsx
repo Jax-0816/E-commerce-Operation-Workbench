@@ -61,6 +61,8 @@ import type { OperationPlansApi } from '../features/operation-plans/api.js';
 import { OperationPlanPanel } from '../features/operation-plans/operation-plan-panel.js';
 import type { DataManagementApi } from '../features/data-management/api.js';
 import { DataManagementPanel } from '../features/data-management/data-management-panel.js';
+import type { SystemStatusApi } from '../features/system-settings/api.js';
+import { SystemSettingsPanel } from '../features/system-settings/system-settings-panel.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
@@ -80,6 +82,7 @@ export interface WorkbenchDependencies {
   readonly skusApi: SkusApi;
   readonly dataManagementApi: DataManagementApi;
   readonly dashboardApi: DashboardApi;
+  readonly systemStatusApi: SystemStatusApi;
 }
 
 const globalNavigation = [
@@ -230,6 +233,14 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
           element={
             <ProductFeature title="数据管理">
               <DataManagementPanel api={dependencies.dataManagementApi} />
+            </ProductFeature>
+          }
+        />
+        <Route
+          path="capabilities/settings"
+          element={
+            <ProductFeature title="系统设置">
+              <SystemSettingsPanel api={dependencies.systemStatusApi} />
             </ProductFeature>
           }
         />

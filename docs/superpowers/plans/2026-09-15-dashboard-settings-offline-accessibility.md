@@ -224,23 +224,23 @@
 - Produces `GET /api/v1/system/status`, `SystemStatusApi`, and the implemented `/capabilities/settings` page.
 - Consumes `APP_VERSION`, fixed loopback metadata, AI configured status, known prompt-template IDs, and rule-pack list state.
 
-- [ ] **Step 1: Write strict redaction RED tests**
+- [x] **Step 1: Write strict redaction RED tests**
 
   Contract/application tests reject extra/path/secret-shaped fields and prove only version, loopback/local-only, AI boolean/model, prompt installed/active counts, and rule installed/active/review counts are returned. Missing prompts/rules remain explicit counts/null state.
 
-- [ ] **Step 2: Implement application and route**
+- [x] **Step 2: Implement application and route**
 
   Count the seven known default prompt template IDs through existing prompt repository reads. Do not add mutation methods or return template bodies/hashes. Validate the route response strictly.
 
-- [ ] **Step 3: Write settings UI RED tests**
+- [x] **Step 3: Write settings UI RED tests**
 
   Assert safe values, no key/path rendering, links to AI/rules/data pages, loading/error states, and textual local-only/loopback explanation.
 
-- [ ] **Step 4: Implement and route the settings page**
+- [x] **Step 4: Implement and route the settings page**
 
   Replace the wildcard placeholder for `/capabilities/settings`. This page summarizes; existing specialist pages remain the only mutation surfaces.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
   Run focused Contracts/Application/Server/Web tests and typechecks/lints/builds, then:
 

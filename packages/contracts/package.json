@@ -11,6 +11,10 @@
     "./dashboard": {
       "types": "./dist/dashboard.d.ts",
       "import": "./dist/dashboard.js"
+    },
+    "./system-status": {
+      "types": "./dist/system-status.d.ts",
+      "import": "./dist/system-status.js"
     }
   },
   "scripts": {

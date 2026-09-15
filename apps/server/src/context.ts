@@ -17,6 +17,7 @@ import type {
   WorkflowsApplication,
   DataManagementApplication,
   DashboardApplication,
+  SystemStatusApplication,
 } from '@eaw/application';
 
 export interface AppContextOptions {
@@ -38,6 +39,7 @@ export interface AppContextOptions {
   readonly operationPlans?: OperationPlansApplication;
   readonly dataManagement?: DataManagementApplication;
   readonly dashboard?: DashboardApplication;
+  readonly systemStatus?: SystemStatusApplication;
 }
 
 export interface AppContext {
@@ -60,6 +62,7 @@ export interface AppContext {
   readonly operationPlans?: OperationPlansApplication;
   readonly dataManagement?: DataManagementApplication;
   readonly dashboard?: DashboardApplication;
+  readonly systemStatus?: SystemStatusApplication;
 }
 
 export function createAppContext(options: AppContextOptions): AppContext {
@@ -83,5 +86,6 @@ export function createAppContext(options: AppContextOptions): AppContext {
     operationPlans: options.operationPlans,
     dataManagement: options.dataManagement,
     dashboard: options.dashboard,
+    systemStatus: options.systemStatus,
   };
 }

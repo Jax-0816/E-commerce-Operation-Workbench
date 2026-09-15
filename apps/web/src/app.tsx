@@ -32,6 +32,10 @@ import {
   type DataManagementApi,
 } from './features/data-management/api.js';
 import { createBrowserDashboardApi, type DashboardApi } from './features/dashboard/api.js';
+import {
+  createBrowserSystemStatusApi,
+  type SystemStatusApi,
+} from './features/system-settings/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -50,6 +54,7 @@ const browserWorkflowApi = createBrowserWorkflowApi();
 const browserOperationPlansApi = createBrowserOperationPlansApi();
 const browserDataManagementApi = createBrowserDataManagementApi();
 const browserDashboardApi = createBrowserDashboardApi();
+const browserSystemStatusApi = createBrowserSystemStatusApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -69,6 +74,7 @@ export function App({
   operationPlansApi = browserOperationPlansApi,
   dataManagementApi = browserDataManagementApi,
   dashboardApi = browserDashboardApi,
+  systemStatusApi = browserSystemStatusApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -87,6 +93,7 @@ export function App({
   readonly operationPlansApi?: OperationPlansApi;
   readonly dataManagementApi?: DataManagementApi;
   readonly dashboardApi?: DashboardApi;
+  readonly systemStatusApi?: SystemStatusApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -108,6 +115,7 @@ export function App({
         operationPlansApi={operationPlansApi}
         dataManagementApi={dataManagementApi}
         dashboardApi={dashboardApi}
+        systemStatusApi={systemStatusApi}
       />
     </BrowserRouter>
   );

@@ -25,6 +25,7 @@ import {
   createWorkflowsApplication,
   createDataManagementApplication,
   createDashboardApplication,
+  createSystemStatusApplication,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
@@ -307,6 +308,12 @@ export async function createProductionApp({
       titles,
       content: contentBuilders,
     });
+    const systemStatus = createSystemStatusApplication({
+      appVersion: APP_VERSION,
+      ai: aiSettings,
+      prompts: promptRepository,
+      rules,
+    });
     const app = buildApp(
       createAppContext({
         aiSettings,
@@ -327,6 +334,7 @@ export async function createProductionApp({
         operationPlans,
         dataManagement,
         dashboard,
+        systemStatus,
       }),
     );
     app.addHook('onClose', cleanup);

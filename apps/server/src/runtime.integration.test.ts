@@ -203,6 +203,23 @@ describe('production app composition', () => {
     expect(response.body).not.toContain(secret);
     expect(response.body).not.toContain(workspacePath);
     expect(providerCalls).toBe(callsBeforeDashboardRead);
+    const systemStatus = await restarted.inject({ method: 'GET', url: '/api/v1/system/status' });
+    expect(systemStatus.statusCode, systemStatus.body).toBe(200);
+    expect(systemStatus.json()).toEqual({
+      appVersion: '0.1.0',
+      localOnly: true,
+      bindAddress: '127.0.0.1',
+      ai: { provider: 'deepseek', model: 'deepseek-chat', configured: true },
+      prompts: { installedCount: 7, activeCount: 7 },
+      rules: {
+        installedCount: 1,
+        activePinduoduoCnVersion: packs.json().items[0].manifest.version,
+        unresolvedActiveRuleCount: 3,
+      },
+    });
+    expect(systemStatus.body).not.toContain(secret);
+    expect(systemStatus.body).not.toContain(workspacePath);
+    expect(providerCalls).toBe(callsBeforeDashboardRead);
     await restarted.close();
   });
 
