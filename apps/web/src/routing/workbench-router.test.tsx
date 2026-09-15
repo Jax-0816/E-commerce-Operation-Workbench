@@ -20,29 +20,16 @@ afterEach(() => {
 });
 
 describe('routed workbench', () => {
-  it('turns the dashboard into an actionable product readiness ledger', async () => {
+  it('opens the API-backed operational dashboard', async () => {
     const { container, root } = await render('/');
 
     expect(container.querySelector('nav[aria-label="主导航"]')).not.toBeNull();
-    expect(
-      [...container.querySelectorAll('button')].find((button) =>
-        button.textContent?.includes('新建商品'),
-      ),
-    ).toBeDefined();
-
-    const readiness = container.querySelector('[aria-label="商品工作流入口"]');
-    expect(readiness?.textContent).toContain('商品事实');
-    expect(readiness?.textContent).toContain('SKU');
-    expect(readiness?.textContent).toContain('平台档案');
-    expect(readiness?.textContent).toContain('成本（Phase 3）');
-
-    const ledger = container.querySelector('table');
-    expect(ledger?.querySelector('caption')?.textContent).toBe('商品任务账本');
-    expect(ledger?.textContent).toContain('保温杯');
-    expect(ledger?.textContent).toContain('SKU 与规格');
-    expect(container.querySelector('aside[aria-label="快捷入口"]')?.textContent).toMatch(
-      /进入\s*保温杯\s*的平台档案/u,
+    expect(container.querySelector('h1')?.textContent).toBe('运营总控台');
+    expect(container.querySelector('[aria-label="运营指标"]')?.textContent).toContain('商品数量');
+    expect(container.querySelector('[aria-label="待处理事项"]')?.textContent).toContain(
+      '补齐 SKU 成本',
     );
+    expect(container.textContent).not.toContain('成本（Phase 3）');
     root.unmount();
   });
 
@@ -278,6 +265,29 @@ async function render(entry: string) {
             createBackup: async () => undefined as never,
             stageRestore: async () => undefined as never,
             restoreStatus: async () => ({ state: 'idle' }),
+          }}
+          dashboardApi={{
+            get: async () => ({
+              summary: {
+                productCount: 1,
+                enabledSkuCount: 2,
+                missingCostProfileCount: 1,
+                staleAssetCount: 0,
+                lossMakingResultCount: 0,
+                ruleRiskCount: 0,
+              },
+              configuration: { aiConfigured: false, pinduoduoRulePackActive: true },
+              attention: [
+                {
+                  code: 'missing_cost_profiles',
+                  severity: 'warning',
+                  count: 1,
+                  label: '补齐 SKU 成本',
+                  explanation: '有 1 个已启用 SKU 尚未设置成本。',
+                  href: '/products',
+                },
+              ],
+            }),
           }}
         />
       </MemoryRouter>,

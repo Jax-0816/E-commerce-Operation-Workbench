@@ -4,7 +4,6 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { ProductDashboard } from './dashboard.js';
 import { ProductOnboarding } from './product-onboarding.js';
 
 const containers: HTMLDivElement[] = [];
@@ -20,16 +19,6 @@ afterEach(() => {
 });
 
 describe('Phase 2 product entry', () => {
-  it('shows product count and recent products on the dashboard', async () => {
-    const { container, root } = await render(
-      <ProductDashboard productsApi={api()} onOpen={() => undefined} />,
-    );
-    expect(container.textContent).toContain('商品数量');
-    expect(container.textContent).toContain('1');
-    expect(container.textContent).toContain('保温杯');
-    root.unmount();
-  });
-
   it('creates a product through the four-step manual wizard', async () => {
     const names: string[] = [];
     const opened: string[] = [];

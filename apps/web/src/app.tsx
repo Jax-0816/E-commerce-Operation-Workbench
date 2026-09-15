@@ -31,6 +31,7 @@ import {
   createBrowserDataManagementApi,
   type DataManagementApi,
 } from './features/data-management/api.js';
+import { createBrowserDashboardApi, type DashboardApi } from './features/dashboard/api.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -48,6 +49,7 @@ const browserContentBuildersApi = createBrowserContentBuildersApi();
 const browserWorkflowApi = createBrowserWorkflowApi();
 const browserOperationPlansApi = createBrowserOperationPlansApi();
 const browserDataManagementApi = createBrowserDataManagementApi();
+const browserDashboardApi = createBrowserDashboardApi();
 
 export function App({
   costsApi = browserCostsApi,
@@ -66,6 +68,7 @@ export function App({
   workflowApi = browserWorkflowApi,
   operationPlansApi = browserOperationPlansApi,
   dataManagementApi = browserDataManagementApi,
+  dashboardApi = browserDashboardApi,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -83,6 +86,7 @@ export function App({
   readonly workflowApi?: WorkflowApi;
   readonly operationPlansApi?: OperationPlansApi;
   readonly dataManagementApi?: DataManagementApi;
+  readonly dashboardApi?: DashboardApi;
 } = {}): React.JSX.Element {
   return (
     <BrowserRouter>
@@ -103,6 +107,7 @@ export function App({
         workflowApi={workflowApi}
         operationPlansApi={operationPlansApi}
         dataManagementApi={dataManagementApi}
+        dashboardApi={dashboardApi}
       />
     </BrowserRouter>
   );

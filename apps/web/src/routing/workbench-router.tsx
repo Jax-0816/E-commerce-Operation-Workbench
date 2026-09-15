@@ -28,7 +28,8 @@ import type { CostsApi } from '../features/costs/api.js';
 import { CostProfileEditor } from '../features/costs/cost-profile-editor.js';
 import type { PlatformProfilesApi } from '../features/platform-profile/api.js';
 import { PlatformProfilePanel } from '../features/platform-profile/platform-profile-panel.js';
-import { ProductDashboard } from '../features/products/dashboard.js';
+import { OperationalDashboard } from '../features/dashboard/dashboard.js';
+import type { DashboardApi } from '../features/dashboard/api.js';
 import type { PricingApi } from '../features/pricing/api.js';
 import { PricingLaboratory } from '../features/pricing/pricing-laboratory.js';
 import { ProductOnboarding } from '../features/products/product-onboarding.js';
@@ -78,6 +79,7 @@ export interface WorkbenchDependencies {
   readonly rulesApi: RulePacksApi;
   readonly skusApi: SkusApi;
   readonly dataManagementApi: DataManagementApi;
+  readonly dashboardApi: DashboardApi;
 }
 
 const globalNavigation = [
@@ -131,7 +133,7 @@ export function WorkbenchRouter(dependencies: WorkbenchDependencies): React.JSX.
   return (
     <Routes>
       <Route element={<WorkbenchShell productsApi={dependencies.productsApi} />}>
-        <Route index element={<Dashboard productsApi={dependencies.productsApi} />} />
+        <Route index element={<OperationalDashboard api={dependencies.dashboardApi} />} />
         <Route path="products" element={<ProductHome productsApi={dependencies.productsApi} />} />
         <Route
           path="products/new"
@@ -350,17 +352,6 @@ function ProductHome({ productsApi }: { readonly productsApi: ProductsApi }): Re
     <ProductLibrary
       api={productsApi}
       onSelect={(product) => navigate(`/products/${product.id}/overview`)}
-    />
-  );
-}
-
-function Dashboard({ productsApi }: { readonly productsApi: ProductsApi }): React.JSX.Element {
-  const navigate = useNavigate();
-  return (
-    <ProductDashboard
-      productsApi={productsApi}
-      onCreate={() => navigate('/products/new')}
-      onOpen={(product) => navigate(`/products/${product.id}/overview`)}
     />
   );
 }

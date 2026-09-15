@@ -883,3 +883,19 @@
 
 1. 提交并推送 Task 28.2，确认 GitHub 同步为 `0 0`。
 2. 进入 Task 28.3：以 Web API/UI RED 测试替换旧 Phase 占位总控台，接入真实风险快照和站内行动链接。
+
+## Session: 2026-09-15 — Task 28.3 actionable dashboard web UI
+
+- **Status:** complete
+- 新增浏览器 `DashboardApi`，只读取 `/api/v1/dashboard` 并用共享严格契约解析；HTTP 失败和带额外内部字段的成功响应均拒绝。
+- 旧商品列表推测式总控台及“成本 Phase 3”占位已删除，替换为真实运营快照：六项具名指标、DeepSeek/拼多多规则包文本状态、按稳定优先级展示的风险行动链接。
+- 加载阶段不显示伪造零值；失败只显示安全告警且不回显后端错误；空工作区明确引导创建第一个商品；无风险状态有文字结论。
+- 页面不再依赖商品列表猜测就绪度，风险链接仅使用契约允许的站内绝对路径并进入商品、规则或 AI 工作区。
+- 新增六列桌面指标、1100px 三列、600px 两列、440px 单列样式；配置与风险项在窄屏改为单列，行动内容不被裁切。
+- 为浏览器增加 `@eaw/contracts/dashboard` 专用导出，避免从 contracts 根入口把 Domain 的 Node `crypto` 依赖带入前端；生产构建模块数由误引入时的 235 降至 170，构建无 browser-external 警告。
+- API/UI/路由聚焦 15 项测试通过；完整 Web 26 个文件、63 项测试通过，Web typecheck/lint/build、Prettier 与 `git diff --check` 通过。
+
+### Next action
+
+1. 提交并推送 Task 28.3，确认 GitHub 同步为 `0 0`。
+2. 进入 Task 28.4：建立脱敏系统状态契约、只读应用/路由及真实系统设置页面。

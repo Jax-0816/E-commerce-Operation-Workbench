@@ -167,7 +167,7 @@
 - Produces `DashboardApi`, `createBrowserDashboardApi`, and the new `OperationalDashboard`.
 - Consumes the strict dashboard response and internal routes only.
 
-- [ ] **Step 1: Write API and UI RED tests**
+- [x] **Step 1: Write API and UI RED tests**
 
   Test strict response parsing and safe errors. Render nonzero/zero/loading/failure snapshots and prove:
 
@@ -178,15 +178,15 @@
   - empty workspace presents a clear first-product action;
   - active/inactive rule and configured/unconfigured AI states are truthful.
 
-- [ ] **Step 2: Implement the browser adapter and dashboard**
+- [x] **Step 2: Implement the browser adapter and dashboard**
 
   Replace Phase 0/3 placeholder language. Keep product list/open actions only if sourced explicitly; otherwise let the dashboard endpoint own all readiness facts. Use semantic lists/sections and text labels for severity.
 
-- [ ] **Step 3: Wire routing and responsive styles**
+- [x] **Step 3: Wire routing and responsive styles**
 
   Add `dashboardApi` to `WorkbenchDependencies` and `App`. Preserve current navigation. At 720/390 px, cards stack and the attention list remains reachable; any table scrolls rather than clipping.
 
-- [ ] **Step 4: Verify and commit**
+- [x] **Step 4: Verify and commit**
 
   Run focused Web tests, Web typecheck/lint/build, changed-file Prettier, `git diff --check`, then:
 

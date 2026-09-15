@@ -87,6 +87,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@eaw/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@eaw/shared':
         specifier: workspace:*
         version: link:../../packages/shared
