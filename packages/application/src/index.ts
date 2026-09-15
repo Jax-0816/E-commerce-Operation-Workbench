@@ -47,6 +47,14 @@ export type {
 } from './promotions/index.js';
 export { createAISettingsApplication } from './ai-settings/index.js';
 export type { AISettingsApplication, AISettingsStatus } from './ai-settings/index.js';
+export { createDashboardApplication } from './dashboard/index.js';
+export type {
+  DashboardApplication,
+  DashboardApplicationDependencies,
+  DashboardAttentionCode,
+  DashboardAttentionItem,
+  DashboardView,
+} from './dashboard/index.js';
 export { createCompetitorsApplication } from './competitors/index.js';
 export type {
   CompetitorsApplication,

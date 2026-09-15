@@ -37,6 +37,16 @@ export {
 export { HealthResponseSchema } from './health.js';
 export type { HealthResponse } from './health.js';
 export {
+  DashboardAttentionCodeSchema,
+  DashboardAttentionItemSchema,
+  DashboardResponseSchema,
+} from './dashboard.js';
+export type {
+  DashboardAttentionCode,
+  DashboardAttentionItem,
+  DashboardResponse,
+} from './dashboard.js';
+export {
   CreateProductInputSchema,
   ProductIdParamsSchema,
   ProductListResponseSchema,

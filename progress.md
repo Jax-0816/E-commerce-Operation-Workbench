@@ -851,3 +851,19 @@
 
 1. 提交并推送 Task 27 收口，确认增强后的最终 CI 与 `HEAD...origin/codex/phase-0` 均为绿色/`0 0`。
 2. 进入 Task 28：先以失败测试定义总控台风险摘要、脱敏设置、离线能力边界与无障碍语义，再分小任务实现并逐次提交推送。
+
+## Session: 2026-09-15 — Task 28.1 operational dashboard read model
+
+- **Status:** complete
+- 新增严格 `DashboardResponseSchema`：六项非负安全整数、两项配置布尔值、封闭的 attention code/severity 和仅允许站内绝对路径的行动链接；额外字段、未知枚举、负数/非安全整数及外部/相对链接均失败关闭。
+- 新增只读 `DashboardApplication`，依赖面只暴露查询方法，不包含任何写入或 provider 调用。
+- 当前风险按未归档商品与已启用 SKU 聚合；定价和促销各自仅采用每个 SKU 最新结果，旧亏损不会覆盖新盈利，禁用 SKU 不计入成本和风险。
+- 定价严格读取 `outcome.netProfit.minorUnits`，促销严格读取 `financial.netProfit.minorUnits`；合法 `financial: null` 表示未形成财务结论，其他畸形快照使整个读取失败。
+- 标题、创意图和详情页按商品/平台/资产种类只取最新修订判断过期；平台固定覆盖拼多多、淘宝、抖音。
+- 规则风险只统计拼多多/CN 当前启用规则包中的 `needs_review`；仅安装未启用时单独提示缺少活动规则包；AI 只暴露是否已配置。
+- RED 已分别证明缺失模块；GREEN 后 Contracts 9 项、Application 3 项聚焦测试通过，两个包 typecheck、变更文件 lint/Prettier 与 `git diff --check` 通过。
+
+### Next action
+
+1. 提交并推送 Task 28.1，确认 GitHub 同步为 `0 0`。
+2. 进入 Task 28.2：先为 `GET /api/v1/dashboard` 写路由 RED 测试，再完成生产 runtime 组合与持久化集成验证。

@@ -40,7 +40,7 @@
 - Produces `DashboardResponseSchema`, `DashboardAttentionItemSchema`, `DashboardApplication`, and `createDashboardApplication`.
 - Consumes narrow read ports for products, SKU matrices, costs, pricing, promotions, active rules, AI configuration, titles, creative plans, and detail pages.
 
-- [ ] **Step 1: Write contract RED tests**
+- [x] **Step 1: Write contract RED tests**
 
   Define a strict response with non-negative safe-integer counts, closed attention codes/severities, `aiConfigured`, `pinduoduoRulePackActive`, and internal absolute route paths. Reject extra fields, negative/unsafe counts, unknown codes, `https://` links, and relative links.
 
@@ -52,7 +52,7 @@
 
   Expected: FAIL because the dashboard contract does not exist.
 
-- [ ] **Step 2: Implement the minimal strict contract and verify GREEN**
+- [x] **Step 2: Implement the minimal strict contract and verify GREEN**
 
   Use a closed code order:
 
@@ -68,7 +68,7 @@
 
   The response contains `summary`, `configuration`, and ordered `attention` only.
 
-- [ ] **Step 3: Write application RED tests**
+- [x] **Step 3: Write application RED tests**
 
   Build deterministic fake ports proving:
 
@@ -91,11 +91,11 @@
 
   Expected: FAIL because `createDashboardApplication` does not exist.
 
-- [ ] **Step 4: Implement latest-only aggregation**
+- [x] **Step 4: Implement latest-only aggregation**
 
   Iterate the fixed platform set `pinduoduo`, `taobao`, `douyin`; reuse existing title/content staleness views; deduplicate financial risk by `productId:skuId:surface`; parse snapshots through a small strict helper. Produce attention items from summary state without mutating any source.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
   Run focused Contracts/Application tests, their typechecks/lints, Prettier on changed files, and `git diff --check`.
 
