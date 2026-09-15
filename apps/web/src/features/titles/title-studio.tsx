@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useConnectivity } from '../connectivity/connectivity-provider.js';
+import { capabilityAvailability } from '../connectivity/policy.js';
 
 import type { TitleCandidate, TitlePlatform, TitlesApi, TitleAssetView } from './api.js';
 
@@ -16,6 +18,8 @@ export function TitleStudio({
   readonly api: TitlesApi;
   readonly productId: string;
 }): React.JSX.Element {
+  const { online } = useConnectivity();
+  const generation = capabilityAvailability('title_generation', online);
   const [platformId, setPlatformId] = useState<TitlePlatform>('pinduoduo');
   const [history, setHistory] = useState<readonly TitleAssetView[]>([]);
   const [drafts, setDrafts] = useState<readonly TitleCandidate[]>([]);
@@ -85,9 +89,11 @@ export function TitleStudio({
         生成、编辑和锁定都会新增修订；旧版本不会被覆盖。无事实支撑词语会进入人工复核。
       </p>
       {error && <p role="alert">{error}</p>}
+      {!generation.available ? <p id="title-offline-reason">{generation.reason}</p> : null}
       <div className="title-actions">
         <button
-          disabled={Boolean(busy)}
+          aria-describedby={!generation.available ? 'title-offline-reason' : undefined}
+          disabled={Boolean(busy) || !generation.available}
           onClick={() => void action('generate', () => api.generate(productId, platformId))}
         >
           {busy === 'generate' ? '生成中…' : latest ? '重新生成' : '生成四类标题'}

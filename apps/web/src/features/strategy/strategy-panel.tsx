@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import type { StrategyApi, StrategyAssetItem, StrategyKind } from './api.js';
+import { useConnectivity } from '../connectivity/connectivity-provider.js';
+import { capabilityAvailability } from '../connectivity/policy.js';
 
 const labels: Record<StrategyKind, string> = {
   competitor_analysis: '竞品分析',
@@ -22,6 +24,8 @@ export function StrategyPanel({
   );
   const [busy, setBusy] = useState<StrategyKind | null>(null);
   const [error, setError] = useState('');
+  const { online } = useConnectivity();
+  const generation = capabilityAvailability('strategy_generation', online);
   const reload = async (kind: StrategyKind) => {
     const history = await api.list(productId, kind);
     setItems((current) => ({ ...current, [kind]: history }));
@@ -57,6 +61,7 @@ export function StrategyPanel({
         AI 结论只引用当前商品的已确认事实和审计快照；无证据想法会进入待核实事实。
       </p>
       {error && <p role="alert">{error}</p>}
+      {!generation.available ? <p id="strategy-offline-reason">{generation.reason}</p> : null}
       {kinds.map((kind) => {
         const latest = items[kind]?.[0];
         return (
@@ -66,7 +71,11 @@ export function StrategyPanel({
                 <span className="eyebrow">{labels[kind]}</span>
                 <h2>{latest ? `修订 ${latest.revisionNo}` : '尚未生成'}</h2>
               </div>
-              <button disabled={busy !== null} onClick={() => void generate(kind)}>
+              <button
+                aria-describedby={!generation.available ? 'strategy-offline-reason' : undefined}
+                disabled={busy !== null || !generation.available}
+                onClick={() => void generate(kind)}
+              >
                 {busy === kind ? '生成中…' : latest ? '重新生成' : '生成'}
               </button>
             </header>

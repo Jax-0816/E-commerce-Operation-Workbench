@@ -71,6 +71,18 @@ body {
   line-height: 1.55;
 }
 
+.offline-banner {
+  position: relative;
+  z-index: 100;
+  padding: 9px 18px;
+  border-bottom: 1px solid #d69a35;
+  color: #5f410b;
+  background: #fff3d5;
+  font-size: 12px;
+  font-weight: 680;
+  text-align: center;
+}
+
 ::selection {
   color: #fffaf4;
   background: var(--primary);

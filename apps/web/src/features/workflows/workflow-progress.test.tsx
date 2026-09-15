@@ -3,6 +3,10 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+  ConnectivityProvider,
+  type ConnectivitySource,
+} from '../connectivity/connectivity-provider.js';
 import type { WorkflowApi, WorkflowPlatformId, WorkflowPreflight, WorkflowRun } from './api.js';
 import { WorkflowProgress } from './workflow-progress.js';
 
@@ -18,8 +22,14 @@ describe('workflow progress', () => {
     const current = run('running');
     const api = fakeApi({
       preflight: async (_productId, platformId) => preflight(platformId),
-      start: async (_productId, platformId) => { calls.push(`start:${platformId}`); return current; },
-      cancel: async (_runId, revision) => { calls.push(`cancel:${revision}`); return { ...current, status: 'cancelled' }; },
+      start: async (_productId, platformId) => {
+        calls.push(`start:${platformId}`);
+        return current;
+      },
+      cancel: async (_runId, revision) => {
+        calls.push(`cancel:${revision}`);
+        return { ...current, status: 'cancelled' };
+      },
       subscribe: (runId) => {
         calls.push(`subscribe:${runId}`);
         return () => undefined;
@@ -34,12 +44,7 @@ describe('workflow progress', () => {
     expect(calls).toEqual(['start:pinduoduo', 'subscribe:run-1']);
     expect(container.querySelector('[aria-live="polite"]')?.textContent).toContain('运行中');
     await click(container, '取消工作流');
-    expect(calls).toEqual([
-      'start:pinduoduo',
-      'subscribe:run-1',
-      'cancel:5',
-      'subscribe:run-1',
-    ]);
+    expect(calls).toEqual(['start:pinduoduo', 'subscribe:run-1', 'cancel:5', 'subscribe:run-1']);
     root.unmount();
   });
 
@@ -49,8 +54,14 @@ describe('workflow progress', () => {
     const api = fakeApi({
       list: async () => [failed],
       get: async () => failed,
-      resume: async (_runId, revision) => { calls.push(`resume:${revision}`); return failed; },
-      retry: async (_runId, nodeKey, revision) => { calls.push(`retry:${nodeKey}:${revision}`); return failed; },
+      resume: async (_runId, revision) => {
+        calls.push(`resume:${revision}`);
+        return failed;
+      },
+      retry: async (_runId, nodeKey, revision) => {
+        calls.push(`retry:${nodeKey}:${revision}`);
+        return failed;
+      },
     });
     const { container, root } = await render(api);
 
@@ -73,7 +84,10 @@ describe('workflow progress', () => {
         return preflight(platformId);
       },
       list: async () => [selectedRun],
-      get: async () => { order.push('get'); return selectedRun; },
+      get: async () => {
+        order.push('get');
+        return selectedRun;
+      },
       subscribe: (_runId, _sequence, _onEvent, onDisconnect) => {
         order.push('subscribe');
         disconnect = onDisconnect;
@@ -83,7 +97,10 @@ describe('workflow progress', () => {
     const { container, root } = await render(api, false);
     const selector = container.querySelector<HTMLSelectElement>('[aria-label="工作流平台"]')!;
     await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(selector, 'taobao');
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(
+        selector,
+        'taobao',
+      );
       selector.dispatchEvent(new Event('change', { bubbles: true }));
     });
     oldPreflight.resolve(preflight('pinduoduo'));
@@ -92,31 +109,97 @@ describe('workflow progress', () => {
     expect(selector.value).toBe('taobao');
     expect(container.textContent).toContain('淘宝');
     expect(order.slice(0, 2)).toEqual(['get', 'subscribe']);
-    await act(async () => { disconnect?.(); await Promise.resolve(); });
+    await act(async () => {
+      disconnect?.();
+      await Promise.resolve();
+    });
     expect(order.slice(-3)).toEqual(['close', 'get', 'subscribe']);
     root.unmount();
   });
+
+  it('blocks start, resume and retry offline while leaving cancellation available', async () => {
+    const calls: string[] = [];
+    const failed = run('failed', 'creative');
+    const startApi = fakeApi({
+      start: async () => {
+        calls.push('start');
+        return failed;
+      },
+    });
+    const startView = await render(startApi, true, offlineSource);
+    const startButton = findButton(startView.container, '启动工作流');
+    expect(startButton.disabled).toBe(true);
+    await act(async () => startButton.click());
+    startView.root.unmount();
+
+    const failedApi = fakeApi({
+      list: async () => [failed],
+      get: async () => failed,
+      resume: async () => {
+        calls.push('resume');
+        return failed;
+      },
+      retry: async () => {
+        calls.push('retry');
+        return failed;
+      },
+      cancel: async () => {
+        calls.push('cancel');
+        return { ...failed, status: 'cancelled' };
+      },
+    });
+    const failedView = await render(failedApi, true, offlineSource);
+    const resumeButton = findButton(failedView.container, '恢复工作流');
+    const retryButton = findButton(failedView.container, '重试创意方案');
+    const cancelButton = findButton(failedView.container, '取消工作流');
+    expect(resumeButton.disabled).toBe(true);
+    expect(retryButton.disabled).toBe(true);
+    expect(cancelButton.disabled).toBe(false);
+    await act(async () => resumeButton.click());
+    await act(async () => retryButton.click());
+    await act(async () => cancelButton.click());
+    expect(calls).toEqual(['cancel']);
+    failedView.root.unmount();
+  });
 });
 
-async function render(api: WorkflowApi, settle = true) {
+const offlineSource: ConnectivitySource = {
+  isOnline: () => false,
+  subscribe: () => () => undefined,
+};
+
+async function render(api: WorkflowApi, settle = true, source?: ConnectivitySource) {
   const container = document.createElement('div');
   document.body.append(container);
   containers.push(container);
   const root = createRoot(container);
-  await act(async () => root.render(<WorkflowProgress api={api} productId="product-1" />));
+  const progress = <WorkflowProgress api={api} productId="product-1" />;
+  await act(async () =>
+    root.render(
+      source ? <ConnectivityProvider source={source}>{progress}</ConnectivityProvider> : progress,
+    ),
+  );
   if (settle) await act(async () => undefined);
   return { container, root };
 }
 
 async function click(container: HTMLElement, label: string): Promise<void> {
-  const button = [...container.querySelectorAll('button')].find(({ textContent }) => textContent === label);
+  await act(async () => findButton(container, label).click());
+}
+
+function findButton(container: HTMLElement, label: string): HTMLButtonElement {
+  const button = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
+    ({ textContent }) => textContent === label,
+  );
   expect(button).toBeDefined();
-  await act(async () => button!.click());
+  return button!;
 }
 
 function fakeApi(overrides: Partial<WorkflowApi>): WorkflowApi {
   const empty = async () => [] as readonly WorkflowRun[];
-  const unavailable = async () => { throw new Error('not configured'); };
+  const unavailable = async () => {
+    throw new Error('not configured');
+  };
   return {
     preflight: async (_productId, platformId) => preflight(platformId),
     start: unavailable,
@@ -137,22 +220,46 @@ function preflight(platformId: WorkflowPlatformId): WorkflowPreflight {
     productId: 'product-1',
     platformId,
     nodes: nodeDefinitions.map(({ key, taskType }, index) => ({
-      key, taskType, order: index + 1, runnable: true, missingInputs: [], dependencyHash: 'a'.repeat(64),
+      key,
+      taskType,
+      order: index + 1,
+      runnable: true,
+      missingInputs: [],
+      dependencyHash: 'a'.repeat(64),
     })),
   };
 }
 
-function run(status: WorkflowRun['status'], failedNode?: WorkflowRun['nodes'][number]['key']): WorkflowRun {
+function run(
+  status: WorkflowRun['status'],
+  failedNode?: WorkflowRun['nodes'][number]['key'],
+): WorkflowRun {
   return {
-    id: 'run-1', productId: 'product-1', platformId: 'pinduoduo', status, revision: 5,
+    id: 'run-1',
+    productId: 'product-1',
+    platformId: 'pinduoduo',
+    status,
+    revision: 5,
     cancellationRequested: false,
-    definition: { definitionId: 'product_content', version: '1.0.0', nodes: nodeDefinitions.map((node, index) => ({ ...node, order: index + 1 })) },
+    definition: {
+      definitionId: 'product_content',
+      version: '1.0.0',
+      nodes: nodeDefinitions.map((node, index) => ({ ...node, order: index + 1 })),
+    },
     nodes: nodeDefinitions.map(({ key, taskType }) => ({
-      key, taskType, status: key === failedNode ? 'failed' : status === 'running' ? 'completed' : 'not_started',
-      dependencyHash: 'a'.repeat(64), output: key === failedNode ? null : { assetType: taskType, assetId: `asset-${key}`, revisionNo: 2 },
-      error: key === failedNode ? { code: 'AI_OUTPUT_INVALID', message: 'Workflow node execution failed.' } : null,
+      key,
+      taskType,
+      status: key === failedNode ? 'failed' : status === 'running' ? 'completed' : 'not_started',
+      dependencyHash: 'a'.repeat(64),
+      output:
+        key === failedNode ? null : { assetType: taskType, assetId: `asset-${key}`, revisionNo: 2 },
+      error:
+        key === failedNode
+          ? { code: 'AI_OUTPUT_INVALID', message: 'Workflow node execution failed.' }
+          : null,
     })),
-    createdAt: '2026-09-08T00:00:00.000Z', updatedAt: '2026-09-08T00:01:00.000Z',
+    createdAt: '2026-09-08T00:00:00.000Z',
+    updatedAt: '2026-09-08T00:01:00.000Z',
   };
 }
 
@@ -167,6 +274,8 @@ const nodeDefinitions = [
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((complete) => { resolve = complete; });
+  const promise = new Promise<T>((complete) => {
+    resolve = complete;
+  });
   return { promise, resolve };
 }

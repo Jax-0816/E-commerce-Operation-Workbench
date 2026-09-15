@@ -36,6 +36,10 @@ import {
   createBrowserSystemStatusApi,
   type SystemStatusApi,
 } from './features/system-settings/api.js';
+import {
+  ConnectivityProvider,
+  type ConnectivitySource,
+} from './features/connectivity/connectivity-provider.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -75,6 +79,7 @@ export function App({
   dataManagementApi = browserDataManagementApi,
   dashboardApi = browserDashboardApi,
   systemStatusApi = browserSystemStatusApi,
+  connectivitySource,
 }: {
   readonly costsApi?: CostsApi;
   readonly factsApi?: FactWorkspaceApi;
@@ -94,29 +99,32 @@ export function App({
   readonly dataManagementApi?: DataManagementApi;
   readonly dashboardApi?: DashboardApi;
   readonly systemStatusApi?: SystemStatusApi;
+  readonly connectivitySource?: ConnectivitySource;
 } = {}): React.JSX.Element {
   return (
-    <BrowserRouter>
-      <WorkbenchRouter
-        costsApi={costsApi}
-        factsApi={factsApi}
-        platformProfilesApi={platformProfilesApi}
-        productsApi={productsApi}
-        pricingApi={pricingApi}
-        promotionApi={promotionApi}
-        rulesApi={rulesApi}
-        skusApi={skusApi}
-        aiSettingsApi={aiSettingsApi}
-        competitorsApi={competitorsApi}
-        strategyApi={strategyApi}
-        titlesApi={titlesApi}
-        contentBuildersApi={contentBuildersApi}
-        workflowApi={workflowApi}
-        operationPlansApi={operationPlansApi}
-        dataManagementApi={dataManagementApi}
-        dashboardApi={dashboardApi}
-        systemStatusApi={systemStatusApi}
-      />
-    </BrowserRouter>
+    <ConnectivityProvider source={connectivitySource}>
+      <BrowserRouter>
+        <WorkbenchRouter
+          costsApi={costsApi}
+          factsApi={factsApi}
+          platformProfilesApi={platformProfilesApi}
+          productsApi={productsApi}
+          pricingApi={pricingApi}
+          promotionApi={promotionApi}
+          rulesApi={rulesApi}
+          skusApi={skusApi}
+          aiSettingsApi={aiSettingsApi}
+          competitorsApi={competitorsApi}
+          strategyApi={strategyApi}
+          titlesApi={titlesApi}
+          contentBuildersApi={contentBuildersApi}
+          workflowApi={workflowApi}
+          operationPlansApi={operationPlansApi}
+          dataManagementApi={dataManagementApi}
+          dashboardApi={dashboardApi}
+          systemStatusApi={systemStatusApi}
+        />
+      </BrowserRouter>
+    </ConnectivityProvider>
   );
 }

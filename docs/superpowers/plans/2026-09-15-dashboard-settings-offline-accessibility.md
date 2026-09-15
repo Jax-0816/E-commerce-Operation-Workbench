@@ -278,23 +278,23 @@
 - Produces injectable `ConnectivitySource`, `ConnectivityProvider`, `useConnectivity`, and pure `capabilityAvailability`.
 - Consumes `navigator.onLine` plus browser `online`/`offline` events only.
 
-- [ ] **Step 1: Write policy/provider RED tests**
+- [x] **Step 1: Write policy/provider RED tests**
 
   Enumerate every classified capability. Prove initial state, event updates, listener cleanup, and that reconnect only changes state. No timers or probes.
 
-- [ ] **Step 2: Implement the minimal provider and global banner**
+- [x] **Step 2: Implement the minimal provider and global banner**
 
   Render a persistent visible/announced offline explanation. Do not equate offline with local API failure.
 
-- [ ] **Step 3: Write action-guard RED tests**
+- [x] **Step 3: Write action-guard RED tests**
 
   For each internet-dependent panel, render offline, click or inspect the action, and assert its API method call count remains zero with a visible/accessibly described reason. Prove AI key save/clear, local pricing/history, local competitor import, rule management, backup, and restore remain enabled. Prove reconnection does not call any method automatically.
 
-- [ ] **Step 4: Add guards without wrapping read APIs**
+- [x] **Step 4: Add guards without wrapping read APIs**
 
   Disable connection test/generate/regenerate/workflow start-resume-retry controls at their owning components. Existing persisted reads still execute. Avoid a global fetch interceptor because it would incorrectly block loopback HTTP.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
   Run all affected Web tests, Web typecheck/lint/build, and `git diff --check`, then:
 

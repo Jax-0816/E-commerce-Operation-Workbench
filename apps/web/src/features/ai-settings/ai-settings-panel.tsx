@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 
 import type { AISettingsApi, AISettingsStatus } from './api.js';
+import { useConnectivity } from '../connectivity/connectivity-provider.js';
+import { capabilityAvailability } from '../connectivity/policy.js';
 
 export function AISettingsPanel({ api }: { readonly api: AISettingsApi }): React.JSX.Element {
   const [status, setStatus] = useState<AISettingsStatus | null>(null);
   const [apiKey, setApiKey] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const { online } = useConnectivity();
+  const connection = capabilityAvailability('deepseek_connection_test', online);
 
   useEffect(() => {
     void api
@@ -64,7 +68,8 @@ export function AISettingsPanel({ api }: { readonly api: AISettingsApi }): React
           </button>
           <button
             aria-label="测试 DeepSeek 连接"
-            disabled={busy || !status?.configured}
+            aria-describedby={!connection.available ? 'deepseek-offline-reason' : undefined}
+            disabled={busy || !status?.configured || !connection.available}
             onClick={() => {
               setBusy(true);
               void api
@@ -88,6 +93,7 @@ export function AISettingsPanel({ api }: { readonly api: AISettingsApi }): React
           </button>
         </div>
       </form>
+      {!connection.available ? <p id="deepseek-offline-reason">{connection.reason}</p> : null}
       {message ? <p role="status">{message}</p> : null}
     </section>
   );

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ContentBuildersApi, ContentPlatform, CreativePlanView } from './api.js';
+import { useConnectivity } from '../connectivity/connectivity-provider.js';
+import { capabilityAvailability } from '../connectivity/policy.js';
 
 export function CreativeBuilder({
   api,
@@ -11,6 +13,8 @@ export function CreativeBuilder({
   const [platformId, setPlatform] = useState<ContentPlatform>('pinduoduo');
   const [history, setHistory] = useState<readonly CreativePlanView[]>([]);
   const [error, setError] = useState('');
+  const { online } = useConnectivity();
+  const generation = capabilityAvailability('creative_generation', online);
   useEffect(() => {
     let active = true;
     void api
@@ -65,7 +69,12 @@ export function CreativeBuilder({
       </header>
       <p className="feature-note">仅生成可审计的画面方案与提示词，不调用图片生成。</p>
       {error && <p role="alert">{error}</p>}
-      <button onClick={() => void act(() => api.generateCreative(productId, platformId))}>
+      {!generation.available ? <p id="creative-offline-reason">{generation.reason}</p> : null}
+      <button
+        aria-describedby={!generation.available ? 'creative-offline-reason' : undefined}
+        disabled={!generation.available}
+        onClick={() => void act(() => api.generateCreative(productId, platformId))}
+      >
         {latest ? '重新生成方案' : '生成五图方案'}
       </button>
       {latest?.stale && <p>已过期：{latest.staleReasons.join('、')}</p>}
@@ -91,7 +100,8 @@ export function CreativeBuilder({
             </p>
             <div>
               <button
-                disabled={item.locked}
+                aria-describedby={!generation.available ? 'creative-offline-reason' : undefined}
+                disabled={item.locked || !generation.available}
                 onClick={() =>
                   void act(() => api.regenerateCreativeItem(productId, platformId, item.id))
                 }

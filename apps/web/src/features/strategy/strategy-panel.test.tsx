@@ -4,6 +4,10 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+  ConnectivityProvider,
+  type ConnectivitySource,
+} from '../connectivity/connectivity-provider.js';
 import type { StrategyApi, StrategyAssetItem } from './api.js';
 import { StrategyPanel } from './strategy-panel.js';
 
@@ -57,4 +61,45 @@ describe('StrategyPanel', () => {
     expect(container.textContent).toContain('竞品样本有限');
     root.unmount();
   });
+
+  it('does not generate strategies while offline', async () => {
+    let generateCalls = 0;
+    const api: StrategyApi = {
+      async list() {
+        return [];
+      },
+      async generate() {
+        generateCalls += 1;
+        throw new Error('must not run');
+      },
+    };
+    const container = document.createElement('div');
+    document.body.append(container);
+    containers.push(container);
+    const root = createRoot(container);
+    await act(async () =>
+      root.render(
+        <ConnectivityProvider source={offlineSource}>
+          <StrategyPanel
+            api={api}
+            productId="product"
+            kinds={['competitor_analysis', 'market_insight', 'selling_point_set']}
+          />
+        </ConnectivityProvider>,
+      ),
+    );
+
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
+    expect(buttons).toHaveLength(3);
+    expect(buttons.every(({ disabled }) => disabled)).toBe(true);
+    await act(async () => buttons.forEach((button) => button.click()));
+    expect(generateCalls).toBe(0);
+    expect(container.textContent).toContain('需要连接互联网');
+    root.unmount();
+  });
 });
+
+const offlineSource: ConnectivitySource = {
+  isOnline: () => false,
+  subscribe: () => () => undefined,
+};

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useConnectivity } from '../connectivity/connectivity-provider.js';
+import { capabilityAvailability } from '../connectivity/policy.js';
 
 import type {
   WorkflowApi,
@@ -40,6 +42,8 @@ export function WorkflowProgress({
   readonly api: WorkflowApi;
   readonly productId: string;
 }): React.JSX.Element {
+  const { online } = useConnectivity();
+  const internetAction = capabilityAvailability('workflow_start', online);
   const [platformId, setPlatformId] = useState<WorkflowPlatformId>('pinduoduo');
   const [preflight, setPreflight] = useState<WorkflowPreflight | null>(null);
   const [run, setRun] = useState<WorkflowRun | null>(null);
@@ -80,7 +84,11 @@ export function WorkflowProgress({
     const reconcile = async (workflowRunId: string): Promise<void> => {
       try {
         const authoritative = await api.get(workflowRunId);
-        if (current() && authoritative.productId === productId && authoritative.platformId === platformId) {
+        if (
+          current() &&
+          authoritative.productId === productId &&
+          authoritative.platformId === platformId
+        ) {
           setRun(authoritative);
         }
       } catch {
@@ -95,7 +103,12 @@ export function WorkflowProgress({
       connectCurrentRun.current = () => undefined;
       try {
         const authoritative = await api.get(workflowRunId);
-        if (!current() || authoritative.productId !== productId || authoritative.platformId !== platformId) return;
+        if (
+          !current() ||
+          authoritative.productId !== productId ||
+          authoritative.platformId !== platformId
+        )
+          return;
         setRun(authoritative);
         connect(workflowRunId);
       } catch {
@@ -114,7 +127,12 @@ export function WorkflowProgress({
           .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
         if (!latest) return;
         const authoritative = await api.get(latest.id);
-        if (!current() || authoritative.productId !== productId || authoritative.platformId !== platformId) return;
+        if (
+          !current() ||
+          authoritative.productId !== productId ||
+          authoritative.platformId !== platformId
+        )
+          return;
         setRun(authoritative);
         connect(authoritative.id);
       })
@@ -151,8 +169,7 @@ export function WorkflowProgress({
       if (requestGeneration === generation.current) setBusy('');
     }
   };
-  const start = () =>
-    updateRun('start', () => api.start(productId, platformId));
+  const start = () => updateRun('start', () => api.start(productId, platformId));
   const resume = () => run && updateRun('resume', () => api.resume(run.id, run.revision));
   const cancel = () => run && updateRun('cancel', () => api.cancel(run.id, run.revision));
   const retry = (nodeKey: WorkflowNodeKey) =>
@@ -182,29 +199,57 @@ export function WorkflowProgress({
             onChange={(event) => setPlatformId(event.target.value as WorkflowPlatformId)}
           >
             {Object.entries(platformLabels).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
+              <option key={value} value={value}>
+                {label}
+              </option>
             ))}
           </select>
         </label>
       </header>
 
-      <p aria-live="polite" className="workflow-announcement">{announcement}</p>
+      <p aria-live="polite" className="workflow-announcement">
+        {announcement}
+      </p>
       {error && <p role="alert">{error}</p>}
+      {!internetAction.available ? (
+        <p id="workflow-offline-reason">{internetAction.reason}</p>
+      ) : null}
       {run?.status === 'interrupted' && (
-        <p className="workflow-interrupted" role="status">服务曾中断；确认当前输入后手动恢复，不会自动消耗 AI 额度。</p>
+        <p className="workflow-interrupted" role="status">
+          服务曾中断；确认当前输入后手动恢复，不会自动消耗 AI 额度。
+        </p>
       )}
 
       <div className="workflow-actions">
         {!run && (
-          <button disabled={!canStart || busy !== ''} onClick={() => void start()} type="button">
+          <button
+            aria-describedby={!internetAction.available ? 'workflow-offline-reason' : undefined}
+            disabled={!canStart || busy !== '' || !internetAction.available}
+            onClick={() => void start()}
+            type="button"
+          >
             {busy === 'start' ? '启动中…' : '启动工作流'}
           </button>
         )}
         {run && ['failed', 'interrupted'].includes(run.status) && (
-          <button disabled={busy !== ''} onClick={() => void resume()} type="button">恢复工作流</button>
+          <button
+            aria-describedby={!internetAction.available ? 'workflow-offline-reason' : undefined}
+            disabled={busy !== '' || !internetAction.available}
+            onClick={() => void resume()}
+            type="button"
+          >
+            恢复工作流
+          </button>
         )}
         {run && ['not_started', 'running', 'failed', 'interrupted'].includes(run.status) && (
-          <button className="secondary" disabled={busy !== ''} onClick={() => void cancel()} type="button">取消工作流</button>
+          <button
+            className="secondary"
+            disabled={busy !== ''}
+            onClick={() => void cancel()}
+            type="button"
+          >
+            取消工作流
+          </button>
         )}
       </div>
 
@@ -216,21 +261,38 @@ export function WorkflowProgress({
             <li data-testid="workflow-node" key={node.key}>
               <div className="workflow-node-heading">
                 <strong>{nodeLabels[node.key]}</strong>
-                <span>{currentNode ? statusLabels[currentNode.status] : inspection?.runnable ? '可运行' : '缺少输入'}</span>
+                <span>
+                  {currentNode
+                    ? statusLabels[currentNode.status]
+                    : inspection?.runnable
+                      ? '可运行'
+                      : '缺少输入'}
+                </span>
               </div>
               {inspection && inspection.missingInputs.length > 0 && (
                 <p>缺少：{inspection.missingInputs.join('、')}</p>
               )}
               {currentNode?.output && (
-                <p>输出修订 {currentNode.output.revisionNo} · {currentNode.output.assetType}</p>
+                <p>
+                  输出修订 {currentNode.output.revisionNo} · {currentNode.output.assetType}
+                </p>
               )}
               {currentNode?.status === 'needs_review' && <p>输出需要人工复核后再发布。</p>}
               {currentNode?.status === 'stale' && <p>依赖已变化，请显式重试该节点。</p>}
               {currentNode?.error && (
-                <p role="alert">{currentNode.error.code}：{currentNode.error.message}</p>
+                <p role="alert">
+                  {currentNode.error.code}：{currentNode.error.message}
+                </p>
               )}
               {run && currentNode?.status === 'failed' && (
-                <button disabled={busy !== ''} onClick={() => void retry(node.key)} type="button">
+                <button
+                  aria-describedby={
+                    !internetAction.available ? 'workflow-offline-reason' : undefined
+                  }
+                  disabled={busy !== '' || !internetAction.available}
+                  onClick={() => void retry(node.key)}
+                  type="button"
+                >
                   重试{nodeLabels[node.key]}
                 </button>
               )}

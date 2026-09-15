@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ContentBuildersApi, ContentPlatform, DetailPageView } from './api.js';
+import { useConnectivity } from '../connectivity/connectivity-provider.js';
+import { capabilityAvailability } from '../connectivity/policy.js';
 
 export function DetailBuilder({
   api,
@@ -11,6 +13,8 @@ export function DetailBuilder({
   const [platformId, setPlatform] = useState<ContentPlatform>('pinduoduo');
   const [history, setHistory] = useState<readonly DetailPageView[]>([]);
   const [error, setError] = useState('');
+  const { online } = useConnectivity();
+  const generation = capabilityAvailability('detail_generation', online);
   useEffect(() => {
     let active = true;
     void api
@@ -64,7 +68,12 @@ export function DetailBuilder({
         </select>
       </header>
       {error && <p role="alert">{error}</p>}
-      <button onClick={() => void act(() => api.generateDetail(productId, platformId))}>
+      {!generation.available ? <p id="detail-offline-reason">{generation.reason}</p> : null}
+      <button
+        aria-describedby={!generation.available ? 'detail-offline-reason' : undefined}
+        disabled={!generation.available}
+        onClick={() => void act(() => api.generateDetail(productId, platformId))}
+      >
         {latest ? '重新生成架构' : '生成详情页架构'}
       </button>
       {latest?.stale && <p>已过期：{latest.staleReasons.join('、')}</p>}

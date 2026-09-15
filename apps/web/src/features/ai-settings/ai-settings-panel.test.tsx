@@ -4,6 +4,10 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import {
+  ConnectivityProvider,
+  type ConnectivitySource,
+} from '../connectivity/connectivity-provider.js';
 import { AISettingsPanel } from './ai-settings-panel.js';
 
 const containers: HTMLDivElement[] = [];
@@ -60,7 +64,68 @@ describe('AISettingsPanel', () => {
     expect(container.textContent).toContain('未配置');
     root.unmount();
   });
+
+  it('blocks only the connection test while offline', async () => {
+    const calls: string[] = [];
+    const api = {
+      async get() {
+        return status(true);
+      },
+      async configure() {
+        calls.push('configure');
+        return status(true);
+      },
+      async clear() {
+        calls.push('clear');
+        return status(false);
+      },
+      async testConnection() {
+        calls.push('test');
+        return { ok: true };
+      },
+    };
+    const container = document.createElement('div');
+    document.body.append(container);
+    containers.push(container);
+    const root = createRoot(container);
+    await act(async () =>
+      root.render(
+        <ConnectivityProvider source={offlineSource}>
+          <AISettingsPanel api={api} />
+        </ConnectivityProvider>,
+      ),
+    );
+    await act(async () => undefined);
+
+    const testButton = container.querySelector<HTMLButtonElement>(
+      '[aria-label="测试 DeepSeek 连接"]',
+    )!;
+    const clearButton = container.querySelector<HTMLButtonElement>(
+      '[aria-label="清除 DeepSeek 密钥"]',
+    )!;
+    const saveButton = container.querySelector<HTMLButtonElement>(
+      '[aria-label="保存 DeepSeek 设置"]',
+    )!;
+    expect(testButton.disabled).toBe(true);
+    expect(testButton.getAttribute('aria-describedby')).toBe('deepseek-offline-reason');
+    expect(clearButton.disabled).toBe(false);
+    await change(
+      container.querySelector<HTMLInputElement>('[aria-label="DeepSeek API Key"]')!,
+      'sk-offline-local',
+    );
+    expect(saveButton.disabled).toBe(false);
+    await act(async () => testButton.click());
+    await act(async () => saveButton.click());
+    await act(async () => clearButton.click());
+    expect(calls).toEqual(['configure', 'clear']);
+    root.unmount();
+  });
 });
+
+const offlineSource: ConnectivitySource = {
+  isOnline: () => false,
+  subscribe: () => () => undefined,
+};
 
 async function change(element: HTMLInputElement, value: string) {
   await act(async () => {

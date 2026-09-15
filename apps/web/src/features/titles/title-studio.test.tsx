@@ -2,6 +2,10 @@
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { describe, expect, it } from 'vitest';
+import {
+  ConnectivityProvider,
+  type ConnectivitySource,
+} from '../connectivity/connectivity-provider.js';
 import type { TitleAssetView, TitlesApi } from './api.js';
 import { TitleStudio } from './title-studio.js';
 
@@ -65,4 +69,77 @@ describe('TitleStudio', () => {
     root.unmount();
     container.remove();
   });
+
+  it('blocks generation but keeps local editing and locking available offline', async () => {
+    const item = titleView();
+    const calls: string[] = [];
+    const api: TitlesApi = {
+      async list() {
+        return [item];
+      },
+      async generate() {
+        calls.push('generate');
+        return item;
+      },
+      async edit() {
+        calls.push('edit');
+        return item;
+      },
+      async lock() {
+        calls.push('lock');
+        return item;
+      },
+    };
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    await act(async () =>
+      root.render(
+        <ConnectivityProvider source={offlineSource}>
+          <TitleStudio api={api} productId="p" />
+        </ConnectivityProvider>,
+      ),
+    );
+    await act(async () => undefined);
+
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')];
+    expect(buttons[0]?.disabled).toBe(true);
+    expect(buttons[1]?.disabled).toBe(false);
+    expect(buttons[2]?.disabled).toBe(false);
+    await act(async () => buttons[0]?.click());
+    await act(async () => buttons[1]?.click());
+    await act(async () => buttons[2]?.click());
+    expect(calls).toEqual(['edit', 'lock']);
+    root.unmount();
+    container.remove();
+  });
 });
+
+const offlineSource: ConnectivitySource = {
+  isOnline: () => false,
+  subscribe: () => () => undefined,
+};
+
+function titleView(): TitleAssetView {
+  const variants = ['recommended', 'search', 'selling_point', 'scenario'] as const;
+  return {
+    revision: {
+      id: 'offline-title',
+      revisionNo: 1,
+      origin: 'generated',
+      status: 'verified',
+      locked: false,
+      titles: variants.map((variant) => ({
+        variant,
+        text: `${variant} title`,
+        keywords: [],
+        claims: [],
+        reviewTerms: [],
+      })),
+      validationIssues: [],
+      createdAt: '2026-09-15T00:00:00.000Z',
+    },
+    stale: false,
+    staleReasons: [],
+  };
+}
