@@ -122,23 +122,23 @@
 - Produces `GET /api/v1/dashboard`.
 - Consumes the Task 1 dashboard application and existing production repositories/applications.
 
-- [ ] **Step 1: Write route RED tests**
+- [x] **Step 1: Write route RED tests**
 
   Prove `200` strict mapping, `503` when the application is absent, no request body/query acceptance, safe failure mapping, and no extra/internal fields.
 
-- [ ] **Step 2: Implement and register the minimal route**
+- [x] **Step 2: Implement and register the minimal route**
 
   Add the optional dashboard dependency to `AppContext`; validate the application result with the shared contract before sending it.
 
-- [ ] **Step 3: Write production integration RED tests**
+- [x] **Step 3: Write production integration RED tests**
 
   Seed products/SKUs/costs, active/inactive rules, current and superseded financial results, and stale/current assets through public/application behavior. Restart production and assert current counts persist. Assert the raw response contains no seeded secret and no workspace absolute path.
 
-- [ ] **Step 4: Compose the production dashboard**
+- [x] **Step 4: Compose the production dashboard**
 
   Construct it only after the existing applications/repositories exist. Pass already-created instances; do not open a second database or duplicate staleness rules.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
   Run focused Server tests, Server typecheck/lint/build, `git diff --check`, then:
 

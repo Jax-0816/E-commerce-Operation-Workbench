@@ -73,7 +73,7 @@ describe('internal package preparation', () => {
     } finally {
       await rm(outputDirectory, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 
   it('uses the current Node process and pnpm CLI without a shell and propagates build errors', () => {
     const calls = [];

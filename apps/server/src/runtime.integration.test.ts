@@ -24,6 +24,188 @@ afterEach(async () => {
 });
 
 describe('production app composition', () => {
+  it('serves a persisted redacted dashboard snapshot without provider calls', async () => {
+    const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-dashboard-')));
+    directories.push(workspacePath);
+    let providerCalls = 0;
+    let productId = '';
+    const secret = 'sk-dashboard-production-secret';
+    const providerFactory = (): AIProvider => ({
+      id: 'unused-dashboard-provider',
+      async generate() {
+        providerCalls += 1;
+        return {
+          provider: 'dashboard-fixture',
+          responseId: `dashboard-${providerCalls}`,
+          model: 'dashboard-fixture',
+          content: JSON.stringify({
+            productId,
+            titles: ['recommended', 'search', 'selling_point', 'scenario'].map((variant) => ({
+              variant,
+              text: `${variant} 总控台商品`,
+              keywords: ['总控台'],
+              claims: [],
+              reviewTerms: [],
+            })),
+          }),
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+        };
+      },
+      async testConnection() {
+        providerCalls += 1;
+        throw new Error('Dashboard must not test the provider.');
+      },
+      getCapabilities() {
+        return { text: true, structured: true };
+      },
+    });
+    const first = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
+    productId = (
+      await first.inject({
+        method: 'POST',
+        url: '/api/v1/products',
+        payload: { name: '总控台商品' },
+      })
+    ).json().id as string;
+    const configured = await first.inject({
+      method: 'PUT',
+      url: `/api/v1/products/${productId}/skus`,
+      payload: { dimensions: [{ name: '颜色', values: ['红', '蓝'] }] },
+    });
+    expect(configured.statusCode, configured.body).toBe(200);
+    const skuId = configured.json().skus[0].id as string;
+    expect(
+      (
+        await first.inject({
+          method: 'PUT',
+          url: `/api/v1/products/${productId}/skus/${skuId}/cost-profile`,
+          payload: dashboardCostProfile(),
+        })
+      ).statusCode,
+    ).toBe(200);
+    await first.inject({
+      method: 'PUT',
+      url: '/api/v1/ai/settings',
+      payload: { apiKey: secret },
+    });
+
+    const inactive = await first.inject({ method: 'GET', url: '/api/v1/dashboard' });
+    expect(inactive.statusCode, inactive.body).toBe(200);
+    expect(inactive.json()).toMatchObject({
+      summary: {
+        productCount: 1,
+        enabledSkuCount: 2,
+        missingCostProfileCount: 1,
+        staleAssetCount: 0,
+        lossMakingResultCount: 0,
+        ruleRiskCount: 0,
+      },
+      configuration: { aiConfigured: true, pinduoduoRulePackActive: false },
+      attention: [
+        expect.objectContaining({ code: 'missing_cost_profiles' }),
+        expect.objectContaining({ code: 'active_rule_pack_missing' }),
+      ],
+    });
+    const packs = await first.inject({
+      method: 'GET',
+      url: '/api/v1/rule-packs?platformId=pinduoduo&region=CN',
+    });
+    const packId = packs.json().items[0].id as string;
+    expect(
+      (
+        await first.inject({
+          method: 'POST',
+          url: `/api/v1/rule-packs/${packId}/activate`,
+        })
+      ).statusCode,
+    ).toBe(200);
+
+    for (const [name, goal] of [
+      ['旧保本结果', { type: 'break_even' }],
+      ['当前盈利结果', { type: 'target_unit_profit', amountMinorUnits: '100' }],
+    ] as const) {
+      const calculated = await first.inject({
+        method: 'POST',
+        url: `/api/v1/products/${productId}/skus/${skuId}/pricing-calculations`,
+        payload: {
+          name,
+          goal,
+          minimumMinorUnits: '0',
+          maximumMinorUnits: '100000',
+        },
+      });
+      expect(calculated.statusCode, calculated.body).toBe(200);
+    }
+    const initialProfile = await first.inject({
+      method: 'PUT',
+      url: `/api/v1/products/${productId}/platform-profiles/pinduoduo`,
+      payload: dashboardPlatformProfile('杯具-旧'),
+    });
+    expect(initialProfile.statusCode, initialProfile.body).toBe(200);
+    expect(
+      (
+        await first.inject({
+          method: 'POST',
+          url: `/api/v1/products/${productId}/titles/generate?platformId=pinduoduo`,
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (
+        await first.inject({
+          method: 'PUT',
+          url: `/api/v1/products/${productId}/platform-profiles/pinduoduo`,
+          payload: {
+            ...dashboardPlatformProfile('杯具-新'),
+            expectedUpdatedAt: initialProfile.json().updatedAt,
+          },
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (
+        await first.inject({
+          method: 'POST',
+          url: `/api/v1/products/${productId}/titles/generate?platformId=taobao`,
+        })
+      ).statusCode,
+    ).toBe(200);
+    await first.close();
+
+    const callsBeforeDashboardRead = providerCalls;
+    const restarted = await createProductionApp({
+      migrationsDirectory,
+      workspacePath,
+      providerFactory,
+    });
+    const response = await restarted.inject({ method: 'GET', url: '/api/v1/dashboard' });
+    expect(response.statusCode, response.body).toBe(200);
+    expect(response.json()).toMatchObject({
+      summary: {
+        productCount: 1,
+        enabledSkuCount: 2,
+        missingCostProfileCount: 1,
+        staleAssetCount: 1,
+        lossMakingResultCount: 0,
+        ruleRiskCount: 3,
+      },
+      configuration: { aiConfigured: true, pinduoduoRulePackActive: true },
+      attention: [
+        expect.objectContaining({ code: 'missing_cost_profiles' }),
+        expect.objectContaining({ code: 'stale_assets' }),
+        expect.objectContaining({ code: 'rule_review_required' }),
+      ],
+    });
+    expect(response.body).not.toContain(secret);
+    expect(response.body).not.toContain(workspacePath);
+    expect(providerCalls).toBe(callsBeforeDashboardRead);
+    await restarted.close();
+  });
+
   it('serves identical locked operation-plan sources after restart without provider calls', async () => {
     const workspacePath = await realpath(
       await mkdtemp(join(tmpdir(), 'eaw-server-operation-plan-')),
@@ -982,6 +1164,39 @@ describe('production app composition', () => {
     await restarted.close();
   });
 });
+
+function dashboardCostProfile() {
+  return {
+    currency: 'CNY',
+    items: [
+      {
+        key: 'materials',
+        label: '材料',
+        kind: 'per_unit',
+        classification: 'cost_of_goods',
+        critical: true,
+        status: 'confirmed',
+        amountMinorUnits: '5000',
+        allocationUnits: null,
+        unitsPerOrder: null,
+        rateBasisPoints: null,
+        percentageBase: null,
+        formula: null,
+      },
+    ],
+  };
+}
+
+function dashboardPlatformProfile(categoryName: string) {
+  return {
+    categoryCode: 'cup-100',
+    categoryName,
+    externalProductId: null,
+    title: '总控台标题',
+    description: null,
+    metadata: {},
+  };
+}
 
 async function waitForWorkflowStatus(
   app: Awaited<ReturnType<typeof createProductionApp>>,

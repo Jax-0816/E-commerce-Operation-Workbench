@@ -24,6 +24,7 @@ import {
   createRepositoryOperationPlanSourceResolver,
   createWorkflowsApplication,
   createDataManagementApplication,
+  createDashboardApplication,
 } from '@eaw/application';
 import { DeepSeekProvider, type AIProvider } from '@eaw/ai-engine';
 import {
@@ -296,6 +297,16 @@ export async function createProductionApp({
         }),
       restoreStatus: () => readWorkspaceRestoreStatus(workspace.path),
     });
+    const dashboard = createDashboardApplication({
+      products,
+      skus,
+      pricing,
+      promotions,
+      rules,
+      ai: aiSettings,
+      titles,
+      content: contentBuilders,
+    });
     const app = buildApp(
       createAppContext({
         aiSettings,
@@ -315,6 +326,7 @@ export async function createProductionApp({
         workflows,
         operationPlans,
         dataManagement,
+        dashboard,
       }),
     );
     app.addHook('onClose', cleanup);
