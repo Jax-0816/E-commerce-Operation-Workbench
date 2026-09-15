@@ -15,6 +15,32 @@ BeforeAll {
     }
   }
 
+  function Read-SharedTextFile {
+    param(
+      [Parameter(Mandatory)]
+      [string] $Path
+    )
+
+    $stream = [IO.FileStream]::new(
+      $Path,
+      [IO.FileMode]::Open,
+      [IO.FileAccess]::Read,
+      [IO.FileShare]::ReadWrite
+    )
+    try {
+      $reader = [IO.StreamReader]::new($stream)
+      try {
+        return $reader.ReadToEnd()
+      }
+      finally {
+        $reader.Dispose()
+      }
+    }
+    finally {
+      $stream.Dispose()
+    }
+  }
+
   $readProductCountScript = @'
 import { DatabaseSync } from 'node:sqlite';
 const database = new DatabaseSync(process.argv[1], { readOnly: true });
@@ -139,10 +165,11 @@ Describe 'Workbench Windows production start' {
     $marker.port | Should -Be $port
     $marker.url | Should -Be $first.Url
     $marker.appVersion | Should -Be '0.1.0'
-    $logText = [IO.File]::ReadAllText(
-      (Join-Path $workspace 'logs\workbench-server.out.log')
-    ) + [IO.File]::ReadAllText(
-      (Join-Path $workspace 'logs\workbench-server.err.log')
+    $logText = Read-SharedTextFile (
+      Join-Path $workspace 'logs\workbench-server.out.log'
+    )
+    $logText += Read-SharedTextFile (
+      Join-Path $workspace 'logs\workbench-server.err.log'
     )
     $logText | Should -Not -Match $script:startTestSecret
 
