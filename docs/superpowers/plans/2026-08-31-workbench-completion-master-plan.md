@@ -325,6 +325,8 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 
 **Files:** `tests/e2e/golden-path.spec.ts`、fake AI fixture、competitor fixture、CI、README 验收说明。
 
+**Detailed plan:** `docs/superpowers/plans/2026-09-16-final-golden-path-release.md`
+
 - [ ] 编写端到端测试：商品 → 事实确认 → SKU → 成本 → 竞品导入 → AI 策略/内容 → 定价 → 拼多多促销 → trace → 运营方案锁定。
 - [ ] 先运行并记录第一个真实行为缺口，再只在归属模块修复并添加聚焦回归。
 - [ ] 在 Windows 与 Ubuntu 运行完整统一门禁，失败时保存 Playwright trace。

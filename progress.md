@@ -977,3 +977,17 @@
 
 1. 确认 Task 28 最终文档提交的 Windows/Ubuntu CI 全绿且 `HEAD...origin/codex/phase-0` 为 `0 0`。
 2. 执行 Task 29：先写统一黄金路径 RED 测试，再按第一个真实行为缺口逐项修复并保留聚焦回归。
+
+## Session: 2026-09-16 — Task 29 execution plan
+
+- **Status:** complete
+- Task 28 最终提交 `2c60f94` 已推送；GitHub run `35051664130` 从干净检出通过，Ubuntu 7m29s、Windows 19m49s，远端同步为 `0 0`。
+- 已核对现有 Phase 2/3/10/11/12 五条 Playwright：分别覆盖建档/窄屏/离线、定价 trace、工作流显式恢复、运营方案不可变锁定、事务备份恢复，但尚无一条从空白工作区贯穿全部业务步骤的规范路径。
+- 已核对 E2E 服务使用本地确定性 fake provider，首个 creative 调用按商品固定失败一次并写调用日志；这可直接验证显式恢复与已完成节点不重跑，不需要真实 DeepSeek 调用。
+- 新计划固定五个小任务：统一 RED、逐 owner 修复、跨平台隔离、双平台强制浏览器门禁、最终升级/恢复/可移植性审计；每个绿色小任务都先提交推送再继续。
+- 详细计划：`docs/superpowers/plans/2026-09-16-final-golden-path-release.md`。
+
+### Next action
+
+1. 提交并推送 Task 29 详细计划。
+2. 创建 `tests/e2e/golden-path.spec.ts` 与 UTF-8 竞品 fixture，运行单 spec RED 并记录第一个真实行为缺口。

@@ -69,6 +69,11 @@ Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress
   - [x] 28.6：全局错误恢复、路由焦点与窄屏验收
   - [x] 28.7：Task 28 发布门禁与记录收口
 - [ ] Task 29：完整 Playwright 黄金路径与发布门禁（in_progress）
+  - [ ] 29.1：统一黄金路径 RED 与确定性 fixture 契约
+  - [ ] 29.2：按首个真实缺口逐个完成 owner 修复并跑通单路径
+  - [ ] 29.3：跨平台 Playwright 隔离、零付费调用与失败 trace
+  - [ ] 29.4：Windows/Ubuntu 强制浏览器发布门禁
+  - [ ] 29.5：升级、备份恢复、可移植性与发布候选收口
 - **Status:** in_progress
 
 ## Key Questions
@@ -117,5 +122,5 @@ Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress
 
 ### Next action
 
-1. 提交并推送 Task 28.7，确认本地与 GitHub 为 `0 0`，Windows/Ubuntu CI 全绿。
-2. 进入 Task 29：先为“商品 → 事实确认 → SKU → 成本 → 竞品 → AI → 定价 → 促销 → trace → 运营方案锁定”写统一 Playwright 黄金路径，并记录第一个真实行为缺口。
+1. 提交并推送 Task 29 详细实施计划，确认本地与 GitHub 为 `0 0`。
+2. 执行 29.1：先写“商品 → 事实确认 → SKU → 成本 → 竞品 → AI → 定价 → 促销 → trace → 运营方案锁定”的统一 Playwright RED，并记录第一个真实行为缺口。
