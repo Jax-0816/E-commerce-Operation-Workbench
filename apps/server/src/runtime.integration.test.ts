@@ -16,6 +16,7 @@ import { createProductionApp } from './runtime.js';
 
 const directories: string[] = [];
 const migrationsDirectory = fileURLToPath(new URL('../../../migrations/', import.meta.url));
+const runtimeIntegrationTimeoutMs = 20_000;
 
 afterEach(async () => {
   await Promise.all(
@@ -23,7 +24,7 @@ afterEach(async () => {
   );
 });
 
-describe('production app composition', () => {
+describe('production app composition', { timeout: runtimeIntegrationTimeoutMs }, () => {
   it('serves a persisted redacted dashboard snapshot without provider calls', async () => {
     const workspacePath = await realpath(await mkdtemp(join(tmpdir(), 'eaw-server-dashboard-')));
     directories.push(workspacePath);

@@ -1046,3 +1046,15 @@
 
 1. 提交并推送 Task 29.4 本地结果。
 2. 等待同一提交的 GitHub `windows-latest` 与 `ubuntu-latest` 任务完成；如失败，读取 OS 专属 artifact 并修复后重跑。
+
+### First matrix result and Windows fix
+
+- GitHub Actions `35081359094`：Ubuntu 全部通过，包括锁定 Chromium 安装和 Playwright 6/6；Windows 在新增浏览器步骤前的既有根级测试失败。
+- Windows 日志显示 3 个 `runtime.integration.test.ts` 用例在默认 5 秒边界超时（实际约 5.0–5.8 秒），超时中断后未关闭的 SQLite 句柄导致清理阶段附带 `EBUSY`；断言本身无失败。
+- 将整组真实生产组合集成测试统一设置 20 秒预算，保留超时保护且覆盖 Windows 的双次启动、持久化和句柄关闭成本；不添加 retry，也不放宽单元测试。
+- 聚焦生产组合测试 15/15 通过（整文件 5.71s），Server typecheck/lint 通过；与 CI 相同的根级 `pnpm test` 全部通过，Server 24 files / 67 tests。
+
+### Next action
+
+1. 提交并推送 Windows 超时预算修复。
+2. 跟踪新矩阵直到 Windows 与 Ubuntu 的浏览器黄金路径都通过。
