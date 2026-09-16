@@ -50,10 +50,10 @@
 | Task 25                               | complete    | 精确来源、稳定 blocker、不可变历史、UI 与 Phase 11 E2E 已完成                             |
 | Task 26                               | complete    | WAL 一致快照、安全归档、事务恢复、数据管理 UI 与 Phase 12 E2E 已通过                      |
 | Task 27                               | complete    | 幂等 Windows 安装、迁移、回环启动、健康等待及真实 Windows CI 已通过                       |
-| Task 28                               | in_progress | 进入总控台、设置、离线与无障碍体验收口                                                    |
-| Task 29                               | pending     | 完成全链路黄金路径与跨平台发布验收                                                        |
+| Task 28                               | complete    | 可行动总控台、脱敏设置、可信离线边界、错误恢复、键盘与三档窄屏验收已完成                  |
+| Task 29                               | in_progress | 完成全链路黄金路径与跨平台发布验收                                                        |
 
-当前主线完成度按原计划 29 个任务计为 `27/29 ≈ 93%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 27 已完成，当前进入 Task 28。
+当前主线完成度按原计划 29 个任务计为 `28/29 ≈ 97%`。这里的状态以代码、提交历史和测试为准；旧计划中的未更新复选框不再作为进度来源。Task 28 已完成，当前进入 Task 29。
 
 ## Dependency Order
 
@@ -315,11 +315,11 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 
 **Files:** dashboard read model/API/UI、规则/提示词/AI/系统页面、全局错误边界、离线与 capability banners。
 
-- [ ] 测试缺失成本、过期资产、规则风险、亏损数量、配置状态和离线允许/禁止动作。
-- [ ] 实现可行动总控台与脱敏设置页；离线时仍允许本地财务和历史查看。
-- [ ] 完成键盘操作、焦点、语义状态、桌面布局和窄屏基本可用性检查。
-- [ ] 更新 README，使能力说明与实际阶段一致。
-- [ ] 提交 `feat: complete operational dashboard and offline ux`。
+- [x] 测试缺失成本、过期资产、规则风险、亏损数量、配置状态和离线允许/禁止动作。
+- [x] 实现可行动总控台与脱敏设置页；离线时仍允许本地财务和历史查看。
+- [x] 完成键盘操作、焦点、语义状态、桌面布局和窄屏基本可用性检查。
+- [x] 更新 README，使能力说明与实际阶段一致。
+- [x] 提交 `feat: complete operational dashboard and offline ux`。
 
 ### Task 29: Full golden path and release gates
 

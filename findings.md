@@ -152,6 +152,8 @@
 | start 的环境仅临时注入生产子进程                  | `HOST/PORT/EAW_WORKSPACE_PATH` 在 `Start-Process` 后立即恢复；失败时只终止本次创建的 PID，不按名称批量杀 Node                   |
 | Windows 版本探测通过固定 `cmd /d /s /c` 调用 pnpm | Node 24 在 Windows 对 `.cmd` 的直接 `execFileSync` 返回 `EINVAL`；固定 `ComSpec` 与静态参数既兼容系统，又不接收用户命令文本     |
 | 仓库文本统一以 LF 检出                            | `.gitattributes` 固定文本换行并显式标记二进制资产，避免 Windows `core.autocrlf` 让脚本、JSON 或校验结果产生机器差异             |
+| 离线能力在所属控件处守卫                          | 全局 fetch 拦截会误伤回环 API；只禁止公网 AI/工作流动作，本地读写、财务、规则和备份保持可用，重连不自动执行                     |
+| Web 在自身门禁前构建 contracts                    | 干净检出没有 `packages/contracts/dist`；Web 的 dev/test/typecheck/build 必须显式准备子路径导出，不能依赖本机旧构建产物          |
 
 ## Issues Encountered
 
@@ -168,6 +170,7 @@
 | 无 TTY 的 setup 冻结安装和构建都触发 pnpm modules purge 拒绝 | 先单独复现两个阶段，确认同一根因；将官方建议的 `CI=true` 限定在 pnpm 子调用期间，并用测试确认恢复原值                            |
 | 进程 marker 复用首次把站点根 URL 当成健康端点                | 失败栈显示第二次启动删除 marker 后命中端口占用；改为先验证 marker 元数据，再固定请求 `<loopback>/api/v1/health`                  |
 | Windows Node 运行日志在子进程存活时无法用 `ReadAllText` 读取 | GitHub Windows Server 2025 复现文件共享冲突；验收测试改用允许既有写句柄的 `FileShare.ReadWrite` 只读流，真实 Windows Pester 通过 |
+| Task 28 后 GitHub 双平台 typecheck 找不到 contracts 子路径   | 本地旧 `dist` 掩盖了干净检出缺口；为 Web 增加统一 `prepare:contracts` pre-hook，并移走本地 dist 后复现验证                       |
 
 ## Resources
 
@@ -187,3 +190,6 @@
 - 2026-09-01 Phase 3 Playwright 黄金路径已覆盖：创建商品/SKU、建立 SKU 成本档案、计算目标单件利润、展示 `verified` 建议价与净利润、显示计算轨迹并追加不可变历史。
 - 2026-09-02 Task 17 页面已在应用内浏览器打开并验证：双栏促销配置、多 SKU 批算、资金流指标、风险提示、trace 与重启后历史均来自真实 API。
 - 2026-09-09 Phase 10 Playwright 黄金路径已验证：从真实运营方案页显式启动，creative 首次失败后重载页面，只在用户点击恢复后继续；前四节点调用次数保持 1。
+- 2026-09-16 总控台显示六项真实风险指标、AI/规则配置和可行动站内链接；系统设置只显示脱敏状态，不暴露密钥、路径或正文。
+- 2026-09-16 Playwright 在 1440/720/390 宽度确认无文档级横向溢出，宽表格在具名区域内部滚动；键盘首个焦点为跳转链接，路径切换聚焦主内容。
+- 2026-09-16 离线横幅可见且会被辅助技术播报；离线只禁用公网 AI 动作，本地功能继续可用，恢复在线不产生写请求或自动 AI 调用。

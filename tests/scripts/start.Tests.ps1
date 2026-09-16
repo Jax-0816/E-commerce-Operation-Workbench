@@ -188,6 +188,8 @@ Describe 'Workbench Windows production start' {
     $markerPath = Join-Path $workspace 'logs\workbench-server.json'
     Remove-Item -LiteralPath $markerPath -Force
     $failedPort = Get-AvailableLoopbackPort
+    $healthTimeoutSeconds = 2
+    $cleanupBudgetSeconds = 5
     $stopwatch = [Diagnostics.Stopwatch]::StartNew()
 
     {
@@ -195,11 +197,14 @@ Describe 'Workbench Windows production start' {
         -RepositoryRoot $repo `
         -WorkspacePath $workspace `
         -Port $failedPort `
-        -HealthTimeoutSeconds 2 `
+        -HealthTimeoutSeconds $healthTimeoutSeconds `
         -NoBrowser
     } | Should -Throw '*failed to become healthy*'
 
-    $stopwatch.Elapsed.TotalSeconds | Should -BeLessThan 4
+    # Windows can spend part of the explicit five-second process cleanup budget
+    # releasing redirected log handles even after the health deadline expires.
+    $stopwatch.Elapsed.TotalSeconds |
+      Should -BeLessThan ($healthTimeoutSeconds + $cleanupBudgetSeconds + 1)
     Test-Path -LiteralPath $markerPath | Should -BeFalse
 
     $probe = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, $failedPort)

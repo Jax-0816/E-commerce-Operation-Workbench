@@ -362,7 +362,7 @@
 - Modify: `findings.md`
 - Modify: `progress.md`
 
-- [ ] **Step 1: Run every release gate with exact tools**
+- [x] **Step 1: Run every release gate with exact tools**
 
   ```bash
   node scripts/check-versions.mjs
@@ -380,15 +380,15 @@
 
   Run PowerShell acceptance and confirm GitHub Windows/Ubuntu CI. Expected: zero failures and zero real paid provider calls.
 
-- [ ] **Step 2: Run final Task 28 product audit**
+- [x] **Step 2: Run final Task 28 product audit**
 
   Verify every dashboard number against seeded source records, every attention link, settings redaction, all offline allowed/blocked actions, no reconnect side effects, keyboard-only flow, error fallback, and 1440/720/390 layouts. Re-run case/symlink/path/line-ending audit for new files.
 
-- [ ] **Step 3: Update documentation and persistent records**
+- [x] **Step 3: Update documentation and persistent records**
 
   Document dashboard, settings, offline boundaries, and keyboard behavior in README. Mark Task 28 complete and Task 29 in progress. Record exact test/E2E/CI counts and remaining known limitations.
 
-- [ ] **Step 4: Commit, push, and confirm CI**
+- [x] **Step 4: Commit, push, and confirm CI**
 
   ```bash
   git commit -m "feat: complete operational dashboard and offline ux"

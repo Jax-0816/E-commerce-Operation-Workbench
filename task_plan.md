@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 7 — Task 28：总控台、设置、离线和无障碍体验（in_progress）
+Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress）
 
 ## Phases
 
@@ -60,15 +60,15 @@ Wave 7 — Task 28：总控台、设置、离线和无障碍体验（in_progress
 
 ### Wave 7: 产品收口与发布验收
 
-- [ ] Task 28：总控台、设置、离线和无障碍体验（in_progress）
+- [x] Task 28：总控台、设置、离线和无障碍体验（complete）
   - [x] 28.1：严格总控台契约与当前风险只读聚合
   - [x] 28.2：总控台 HTTP 路由与生产组合
   - [x] 28.3：真实总控台网页与站内行动链接
   - [x] 28.4：脱敏系统状态与设置页
   - [x] 28.5：可信离线能力策略与操作守卫
   - [x] 28.6：全局错误恢复、路由焦点与窄屏验收
-  - [ ] 28.7：Task 28 发布门禁与记录收口
-- [ ] Task 29：完整 Playwright 黄金路径与发布门禁
+  - [x] 28.7：Task 28 发布门禁与记录收口
+- [ ] Task 29：完整 Playwright 黄金路径与发布门禁（in_progress）
 - **Status:** in_progress
 
 ## Key Questions
@@ -114,3 +114,8 @@ Wave 7 — Task 28：总控台、设置、离线和无障碍体验（in_progress
 - 任何新范围先写进 master plan，再进入实现。
 - 每个小任务通过聚焦门禁后提交、推送，并确认本地与 `origin/codex/phase-0` 为 0 ahead / 0 behind，再开始下一项。
 - 新增代码和脚本持续检查 Windows 路径、CRLF、大小写、进程行为与原生依赖；Task 27 是完整安装验收，不是首次兼容处理。
+
+### Next action
+
+1. 提交并推送 Task 28.7，确认本地与 GitHub 为 `0 0`，Windows/Ubuntu CI 全绿。
+2. 进入 Task 29：先为“商品 → 事实确认 → SKU → 成本 → 竞品 → AI → 定价 → 促销 → trace → 运营方案锁定”写统一 Playwright 黄金路径，并记录第一个真实行为缺口。

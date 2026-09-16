@@ -583,11 +583,11 @@ docs/adr/                     architecture decisions
 - Produces: actionable dashboard summary and truthful offline/capability UX.
 - Consumes: read models only; offline mode blocks new AI/external fetches but not local finance/history.
 
-- [ ] **Step 1: Test missing-cost/stale/rule/loss counts, provider configured-only response, offline allowed/blocked actions, and semantic status labels**.
-- [ ] **Step 2: Confirm failure**.
-- [ ] **Step 3: Implement focused read model and desktop UI polish**.
-- [ ] **Step 4: Run UI/API/accessibility tests and build**.
-- [ ] **Step 5: Commit** `feat: complete operational dashboard and offline ux`.
+- [x] **Step 1: Test missing-cost/stale/rule/loss counts, provider configured-only response, offline allowed/blocked actions, and semantic status labels**.
+- [x] **Step 2: Confirm failure**.
+- [x] **Step 3: Implement focused read model and desktop UI polish**.
+- [x] **Step 4: Run UI/API/accessibility tests and build**.
+- [x] **Step 5: Commit** `feat: complete operational dashboard and offline ux`.
 
 ### Task 29: Playwright golden path and final gates
 

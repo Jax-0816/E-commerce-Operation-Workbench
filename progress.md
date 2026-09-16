@@ -812,7 +812,7 @@
 - 生产子进程只获得 `HOST=127.0.0.1`、指定 PORT 和解析后工作区；父进程的三个环境值在 spawn 后精确恢复。
 - 健康成功后才以 UTF-8 原子发布 `logs/workbench-server.json`，记录 PID/port/loopback URL/version；复用前先校验 marker metadata 为回环地址，再校验活进程与精确健康版本。
 - 真实 API 写入的“启动路径商品”在指定中文/空格工作区 SQLite 中可见；第二次启动复用同一 PID，从非仓库 cwd 调用不受影响。
-- 已启动子进程因 workspace lock 立即失败时，2 秒时限内清理 marker 且端口可立即重新绑定；无关监听端口不启动新进程并在 1 秒内失败。
+- 已启动子进程因 workspace lock 立即失败时，在 2 秒健康时限和显式 5 秒进程清理预算内移除 marker，且端口可立即重新绑定；无关监听端口不启动新进程并在 1 秒内失败。
 - 完整 PowerShell 套件 3 文件/12 项通过；加强后启动聚焦测试 3/3 通过，确认日志不包含子进程继承的测试密钥，AfterAll 等待并断言精确 PID 退出。
 
 ### Next action
@@ -945,3 +945,35 @@
 
 1. 提交并推送 Task 28.6，确认 GitHub 同步为 `0 0`。
 2. 进入 Task 28.7：运行 Task 28 全部发布门禁、审计脱敏/离线/键盘/窄屏结果，更新 README 和主计划记录。
+
+## Session: 2026-09-16 — Task 28.7 release closeout
+
+- **Status:** complete
+- 精确工具链 Node.js 24.19.0、pnpm 11.22.0 下，冻结离线安装、格式、typecheck、lint、生产构建、7 个提示词和 1 个规则包校验全部通过。
+- 全仓单元/集成测试为 164 个文件、595 项通过、0 失败；Task 28 Web 回归为 31 个文件、77 项通过，构建转换 177 个模块。
+- 完整 Playwright Phase 2/3/10/11/12 为 5/5 通过；Task 28 专项在 1440/720/390 宽度验证无文档级横向溢出、键盘跳转和路由焦点，并证明离线横幅切换不会产生写请求。
+- PowerShell 6.2.0 验收共 12 项通过：普通沙箱内 setup/common 9/9，通过授权的本机回环环境补跑 start 3/3；区分记录是因为沙箱禁止监听回环端口，不是产品失败。
+- 可移植性审计覆盖 727 个跟踪文件：0 大小写冲突、0 Windows 非法路径、0 跟踪符号链接、0 CRLF 文本、0 本机绝对路径泄漏；`git diff --check` 通过。
+- GitHub 干净检出首次暴露 Web typecheck 依赖本机旧 `packages/contracts/dist`；新增统一 `prepare:contracts` pre-hook 后，移走本地 dist 仍可自动重建 dashboard/system-status 子路径声明并通过 Web typecheck、77 项测试及构建。
+- GitHub run `35049892068` 的 Ubuntu 作业 10m20s 通过，Windows 的安装、类型、lint、595 项测试、构建和资源校验也全部通过；最终 Pester 仅因 4 秒硬编码断言在 4.714 秒失败，而 marker 已删除且端口已释放。断言改为真实的 2 秒健康时限 + 5 秒清理预算 + 1 秒 runner 余量后，锁定工具链本地 start Pester 3/3 通过（2.85 秒完成失败子进程清理）。
+- 总控台、脱敏系统设置、离线允许/禁止边界、显式错误恢复、键盘语义和窄屏行为已写入 README；自动化真实付费 AI 调用数为 0。
+- 已知剩余范围仅为 Task 29：把现有分阶段 Playwright 场景合并为从空白工作区到锁定运营方案的单一黄金路径，并纳入最终 Windows/Ubuntu 发布门禁；当前 CI 执行质量门禁与 Windows Pester，Playwright 证据来自本地支持环境。
+
+### Fresh verification evidence
+
+| Gate                             | Result                                  |
+| -------------------------------- | --------------------------------------- |
+| Runtime / frozen install         | Node 24.19.0 + pnpm 11.22.0 passed      |
+| Root unit/integration tests      | 164 files, 595 passed, 0 failed         |
+| Task 28 Web regression           | 31 files, 77 passed, 0 failed           |
+| PowerShell acceptance            | 9 sandbox + 3 loopback, 12 passed total |
+| Playwright golden paths          | Phase 2/3/10/11/12: 5 passed, 0 failed  |
+| Root format/typecheck/lint/build | passed                                  |
+| Prompt/rule-pack validation      | 7 prompts + 1 rule pack passed          |
+| Windows portability / diff audit | 727 tracked files audited; passed       |
+| Real paid AI calls               | 0                                       |
+
+### Next action
+
+1. 确认 Task 28 最终文档提交的 Windows/Ubuntu CI 全绿且 `HEAD...origin/codex/phase-0` 为 `0 0`。
+2. 执行 Task 29：先写统一黄金路径 RED 测试，再按第一个真实行为缺口逐项修复并保留聚焦回归。
