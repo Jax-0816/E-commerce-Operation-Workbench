@@ -83,6 +83,37 @@ describe('repository operation plan source resolver', () => {
     expect(resolved.sources.pricing.costProfileRevisionNo).toBe(1);
   });
 
+  it('does not mark equivalent persisted sources stale when object key order changes', async () => {
+    const fixture = setup();
+    const resolved = await fixture.resolver.resolve(fixture.productId, fixture.input);
+    const promotion = resolved.sources.promotion!;
+    const id = createUuidV7();
+
+    await expect(
+      fixture.resolver.revalidate({
+        id,
+        lineageId: id,
+        productId: fixture.productId,
+        platformId: resolved.platformId,
+        revisionNo: 1,
+        status: 'draft',
+        lockedAt: null,
+        sources: {
+          ...resolved.sources,
+          promotion: {
+            scenarioId: promotion.scenarioId,
+            ruleSnapshotHash: promotion.ruleSnapshotHash,
+            resultIds: promotion.resultIds,
+          },
+        },
+        sourceHash: 'd'.repeat(64),
+        blockers: [],
+        supersedesRevisionId: null,
+        createdAt: new Date(),
+      }),
+    ).resolves.toEqual([]);
+  });
+
   it('revalidates stored identities and marks replaced exact revisions stale', async () => {
     const fixture = setup();
     const resolved = await fixture.resolver.resolve(fixture.productId, fixture.input);

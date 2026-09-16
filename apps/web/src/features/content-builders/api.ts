@@ -112,7 +112,12 @@ export function createBrowserContentBuildersApi(fetcher: typeof fetch = fetch): 
     if (!response.ok) throw new Error('内容构建请求失败');
     return response.json() as Promise<T>;
   };
-  const post = { method: 'POST', headers: { 'content-type': 'application/json' } };
+  const post = { method: 'POST' };
+  const jsonPost = (value: unknown): RequestInit => ({
+    ...post,
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(value),
+  });
   return {
     async listCreative(p, x) {
       return (await call<{ items: CreativePlanView[] }>(p, x, 'creative')).items;
@@ -127,7 +132,7 @@ export function createBrowserContentBuildersApi(fetcher: typeof fetch = fetch): 
       return call(p, x, `creative/items/${id}/lock`, post);
     },
     async reorderCreative(p, x, orderedIds) {
-      return call(p, x, 'creative/reorder', { ...post, body: JSON.stringify({ orderedIds }) });
+      return call(p, x, 'creative/reorder', jsonPost({ orderedIds }));
     },
     async listDetail(p, x) {
       return (await call<{ items: DetailPageView[] }>(p, x, 'detail')).items;
@@ -139,7 +144,7 @@ export function createBrowserContentBuildersApi(fetcher: typeof fetch = fetch): 
       return call(p, x, `detail/sections/${id}/lock`, post);
     },
     async reorderDetail(p, x, orderedIds) {
-      return call(p, x, 'detail/reorder', { ...post, body: JSON.stringify({ orderedIds }) });
+      return call(p, x, 'detail/reorder', jsonPost({ orderedIds }));
     },
   };
 }

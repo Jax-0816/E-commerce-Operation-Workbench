@@ -38,7 +38,7 @@
 - Produces one Playwright test named `completes the canonical workbench path and locks exact sources`.
 - Consumes the real browser routes, existing deterministic provider, provider call log and strict public/read-only APIs.
 
-- [ ] **Step 1: Write the complete user-visible path before changing product code**
+- [x] **Step 1: Write the complete user-visible path before changing product code**
 
   Drive the following sequence through labels/roles instead of CSS implementation details:
 
@@ -53,11 +53,11 @@
   9. select the exact workflow, pricing and promotion sources, create a draft with zero blockers and explicitly lock it;
   10. reload and restart the E2E server, then prove the locked revision and exact source hash remain unchanged.
 
-- [ ] **Step 2: Add exact audit assertions**
+- [x] **Step 2: Add exact audit assertions**
 
   Assert call order/count, completed-node reuse, confirmed fact ID in content evidence, current rule checksum, pricing/promotion record IDs, non-empty calculation traces, locked source IDs/hash, immutable history, no page errors and no unexpected HTTP failures. Reject any request whose host is outside loopback, except Vite's own local assets.
 
-- [ ] **Step 3: Run RED and record the first real behavior gap**
+- [x] **Step 3: Run RED and record the first real behavior gap**
 
   ```bash
   pnpm exec playwright test tests/e2e/golden-path.spec.ts
@@ -77,19 +77,19 @@
 - Modify: `findings.md`
 - Modify: `progress.md`
 
-- [ ] **Step 1: Diagnose before editing**
+- [x] **Step 1: Diagnose before editing**
 
   Reproduce the first failure with Playwright trace, server output and the narrow public API. State whether the cause is product behavior, fixture behavior, timing, or an incorrect test assumption.
 
-- [ ] **Step 2: Write the owner-level RED regression**
+- [x] **Step 2: Write the owner-level RED regression**
 
   Add the smallest deterministic test at Contracts/Application/Server/Web level. Confirm that it fails for the same cause as the browser path.
 
-- [ ] **Step 3: Implement the minimal owner fix and verify GREEN**
+- [x] **Step 3: Implement the minimal owner fix and verify GREEN**
 
   Run the owner test, owner workspace suite/typecheck/lint/build, then rerun only the canonical Playwright test. Repeat Steps 1–3 for the next real gap until the single path is green; never bundle speculative repairs.
 
-- [ ] **Step 4: Commit and push the green canonical path**
+- [x] **Step 4: Commit and push the green canonical path**
 
   ```bash
   git commit -m "test: add complete ecommerce workbench golden path"

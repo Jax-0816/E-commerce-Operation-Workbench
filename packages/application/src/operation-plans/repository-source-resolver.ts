@@ -19,6 +19,7 @@ import {
   type TitleAssetRepository,
   type UuidV7,
 } from '@eaw/domain';
+import { canonicalJson } from '@eaw/prompt-engine';
 import type { WorkflowRepository, WorkflowRun } from '@eaw/workflow-engine';
 
 import type { WorkflowPreflightInspector } from '../workflows/index.js';
@@ -168,7 +169,7 @@ export function createRepositoryOperationPlanSourceResolver(dependencies: {
         const blockers = [...resolved.blockers];
         if (
           resolved.platformId !== plan.platformId ||
-          JSON.stringify(resolved.sources) !== JSON.stringify(plan.sources)
+          canonicalJson(resolved.sources) !== canonicalJson(plan.sources)
         ) {
           blockers.push({ code: 'SOURCE_STALE', source: 'workflow' });
         }

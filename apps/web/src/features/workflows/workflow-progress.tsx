@@ -176,7 +176,10 @@ export function WorkflowProgress({
     run && updateRun(`retry:${nodeKey}`, () => api.retry(run.id, nodeKey, run.revision));
 
   const nodes = run?.nodes ?? preflight?.nodes ?? [];
-  const canStart = !run && preflight?.nodes.every(({ runnable }) => runnable) === true;
+  const preflightReady = preflight?.nodes.every(({ runnable }) => runnable) === true;
+  const canStart = !run && preflightReady;
+  const canStartNew =
+    run !== null && ['completed', 'cancelled'].includes(run.status) && preflightReady;
   const announcement = run
     ? `工作流${statusLabels[run.status] ?? run.status}`
     : preflight
@@ -229,6 +232,16 @@ export function WorkflowProgress({
             type="button"
           >
             {busy === 'start' ? '启动中…' : '启动工作流'}
+          </button>
+        )}
+        {canStartNew && (
+          <button
+            aria-describedby={!internetAction.available ? 'workflow-offline-reason' : undefined}
+            disabled={busy !== '' || !internetAction.available}
+            onClick={() => void start()}
+            type="button"
+          >
+            {busy === 'start' ? '启动中…' : '启动新工作流'}
           </button>
         )}
         {run && ['failed', 'interrupted'].includes(run.status) && (

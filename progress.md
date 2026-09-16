@@ -991,3 +991,29 @@
 
 1. 提交并推送 Task 29 详细计划。
 2. 创建 `tests/e2e/golden-path.spec.ts` 与 UTF-8 竞品 fixture，运行单 spec RED 并记录第一个真实行为缺口。
+
+## Session: 2026-09-16 — Task 29.1–29.2 canonical golden path
+
+- **Status:** complete
+- 新增从空白工作区开始的单一 Playwright 黄金路径：可见 UI 完成商品、已确认事实、SKU、成本、UTF-8 竞品导入、AI 设置、规则包、显式失败/恢复工作流、标题/五图/详情锁定、定价与促销 trace、精确来源选择、草稿与显式锁定。
+- 确定性 provider 调用顺序严格为前四节点各 1 次、creative 失败后重试 1 次、detail 1 次；已完成节点未重跑，无公网请求、无真实付费 AI 调用。
+- 增加确定性已验证拼多多 test-only 规则夹具；内置待复核规则仍先通过 UI 显式启用，不会被伪装为可确定计算的财务值。
+- 修复三个产品缺口：已完成运行后缺少“启动新工作流”显式入口；无 body 内容锁定 POST 错误携带 JSON header；运营方案二次校验用字段顺序敏感的 JSON 比较误判来源过期。
+- 锁定修订在页面刷新和 E2E 服务重启后保持相同来源对象与 64 位来源哈希；精确包含 6 个工作流资产节点、1 个竞品快照、定价与活动来源。
+
+### Verification evidence
+
+| Gate                                        | Result                  |
+| ------------------------------------------- | ----------------------- |
+| Canonical Playwright                        | 1 passed in 1.3m        |
+| Application tests                           | 22 files, 55 passed     |
+| Web tests                                   | 32 files, 80 passed     |
+| Focused workflow/content/source regressions | 15 passed total         |
+| Application/Web typecheck + lint + build    | passed                  |
+| Verified E2E rule fixture                   | 3 rules, checksum valid |
+| Real paid AI calls                          | 0                       |
+
+### Next action
+
+1. 提交并推送 Task 29.1–29.2，确认 GitHub 同步为 `0 0`。
+2. 执行 29.3：将工作区与 provider 日志改为每次运行唯一的中文/空格临时路径，联跑全部 Playwright 场景并验证失败 trace 策略。

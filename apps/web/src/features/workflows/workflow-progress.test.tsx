@@ -73,6 +73,31 @@ describe('workflow progress', () => {
     root.unmount();
   });
 
+  it('requires an explicit click to start a new run after the latest run completed', async () => {
+    const completed = run('completed');
+    const next = { ...run('running'), id: 'run-2', revision: 1 };
+    const calls: string[] = [];
+    const api = fakeApi({
+      list: async () => [completed],
+      get: async () => completed,
+      start: async (_productId, platformId) => {
+        calls.push(`start:${platformId}`);
+        return next;
+      },
+      subscribe: (runId) => {
+        calls.push(`subscribe:${runId}`);
+        return () => undefined;
+      },
+    });
+    const { container, root } = await render(api);
+
+    expect(calls).toEqual(['subscribe:run-1']);
+    await click(container, '启动新工作流');
+    expect(calls).toEqual(['subscribe:run-1', 'start:pinduoduo', 'subscribe:run-2']);
+    expect(container.querySelector('[aria-live="polite"]')?.textContent).toContain('运行中');
+    root.unmount();
+  });
+
   it('drops stale platform results and GETs state before reconnecting SSE', async () => {
     const oldPreflight = deferred<WorkflowPreflight>();
     const selectedRun = { ...run('running'), platformId: 'taobao' as const };

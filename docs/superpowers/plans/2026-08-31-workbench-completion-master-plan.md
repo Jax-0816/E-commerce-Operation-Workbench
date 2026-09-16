@@ -327,8 +327,8 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 
 **Detailed plan:** `docs/superpowers/plans/2026-09-16-final-golden-path-release.md`
 
-- [ ] 编写端到端测试：商品 → 事实确认 → SKU → 成本 → 竞品导入 → AI 策略/内容 → 定价 → 拼多多促销 → trace → 运营方案锁定。
-- [ ] 先运行并记录第一个真实行为缺口，再只在归属模块修复并添加聚焦回归。
+- [x] 编写端到端测试：商品 → 事实确认 → SKU → 成本 → 竞品导入 → AI 策略/内容 → 定价 → 拼多多促销 → trace → 运营方案锁定。
+- [x] 先运行并记录第一个真实行为缺口，再只在归属模块修复并添加聚焦回归。
 - [ ] 在 Windows 与 Ubuntu 运行完整统一门禁，失败时保存 Playwright trace。
 - [ ] 从 GitHub 全新克隆验证安装、迁移、启动和黄金路径；覆盖含空格/中文的 Windows 路径，并确保仓库不含本机绝对路径或仅 POSIX 可用的启动依赖。
 - [ ] 验证空白新工作区、已有工作区升级、备份恢复和离线模式。

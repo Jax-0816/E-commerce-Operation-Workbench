@@ -171,6 +171,10 @@
 | 进程 marker 复用首次把站点根 URL 当成健康端点                | 失败栈显示第二次启动删除 marker 后命中端口占用；改为先验证 marker 元数据，再固定请求 `<loopback>/api/v1/health`                  |
 | Windows Node 运行日志在子进程存活时无法用 `ReadAllText` 读取 | GitHub Windows Server 2025 复现文件共享冲突；验收测试改用允许既有写句柄的 `FileShare.ReadWrite` 只读流，真实 Windows Pester 通过 |
 | Task 28 后 GitHub 双平台 typecheck 找不到 contracts 子路径   | 本地旧 `dist` 掩盖了干净检出缺口；为 Web 增加统一 `prepare:contracts` pre-hook，并移走本地 dist 后复现验证                       |
+| 内容锁定按钮返回通用 503                                     | 前端对无正文 POST 错误声明 JSON，Fastify 在路由前拒绝空 JSON；只对真正有 body 的 reorder 请求设置 JSON header                    |
+| 零 blocker 运营方案仍被判定来源过期                          | SQLite 重建 promotion 对象时字段顺序不同；将顺序敏感 `JSON.stringify` 判等改为已有 `canonicalJson` 规范化比较                    |
+| 内置规则包无法产生可锁定的已验证促销                         | 这是安全设计：三项财务规则故意 `needs_review`；黄金路径保留内置包显式启用，再通过 UI 导入并启用已校验的 test-only 规则 fixture   |
+| E2E 热重启停在工作流页时等待 SSE 连接                        | 重启前先导航到无 SSE 的本地页面，关闭订阅后再重启，然后重新打开已锁定方案验证持久化                                              |
 
 ## Resources
 
