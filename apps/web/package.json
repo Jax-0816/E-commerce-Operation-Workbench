@@ -4,10 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare:contracts": "pnpm --filter @eaw/contracts run build",
+    "predev": "pnpm run prepare:contracts",
     "dev": "vite",
+    "prebuild": "pnpm run prepare:contracts",
     "build": "tsc -p tsconfig.json && vite build",
     "start": "vite preview --host 127.0.0.1",
+    "pretest": "pnpm run prepare:contracts",
     "test": "vitest run src",
+    "pretypecheck": "pnpm run prepare:contracts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint src vite.config.ts"
   },
