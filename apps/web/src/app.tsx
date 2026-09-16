@@ -40,6 +40,7 @@ import {
   ConnectivityProvider,
   type ConnectivitySource,
 } from './features/connectivity/connectivity-provider.js';
+import { WorkbenchErrorBoundary } from './routing/workbench-error-boundary.js';
 
 const browserProductsApi = createBrowserProductsApi();
 const browserFactsApi = createBrowserFactsApi();
@@ -102,29 +103,31 @@ export function App({
   readonly connectivitySource?: ConnectivitySource;
 } = {}): React.JSX.Element {
   return (
-    <ConnectivityProvider source={connectivitySource}>
-      <BrowserRouter>
-        <WorkbenchRouter
-          costsApi={costsApi}
-          factsApi={factsApi}
-          platformProfilesApi={platformProfilesApi}
-          productsApi={productsApi}
-          pricingApi={pricingApi}
-          promotionApi={promotionApi}
-          rulesApi={rulesApi}
-          skusApi={skusApi}
-          aiSettingsApi={aiSettingsApi}
-          competitorsApi={competitorsApi}
-          strategyApi={strategyApi}
-          titlesApi={titlesApi}
-          contentBuildersApi={contentBuildersApi}
-          workflowApi={workflowApi}
-          operationPlansApi={operationPlansApi}
-          dataManagementApi={dataManagementApi}
-          dashboardApi={dashboardApi}
-          systemStatusApi={systemStatusApi}
-        />
-      </BrowserRouter>
-    </ConnectivityProvider>
+    <WorkbenchErrorBoundary>
+      <ConnectivityProvider source={connectivitySource}>
+        <BrowserRouter>
+          <WorkbenchRouter
+            costsApi={costsApi}
+            factsApi={factsApi}
+            platformProfilesApi={platformProfilesApi}
+            productsApi={productsApi}
+            pricingApi={pricingApi}
+            promotionApi={promotionApi}
+            rulesApi={rulesApi}
+            skusApi={skusApi}
+            aiSettingsApi={aiSettingsApi}
+            competitorsApi={competitorsApi}
+            strategyApi={strategyApi}
+            titlesApi={titlesApi}
+            contentBuildersApi={contentBuildersApi}
+            workflowApi={workflowApi}
+            operationPlansApi={operationPlansApi}
+            dataManagementApi={dataManagementApi}
+            dashboardApi={dashboardApi}
+            systemStatusApi={systemStatusApi}
+          />
+        </BrowserRouter>
+      </ConnectivityProvider>
+    </WorkbenchErrorBoundary>
   );
 }

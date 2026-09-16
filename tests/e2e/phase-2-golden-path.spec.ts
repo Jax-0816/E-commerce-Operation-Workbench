@@ -3,7 +3,11 @@ import { expect, test } from '@playwright/test';
 test('creates a product and completes the visible Phase 2 workflow', async ({ page }, testInfo) => {
   const errors: string[] = [];
   const requests: string[] = [];
-  page.on('request', (request) => requests.push(request.url()));
+  const mutatingRequests: string[] = [];
+  page.on('request', (request) => {
+    requests.push(request.url());
+    if (request.method() !== 'GET') mutatingRequests.push(`${request.method()} ${request.url()}`);
+  });
   page.on('response', (response) => {
     const expectedMissingProfile =
       response.status() === 404 &&
@@ -15,7 +19,10 @@ test('creates a product and completes the visible Phase 2 workflow', async ({ pa
   page.on('pageerror', (error) => errors.push(error.message));
 
   await page.goto('/');
-  await page.getByRole('link', { name: '新建商品' }).click();
+  await page
+    .getByRole('navigation', { name: '主导航' })
+    .getByRole('link', { name: '新建商品' })
+    .click();
   await page.getByRole('button', { name: /手工创建/u }).click();
   await page
     .getByLabel('商品名称')
@@ -44,7 +51,7 @@ test('creates a product and completes the visible Phase 2 workflow', async ({ pa
   await page.getByRole('link', { name: 'SKU', exact: true }).click();
   await page.getByLabel('规格配置').fill('容量=500ml,750ml\n颜色=黑色,白色');
   await page.getByLabel('生成 SKU 矩阵').click();
-  await expect(page.getByRole('cell', { name: '500ml / 黑色' })).toBeVisible();
+  await expect(page.getByRole('rowheader', { name: '500ml / 黑色' })).toBeVisible();
 
   await page.getByRole('link', { name: '平台档案' }).click();
   await expect(page.getByRole('region', { name: '平台能力' })).toContainText('待规则验证');
@@ -62,5 +69,66 @@ test('creates a product and completes the visible Phase 2 workflow', async ({ pa
   await expect(capabilities).not.toContainText('利润');
   expect(requests.some((url) => /\/api\/v1\/(?:ai|generations?)/u.test(url))).toBe(false);
 
+  const productId = new URL(page.url()).pathname.split('/')[2];
+  expect(productId).toBeTruthy();
+  for (const width of [1440, 720, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/products/${productId}/facts`);
+    await expect(page.getByRole('heading', { name: '商品事实', level: 1 })).toBeVisible();
+    await expect(page.getByRole('link', { name: '商品库', exact: true })).toBeVisible();
+    await expect(page.locator('#workspace-main')).toBeVisible();
+    await expectDocumentToFitViewport(page);
+
+    if (width === 390) {
+      const factTableRegion = page.getByRole('region', { name: '商品事实表格' });
+      await expect(factTableRegion).toBeVisible();
+      const tableOverflow = await factTableRegion.evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      }));
+      expect(tableOverflow.scrollWidth).toBeGreaterThan(tableOverflow.clientWidth);
+      await factTableRegion.evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      expect(await factTableRegion.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+      await expectDocumentToFitViewport(page);
+    }
+
+    await page.goto('/capabilities/settings');
+    await expect(page.getByRole('heading', { name: '系统设置', level: 1 })).toBeVisible();
+    await expect(page.getByRole('link', { name: '管理 AI 设置' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '管理平台规则' })).toBeVisible();
+    await expect(page.getByRole('link', { name: '备份与恢复' })).toBeVisible();
+    await expectDocumentToFitViewport(page);
+  }
+
+  await page.goto('/');
+  const mutationCount = mutatingRequests.length;
+  await page.context().setOffline(true);
+  await expect(
+    page.getByText('当前离线：联网 AI 操作已暂停，本地数据与财务功能仍可使用。'),
+  ).toBeVisible();
+  await page.context().setOffline(false);
+  await expect(
+    page.getByText('当前离线：联网 AI 操作已暂停，本地数据与财务功能仍可使用。'),
+  ).toHaveCount(0);
+  expect(mutatingRequests).toHaveLength(mutationCount);
+  await page.keyboard.press('Tab');
+  const skipLink = page.getByRole('link', { name: '跳到主要内容' });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#workspace-main')).toBeFocused();
+  await page.getByRole('link', { name: '商品库', exact: true }).click();
+  await expect(page.locator('#workspace-main')).toBeFocused();
+
   expect(errors).toEqual([]);
 });
+
+async function expectDocumentToFitViewport(page: import('@playwright/test').Page): Promise<void> {
+  const dimensions = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+}

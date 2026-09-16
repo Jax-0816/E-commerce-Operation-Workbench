@@ -323,23 +323,23 @@
 
 - Produces a safe top-level fallback, skip link, main focus target, and stable responsive shell.
 
-- [ ] **Step 1: Write error/focus RED tests**
+- [x] **Step 1: Write error/focus RED tests**
 
   Prove render exceptions show a Chinese safe fallback without raw message/stack, reload is explicit, skip link is first focusable control, pathname navigation focuses the main target, query-only changes do not steal focus, and active/disabled states have semantic text/attributes.
 
-- [ ] **Step 2: Implement the minimal shell reliability components**
+- [x] **Step 2: Implement the minimal shell reliability components**
 
   Use a class error boundary and a pathname-keyed focus effect. The fallback must not attempt automatic reload. Keep native controls and visible focus outlines.
 
-- [ ] **Step 3: Add deterministic responsive acceptance**
+- [x] **Step 3: Add deterministic responsive acceptance**
 
   Extend Playwright smoke coverage or a dedicated Task 28 spec to check 1440, 720, and 390 widths: no document-level horizontal overflow, navigation/main content and critical actions remain reachable, wide data tables scroll inside their own region, and no critical control is CSS-hidden.
 
-- [ ] **Step 4: Verify keyboard and semantic behavior**
+- [x] **Step 4: Verify keyboard and semantic behavior**
 
   Tab through skip link, global navigation, product navigation, main actions, offline banner context, and settings links. Inspect headings, landmarks, captions, scopes, `aria-live`, `aria-disabled`, and focus visibility.
 
-- [ ] **Step 5: Verify and commit**
+- [x] **Step 5: Verify and commit**
 
   Run focused Web tests plus relevant Playwright, Web typecheck/lint/build, and `git diff --check`, then:
 

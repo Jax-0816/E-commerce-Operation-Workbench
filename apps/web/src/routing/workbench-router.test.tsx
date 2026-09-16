@@ -23,7 +23,14 @@ describe('routed workbench', () => {
   it('opens the API-backed operational dashboard', async () => {
     const { container, root } = await render('/');
 
+    expect(container.querySelector('a')?.textContent).toContain('跳到主要内容');
+    expect(container.querySelectorAll('main')).toHaveLength(1);
+    expect(container.querySelector('main')?.id).toBe('workspace-main');
     expect(container.querySelector('nav[aria-label="主导航"]')).not.toBeNull();
+    expect(container.querySelector('a[aria-current="page"]')?.textContent).toContain('工作台');
+    expect(container.querySelector('a[aria-disabled="true"]')?.textContent).toContain(
+      '生成运营方案',
+    );
     expect(container.querySelector('h1')?.textContent).toBe('运营总控台');
     expect(container.querySelector('[aria-label="运营指标"]')?.textContent).toContain('商品数量');
     expect(container.querySelector('[aria-label="待处理事项"]')?.textContent).toContain(

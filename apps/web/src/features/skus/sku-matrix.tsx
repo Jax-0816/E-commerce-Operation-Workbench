@@ -61,31 +61,34 @@ export function SkuMatrix({
       {matrix.dimensions.length === 0 ? (
         <p>请先配置规格维度。</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>组合</th>
-              <th>启用</th>
-              <th>内部编码</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matrix.skus.map((sku) => (
-              <tr key={sku.id}>
-                <td>{combinationLabel(matrix, sku.valueIds)}</td>
-                <td>
-                  <input
-                    aria-label={`启用 ${sku.signature}`}
-                    type="checkbox"
-                    checked={sku.enabled}
-                    onChange={() => void update(sku)}
-                  />
-                </td>
-                <td>{sku.internalCode ?? '未设置'}</td>
+        <div className="table-scroll" role="region" aria-label="SKU 矩阵表格">
+          <table>
+            <caption>当前 SKU 组合与启用状态</caption>
+            <thead>
+              <tr>
+                <th scope="col">组合</th>
+                <th scope="col">启用</th>
+                <th scope="col">内部编码</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {matrix.skus.map((sku) => (
+                <tr key={sku.id}>
+                  <th scope="row">{combinationLabel(matrix, sku.valueIds)}</th>
+                  <td>
+                    <input
+                      aria-label={`启用 ${sku.signature}`}
+                      type="checkbox"
+                      checked={sku.enabled}
+                      onChange={() => void update(sku)}
+                    />
+                  </td>
+                  <td>{sku.internalCode ?? '未设置'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

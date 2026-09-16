@@ -156,81 +156,83 @@ export function FactStatusTable({
       {items === undefined && !error ? <p>正在加载事实…</p> : null}
       {items?.length === 0 ? <p>尚未录入产品事实。</p> : null}
       {items && items.length > 0 ? (
-        <table>
-          <caption>当前事实及核验状态</caption>
-          <thead>
-            <tr>
-              <th scope="col">事实</th>
-              <th scope="col">值</th>
-              <th scope="col">来源</th>
-              <th scope="col">状态</th>
-              <th scope="col">操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((fact) => {
-              const canConfirm =
-                (fact.verification === 'unverified' || fact.verification === 'inferred') &&
-                fact.value !== null &&
-                (!fact.sensitive || fact.policyEligible);
-              return (
-                <tr key={fact.id}>
-                  <th scope="row">{fact.label}</th>
-                  <td>{formatValue(fact)}</td>
-                  <td>{sourceLabel(fact.sourceType)}</td>
-                  <td>
-                    {verificationLabel(fact.verification)}
-                    {fact.verification === 'inferred' ? (
-                      <span role="note"> — AI 推断，未经人工确认</span>
-                    ) : null}
-                    {fact.sensitive && !fact.policyEligible ? (
-                      <span role="note"> — 需先完成敏感声明政策核验</span>
-                    ) : null}
-                  </td>
-                  <td>
-                    {fact.verification !== 'confirmed' ? (
-                      <button
-                        aria-label={`编辑 ${fact.label}`}
-                        className="secondary compact"
-                        onClick={() => setEditing(fact)}
-                        type="button"
-                      >
-                        编辑
-                      </button>
-                    ) : null}
-                    {canConfirm ? (
-                      <div>
-                        <label>
-                          <span>确认依据</span>
-                          <input
-                            aria-label={`确认依据 ${fact.label}`}
-                            onChange={(event) =>
-                              setEvidence((current) => ({
-                                ...current,
-                                [fact.id]: event.target.value,
-                              }))
-                            }
-                            value={evidence[fact.id] ?? ''}
-                          />
-                        </label>
+        <div className="table-scroll" role="region" aria-label="商品事实表格">
+          <table>
+            <caption>当前事实及核验状态</caption>
+            <thead>
+              <tr>
+                <th scope="col">事实</th>
+                <th scope="col">值</th>
+                <th scope="col">来源</th>
+                <th scope="col">状态</th>
+                <th scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((fact) => {
+                const canConfirm =
+                  (fact.verification === 'unverified' || fact.verification === 'inferred') &&
+                  fact.value !== null &&
+                  (!fact.sensitive || fact.policyEligible);
+                return (
+                  <tr key={fact.id}>
+                    <th scope="row">{fact.label}</th>
+                    <td>{formatValue(fact)}</td>
+                    <td>{sourceLabel(fact.sourceType)}</td>
+                    <td>
+                      {verificationLabel(fact.verification)}
+                      {fact.verification === 'inferred' ? (
+                        <span role="note"> — AI 推断，未经人工确认</span>
+                      ) : null}
+                      {fact.sensitive && !fact.policyEligible ? (
+                        <span role="note"> — 需先完成敏感声明政策核验</span>
+                      ) : null}
+                    </td>
+                    <td>
+                      {fact.verification !== 'confirmed' ? (
                         <button
-                          aria-label={`确认 ${fact.label}`}
-                          disabled={!evidence[fact.id]?.trim() || confirming.has(fact.id)}
-                          onClick={() => void confirm(fact)}
+                          aria-label={`编辑 ${fact.label}`}
+                          className="secondary compact"
+                          onClick={() => setEditing(fact)}
                           type="button"
                         >
-                          {confirming.has(fact.id) ? '正在确认…' : '人工确认'}
+                          编辑
                         </button>
-                      </div>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                      ) : null}
+                      {canConfirm ? (
+                        <div>
+                          <label>
+                            <span>确认依据</span>
+                            <input
+                              aria-label={`确认依据 ${fact.label}`}
+                              onChange={(event) =>
+                                setEvidence((current) => ({
+                                  ...current,
+                                  [fact.id]: event.target.value,
+                                }))
+                              }
+                              value={evidence[fact.id] ?? ''}
+                            />
+                          </label>
+                          <button
+                            aria-label={`确认 ${fact.label}`}
+                            disabled={!evidence[fact.id]?.trim() || confirming.has(fact.id)}
+                            onClick={() => void confirm(fact)}
+                            type="button"
+                          >
+                            {confirming.has(fact.id) ? '正在确认…' : '人工确认'}
+                          </button>
+                        </div>
+                      ) : (
+                        <span>—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </section>
   );

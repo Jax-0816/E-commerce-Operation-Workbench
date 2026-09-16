@@ -165,19 +165,20 @@ function SnapshotTable({
   return (
     <div className="table-scroll">
       <table>
+        <caption>已确认的竞品快照</caption>
         <thead>
           <tr>
-            <th>竞品</th>
-            <th>展示价</th>
-            <th>展示销量</th>
-            <th>展示评价</th>
-            <th>卖点</th>
+            <th scope="col">竞品</th>
+            <th scope="col">展示价</th>
+            <th scope="col">展示销量</th>
+            <th scope="col">展示评价</th>
+            <th scope="col">卖点</th>
           </tr>
         </thead>
         <tbody>
           {items.map(({ id, name, snapshot }) => (
             <tr key={id}>
-              <td>{name}</td>
+              <th scope="row">{name}</th>
               <td>{snapshot.displayedPriceText ?? '—'}</td>
               <td>{snapshot.displayedSalesText ?? '—'}</td>
               <td>{snapshot.displayedReviewText ?? '—'}</td>

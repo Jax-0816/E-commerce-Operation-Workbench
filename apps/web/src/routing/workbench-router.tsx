@@ -63,6 +63,7 @@ import type { DataManagementApi } from '../features/data-management/api.js';
 import { DataManagementPanel } from '../features/data-management/data-management-panel.js';
 import type { SystemStatusApi } from '../features/system-settings/api.js';
 import { SystemSettingsPanel } from '../features/system-settings/system-settings-panel.js';
+import { RouteFocus, SkipLink } from './route-focus.js';
 
 export interface WorkbenchDependencies {
   readonly aiSettingsApi: AISettingsApi;
@@ -266,7 +267,8 @@ function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }):
   }, [productsApi]);
   const product = products.find((candidate) => candidate.id === productId);
   return (
-    <main className="workbench-shell">
+    <div className="workbench-shell">
+      <SkipLink targetId="workspace-main" />
       <aside className="command-sidebar">
         <Link aria-label="返回工作台" className="brand" to="/">
           <StorefrontIcon aria-hidden="true" size={28} weight="duotone" />
@@ -318,6 +320,9 @@ function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }):
             <Link
               aria-disabled={!productId}
               className={!productId ? 'disabled' : undefined}
+              onClick={(event) => {
+                if (!productId) event.preventDefault();
+              }}
               to={productId ? `/products/${productId}/plans` : '/products'}
             >
               <ChartLineUpIcon aria-hidden="true" size={18} />
@@ -339,9 +344,10 @@ function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }):
             ))}
           </nav>
         ) : null}
-        <div className="workspace-content">
+        <main className="workspace-content" id="workspace-main" tabIndex={-1}>
+          <RouteFocus targetId="workspace-main" />
           <Outlet />
-        </div>
+        </main>
         <footer className="workspace-status">
           <span>
             <SquaresFourIcon aria-hidden="true" size={15} /> 本地工作区
@@ -353,7 +359,7 @@ function WorkbenchShell({ productsApi }: { readonly productsApi: ProductsApi }):
           <span>未连接的能力不会生成伪结果</span>
         </footer>
       </section>
-    </main>
+    </div>
   );
 }
 
