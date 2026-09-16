@@ -96,7 +96,8 @@ pnpm test
 pnpm build
 pnpm validate:prompts
 pnpm validate:rule-packs
+pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-自动化测试默认使用 fake provider，不会触发真实付费 AI 调用。贡献和安全说明见 [CONTRIBUTING.md](CONTRIBUTING.md)、[RULE_PACK_CONTRIBUTING.md](RULE_PACK_CONTRIBUTING.md)、[SECURITY.md](SECURITY.md) 和 [docs/adr](docs/adr)。
+首次执行浏览器门禁前安装与锁文件匹配的 Playwright Chromium；Ubuntu CI 使用 `pnpm exec playwright install --with-deps chromium` 同时安装系统依赖。自动化测试使用每次运行唯一的临时工作区和 fake provider，不读取浏览器用户资料，也不会触发真实付费 AI 调用。贡献和安全说明见 [CONTRIBUTING.md](CONTRIBUTING.md)、[RULE_PACK_CONTRIBUTING.md](RULE_PACK_CONTRIBUTING.md)、[SECURITY.md](SECURITY.md) 和 [docs/adr](docs/adr)。

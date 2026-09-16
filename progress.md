@@ -1032,3 +1032,17 @@
 
 1. 提交并推送 Task 29.3，确认 GitHub 同步为 `0 0`。
 2. 执行 Task 29.4：在 Windows/Ubuntu 矩阵安装锁定 Playwright Chromium，将 `pnpm test:e2e` 设为强制发布门禁，只在失败时上传按 OS 区分的报告。
+
+## Session: 2026-09-16 — Task 29.4 local browser release gate
+
+- **Status:** in progress — local complete, GitHub matrix pending
+- CI Windows 与 Ubuntu 质量任务均在构建、提示词/规则包校验及既有 Windows Pester 后安装锁文件对应的 Playwright Chromium，并强制执行 `pnpm test:e2e`。
+- 浏览器门禁失败时才上传 `playwright-report/` 与 `test-results/`，artifact 名包含矩阵操作系统与重试次数；成功运行不上传报告或 trace。
+- Playwright 不再选择机器全局 Chrome；CI 生成 HTML 报告供失败证据上传，本地仍使用简洁 line reporter。每次运行继续使用唯一中文/空格临时工作区和 fake provider，不读取浏览器用户资料。
+- README 已给出本地 `pnpm exec playwright install chromium`，并说明 Ubuntu 的 `--with-deps` 命令。
+- YAML 语法、Prettier 和 6 条用例发现通过；本机安装锁定 Chromium 1234 后完整 Playwright 6/6 通过（2.0m）。根级 format、typecheck、lint、build、prompts 与 rule packs 校验全部通过。
+
+### Next action
+
+1. 提交并推送 Task 29.4 本地结果。
+2. 等待同一提交的 GitHub `windows-latest` 与 `ubuntu-latest` 任务完成；如失败，读取 OS 专属 artifact 并修复后重跑。

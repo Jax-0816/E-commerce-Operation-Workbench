@@ -140,11 +140,11 @@
 - Modify: `playwright.config.ts` only if the runner proves a browser-selection issue
 - Modify: `README.md`
 
-- [ ] **Step 1: Add the browser gate to both matrix jobs**
+- [x] **Step 1: Add the browser gate to both matrix jobs**
 
   Install the Playwright-managed Chromium matching the lockfile, run `pnpm test:e2e` after build/resource validation on Windows and Ubuntu, keep Windows Pester, and upload the Playwright report/trace only when the browser step fails. Use OS-qualified artifact names.
 
-- [ ] **Step 2: Validate YAML and local command parity**
+- [x] **Step 2: Validate YAML and local command parity**
 
   Confirm both jobs use Node 24.19.0, pnpm 11.22.0 and frozen install. The CI browser command must be exactly reproducible locally and must not use a saved user profile or machine-global workspace.
 

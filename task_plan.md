@@ -122,5 +122,5 @@ Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress
 
 ### Next action
 
-1. 提交并推送已全绿的 29.3，确认本地与 GitHub 为 `0 0`。
-2. 执行 29.4：将 `pnpm test:e2e` 纳入 Windows/Ubuntu CI 矩阵，仅在失败时上传按操作系统命名的 Playwright 报告与 trace。
+1. 提交并推送已通过本地门禁的 29.4。
+2. 检查首次 GitHub Windows/Ubuntu 浏览器矩阵；仅在两端都通过后标记 29.4 complete，再进入 29.5 发布候选审计。
