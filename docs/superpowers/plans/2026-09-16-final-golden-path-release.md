@@ -107,15 +107,15 @@
 - Modify: `tests/e2e/*.spec.ts` only for proven cross-test isolation defects
 - Modify: `.gitignore` if a generated Playwright directory is not already ignored
 
-- [ ] **Step 1: Make workspace and call-log isolation explicit**
+- [x] **Step 1: Make workspace and call-log isolation explicit**
 
   Use run-unique temporary directories and log files. The canonical source workspace prefix must contain Chinese characters and spaces. Remove stale log ambiguity without deleting user paths; all cleanup remains limited to generated temporary paths.
 
-- [ ] **Step 2: Prove fake-provider and offline boundaries**
+- [x] **Step 2: Prove fake-provider and offline boundaries**
 
   Keep the fake provider local and deterministic. Assert no request reaches a DeepSeek/public host, no raw test key appears in UI/server logs/backup bytes, and toggling browser offline blocks only public AI actions without issuing a mutation on reconnect.
 
-- [ ] **Step 3: Run all Playwright scenarios together**
+- [x] **Step 3: Run all Playwright scenarios together**
 
   ```bash
   pnpm test:e2e
@@ -123,7 +123,7 @@
 
   Expected: canonical + Phase 2/3/10/11/12 all pass serially, zero paid calls, no state collision, traces retained only on failure.
 
-- [ ] **Step 4: Commit and push**
+- [x] **Step 4: Commit and push**
 
   ```bash
   git commit -m "test: harden cross-platform golden path fixtures"

@@ -3,6 +3,7 @@ node_modules/
 dist/
 playwright-report/
 test-results/
+.playwright-e2e-environment.json
 coverage/
 .env
 .env.local

@@ -14,6 +14,10 @@ test('completes the canonical workbench path and locks exact sources', async ({
   page,
   request,
 }) => {
+  const sourceWorkspacePath = process.env.EAW_E2E_SOURCE_WORKSPACE_PATH;
+  expect(sourceWorkspacePath).toBeTruthy();
+  expect(sourceWorkspacePath).toContain(' ');
+  expect(sourceWorkspacePath).toMatch(/[^\x00-\x7f]/u);
   const browserErrors: string[] = [];
   const publicRequests: string[] = [];
   page.on('pageerror', (error) => browserErrors.push(error.message));
@@ -67,6 +71,7 @@ test('completes the canonical workbench path and locks exact sources', async ({
   await page.getByLabel('保存 DeepSeek 设置').click();
   await expect(page.getByRole('status')).toContainText('设置已保存');
   await expect(page.getByRole('region', { name: 'DeepSeek 设置' })).toContainText('已配置');
+  await expect(page.locator('body')).not.toContainText('deterministic-e2e-secret');
 
   await page.goto('/capabilities/rules');
   const bundledPack = page.getByRole('article').filter({ hasText: '2026.9.0' });
@@ -91,6 +96,7 @@ test('completes the canonical workbench path and locks exact sources', async ({
 
   const callLogPath = process.env.EAW_E2E_CALL_LOG;
   expect(callLogPath).toBeTruthy();
+  expect(await readFile(callLogPath!, 'utf8')).not.toContain('deterministic-e2e-secret');
   expect(await providerTasks(callLogPath!, productId)).toEqual([
     'competitor_analysis',
     'market_insight',

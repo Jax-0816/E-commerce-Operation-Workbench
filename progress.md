@@ -1017,3 +1017,18 @@
 
 1. 提交并推送 Task 29.1–29.2，确认 GitHub 同步为 `0 0`。
 2. 执行 29.3：将工作区与 provider 日志改为每次运行唯一的中文/空格临时路径，联跑全部 Playwright 场景并验证失败 trace 策略。
+
+## Session: 2026-09-16 — Task 29.3 cross-platform Playwright isolation
+
+- **Status:** complete
+- Playwright 每次命令生成唯一的源工作区、恢复工作区和 provider JSONL 目录；源工作区前缀固定含中文与空格，黄金路径直接断言该跨平台路径契约。
+- 解决 Playwright 主进程和测试 worker 重复求值配置的隔离缺口：主进程写入单次运行清单，worker 只读取同一组路径；清单位于被 Git 忽略的仓库根文件，不会被 Playwright 清空报告目录时误删。
+- 主黄金路径新增页面与 provider 日志的测试密钥不可见断言；Phase 12 继续验证备份字节不含密钥或源工作区路径，Phase 2 继续验证离线/恢复联网不产生写请求。
+- 单条规范黄金路径 1/1 通过；同一运行中规范路径 + Phase 2/3/10/11/12 全部 6/6 通过，包含服务重启和事务恢复，无工作区或 provider 日志串扰。
+- 成功运行没有保留 `trace.zip`；失败调试运行均生成可用 trace，配置仍为 `retain-on-failure`。联跑 provider 日志共 25 条本地 fake 调用、密钥命中 0、真实付费调用 0。
+- 根级 typecheck 与 lint 通过，`test-results/` 与运行清单都已忽略，不会污染 Windows 克隆。
+
+### Next action
+
+1. 提交并推送 Task 29.3，确认 GitHub 同步为 `0 0`。
+2. 执行 Task 29.4：在 Windows/Ubuntu 矩阵安装锁定 Playwright Chromium，将 `pnpm test:e2e` 设为强制发布门禁，只在失败时上传按 OS 区分的报告。

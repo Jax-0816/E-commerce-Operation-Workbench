@@ -157,24 +157,25 @@
 
 ## Issues Encountered
 
-| Issue                                                        | Resolution                                                                                                                       |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| graphify 知识图陈旧且只覆盖设计文档                          | 保留为架构参考，当前进度以源码/提交/测试为准                                                                                     |
-| 根级 `pnpm test` 受工具链版本与依赖准备影响                  | 不宣称完整门禁通过；实施前恢复精确工具链                                                                                         |
-| 根目录直接运行全部 Vitest 会破坏 workspace cwd 假设          | 后续只用 package scripts 或明确的 workspace cwd                                                                                  |
-| 重连后精确 pnpm 临时目录被系统清理                           | 网络受限首次恢复失败；获准联网后重新安装 pnpm 11.22.0，并重新执行受影响门禁                                                      |
-| Windows 审计的首个换行正则包含非法字面换行                   | 改用固定字符串搜索；命中仅位于 JSONL 测试，JSON.parse 可接受行尾 CR，不影响生产解析                                              |
-| pnpm 依赖状态自检在中断后循环触发 install                    | 保留损坏目录到 `/private/tmp` 后从锁文件完整重建；聚焦门禁直接调用仓库二进制，最终再运行 frozen install                          |
-| Prettier 展开了整个 pnpm lockfile                            | 从本轮开始前的 HEAD 机械恢复原文件，再只用 `apply_patch` 加入 3 行真实 workspace 依赖                                            |
-| Homebrew 只提供 PowerShell preview，且首个官方包架构不匹配   | 不用预览版；检查 `uname -m` 后改用 Microsoft 官方 7.6.6 x64 tarball，并在解压前校验 SHA-256                                      |
-| 无 TTY 的 setup 冻结安装和构建都触发 pnpm modules purge 拒绝 | 先单独复现两个阶段，确认同一根因；将官方建议的 `CI=true` 限定在 pnpm 子调用期间，并用测试确认恢复原值                            |
-| 进程 marker 复用首次把站点根 URL 当成健康端点                | 失败栈显示第二次启动删除 marker 后命中端口占用；改为先验证 marker 元数据，再固定请求 `<loopback>/api/v1/health`                  |
-| Windows Node 运行日志在子进程存活时无法用 `ReadAllText` 读取 | GitHub Windows Server 2025 复现文件共享冲突；验收测试改用允许既有写句柄的 `FileShare.ReadWrite` 只读流，真实 Windows Pester 通过 |
-| Task 28 后 GitHub 双平台 typecheck 找不到 contracts 子路径   | 本地旧 `dist` 掩盖了干净检出缺口；为 Web 增加统一 `prepare:contracts` pre-hook，并移走本地 dist 后复现验证                       |
-| 内容锁定按钮返回通用 503                                     | 前端对无正文 POST 错误声明 JSON，Fastify 在路由前拒绝空 JSON；只对真正有 body 的 reorder 请求设置 JSON header                    |
-| 零 blocker 运营方案仍被判定来源过期                          | SQLite 重建 promotion 对象时字段顺序不同；将顺序敏感 `JSON.stringify` 判等改为已有 `canonicalJson` 规范化比较                    |
-| 内置规则包无法产生可锁定的已验证促销                         | 这是安全设计：三项财务规则故意 `needs_review`；黄金路径保留内置包显式启用，再通过 UI 导入并启用已校验的 test-only 规则 fixture   |
-| E2E 热重启停在工作流页时等待 SSE 连接                        | 重启前先导航到无 SSE 的本地页面，关闭订阅后再重启，然后重新打开已锁定方案验证持久化                                              |
+| Issue                                                        | Resolution                                                                                                                                |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| graphify 知识图陈旧且只覆盖设计文档                          | 保留为架构参考，当前进度以源码/提交/测试为准                                                                                              |
+| 根级 `pnpm test` 受工具链版本与依赖准备影响                  | 不宣称完整门禁通过；实施前恢复精确工具链                                                                                                  |
+| 根目录直接运行全部 Vitest 会破坏 workspace cwd 假设          | 后续只用 package scripts 或明确的 workspace cwd                                                                                           |
+| 重连后精确 pnpm 临时目录被系统清理                           | 网络受限首次恢复失败；获准联网后重新安装 pnpm 11.22.0，并重新执行受影响门禁                                                               |
+| Windows 审计的首个换行正则包含非法字面换行                   | 改用固定字符串搜索；命中仅位于 JSONL 测试，JSON.parse 可接受行尾 CR，不影响生产解析                                                       |
+| pnpm 依赖状态自检在中断后循环触发 install                    | 保留损坏目录到 `/private/tmp` 后从锁文件完整重建；聚焦门禁直接调用仓库二进制，最终再运行 frozen install                                   |
+| Prettier 展开了整个 pnpm lockfile                            | 从本轮开始前的 HEAD 机械恢复原文件，再只用 `apply_patch` 加入 3 行真实 workspace 依赖                                                     |
+| Homebrew 只提供 PowerShell preview，且首个官方包架构不匹配   | 不用预览版；检查 `uname -m` 后改用 Microsoft 官方 7.6.6 x64 tarball，并在解压前校验 SHA-256                                               |
+| 无 TTY 的 setup 冻结安装和构建都触发 pnpm modules purge 拒绝 | 先单独复现两个阶段，确认同一根因；将官方建议的 `CI=true` 限定在 pnpm 子调用期间，并用测试确认恢复原值                                     |
+| 进程 marker 复用首次把站点根 URL 当成健康端点                | 失败栈显示第二次启动删除 marker 后命中端口占用；改为先验证 marker 元数据，再固定请求 `<loopback>/api/v1/health`                           |
+| Windows Node 运行日志在子进程存活时无法用 `ReadAllText` 读取 | GitHub Windows Server 2025 复现文件共享冲突；验收测试改用允许既有写句柄的 `FileShare.ReadWrite` 只读流，真实 Windows Pester 通过          |
+| Task 28 后 GitHub 双平台 typecheck 找不到 contracts 子路径   | 本地旧 `dist` 掩盖了干净检出缺口；为 Web 增加统一 `prepare:contracts` pre-hook，并移走本地 dist 后复现验证                                |
+| 内容锁定按钮返回通用 503                                     | 前端对无正文 POST 错误声明 JSON，Fastify 在路由前拒绝空 JSON；只对真正有 body 的 reorder 请求设置 JSON header                             |
+| 零 blocker 运营方案仍被判定来源过期                          | SQLite 重建 promotion 对象时字段顺序不同；将顺序敏感 `JSON.stringify` 判等改为已有 `canonicalJson` 规范化比较                             |
+| 内置规则包无法产生可锁定的已验证促销                         | 这是安全设计：三项财务规则故意 `needs_review`；黄金路径保留内置包显式启用，再通过 UI 导入并启用已校验的 test-only 规则 fixture            |
+| E2E 热重启停在工作流页时等待 SSE 连接                        | 重启前先导航到无 SSE 的本地页面，关闭订阅后再重启，然后重新打开已锁定方案验证持久化                                                       |
+| Playwright 配置在主进程和 worker 重复求值                    | 顶层 `mkdtemp` 使服务器与 worker 指向不同路径；主进程写入被 Git 忽略的单次运行清单，worker 只读取，同时保留每次运行唯一的临时工作区与日志 |
 
 ## Resources
 

@@ -71,7 +71,7 @@ Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress
 - [ ] Task 29：完整 Playwright 黄金路径与发布门禁（in_progress）
   - [x] 29.1：统一黄金路径 RED 与确定性 fixture 契约
   - [x] 29.2：按首个真实缺口逐个完成 owner 修复并跑通单路径
-  - [ ] 29.3：跨平台 Playwright 隔离、零付费调用与失败 trace
+  - [x] 29.3：跨平台 Playwright 隔离、零付费调用与失败 trace
   - [ ] 29.4：Windows/Ubuntu 强制浏览器发布门禁
   - [ ] 29.5：升级、备份恢复、可移植性与发布候选收口
 - **Status:** in_progress
@@ -122,5 +122,5 @@ Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress
 
 ### Next action
 
-1. 提交并推送已全绿的 29.1–29.2，确认本地与 GitHub 为 `0 0`。
-2. 执行 29.3：隔离每条 Playwright 的临时工作区与 provider 日志，联跑全部场景并审计零公网/零付费调用。
+1. 提交并推送已全绿的 29.3，确认本地与 GitHub 为 `0 0`。
+2. 执行 29.4：将 `pnpm test:e2e` 纳入 Windows/Ubuntu CI 矩阵，仅在失败时上传按操作系统命名的 Playwright 报告与 trace。
