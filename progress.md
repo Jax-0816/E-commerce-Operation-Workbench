@@ -1053,8 +1053,10 @@
 - Windows 日志显示 3 个 `runtime.integration.test.ts` 用例在默认 5 秒边界超时（实际约 5.0–5.8 秒），超时中断后未关闭的 SQLite 句柄导致清理阶段附带 `EBUSY`；断言本身无失败。
 - 将整组真实生产组合集成测试统一设置 20 秒预算，保留超时保护且覆盖 Windows 的双次启动、持久化和句柄关闭成本；不添加 retry，也不放宽单元测试。
 - 聚焦生产组合测试 15/15 通过（整文件 5.71s），Server typecheck/lint 通过；与 CI 相同的根级 `pnpm test` 全部通过，Server 24 files / 67 tests。
+- 第二轮 `35083226008` 再次确认 Ubuntu 全绿，但 Windows runner 在 Defender/冷启动负载下部分用例达到 15–30 秒，20 秒中断打开的 SQLite 后造成级联 `EBUSY`，临时目录 hook 也触发默认 10 秒上限。
+- 最终把该生产组合集成套件及其清理 hook 统一为 60 秒预算；范围仍只覆盖真实磁盘、数据库迁移与双次生产启动测试，其他快速测试不变，且不使用 retry。
 
 ### Next action
 
-1. 提交并推送 Windows 超时预算修复。
+1. 提交并推送最终 Windows 集成测试/清理预算修复。
 2. 跟踪新矩阵直到 Windows 与 Ubuntu 的浏览器黄金路径都通过。

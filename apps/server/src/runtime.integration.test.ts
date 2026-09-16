@@ -16,13 +16,13 @@ import { createProductionApp } from './runtime.js';
 
 const directories: string[] = [];
 const migrationsDirectory = fileURLToPath(new URL('../../../migrations/', import.meta.url));
-const runtimeIntegrationTimeoutMs = 20_000;
+const runtimeIntegrationTimeoutMs = 60_000;
 
 afterEach(async () => {
   await Promise.all(
     directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
   );
-});
+}, runtimeIntegrationTimeoutMs);
 
 describe('production app composition', { timeout: runtimeIntegrationTimeoutMs }, () => {
   it('serves a persisted redacted dashboard snapshot without provider calls', async () => {
