@@ -148,7 +148,7 @@
 
   Confirm both jobs use Node 24.19.0, pnpm 11.22.0 and frozen install. The CI browser command must be exactly reproducible locally and must not use a saved user profile or machine-global workspace.
 
-- [ ] **Step 3: Push and inspect the first real matrix run**
+- [x] **Step 3: Push and inspect the first real matrix run**
 
   ```bash
   git commit -m "ci: require golden path on windows and ubuntu"

@@ -122,5 +122,5 @@ Wave 7 — Task 29：完整 Playwright 黄金路径与发布门禁（in_progress
 
 ### Next action
 
-1. 提交并推送 Windows 生产组合集成测试超时预算修复。
-2. 检查新一轮 GitHub Windows/Ubuntu 浏览器矩阵；仅在两端都通过后标记 29.4 complete，再进入 29.5 发布候选审计。
+1. 提交并推送 Task 29.4 双平台全绿证据。
+2. 执行 29.5：完成升级、恢复与发布候选审计，收敛 README、主计划与最终计划状态。

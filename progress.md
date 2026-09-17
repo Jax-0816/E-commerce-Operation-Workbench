@@ -1060,3 +1060,16 @@
 
 1. 提交并推送最终 Windows 集成测试/清理预算修复。
 2. 跟踪新矩阵直到 Windows 与 Ubuntu 的浏览器黄金路径都通过。
+
+### Final matrix result
+
+- **Status:** complete
+- GitHub Actions `35084741641` 在提交 `c71cc2d` 上整体成功：`windows-latest` 与 `ubuntu-latest` 均从干净检出完成冻结安装、Node 24.19.0 / pnpm 11.22.0 版本检查、format、typecheck、lint、test、build、prompts 与 rule packs 校验。
+- Windows 额外通过 Pester setup/start 验收，安装锁文件对应 Chromium 后完整 Playwright 黄金路径通过（1m57s）；Ubuntu 通过 `--with-deps` 安装后完整 Playwright 黄金路径通过（1m46s）。
+- 两端成功运行都跳过 Playwright failure artifact，证明报告和 trace 仅在浏览器步骤失败时上传。
+- Task 29.4 完成；下一项为 29.5 升级、恢复与发布候选审计。
+
+### Next action
+
+1. 提交并推送 Task 29.4 双平台证据，确认本地与 GitHub `0 0`。
+2. 执行 Task 29.5 发布候选审计与文档收敛。
