@@ -8,7 +8,7 @@
 
 `0.1.0` 的规范验收路径从空白工作区开始，经可见界面完成：商品建档 → 事实确认 → SKU 与成本 → 竞品导入 → AI 策略和内容 → 定价 → 拼多多促销 → trace → 精确来源选择 → 运营方案锁定。锁定结果会在页面刷新和服务重启后保持相同来源与哈希；备份恢复场景另行验证损坏归档不改变旧工作区、成功恢复不携带源机器密钥。
 
-自动化 AI 仅使用本机、确定性 fake provider。浏览器门禁拒绝非回环请求，provider 日志只记录任务名和商品 ID；它不读取真实 DeepSeek 密钥，也不会产生真实付费调用。最近一次代码级双平台基线是 [GitHub Actions 35084741641](https://github.com/Jax-0816/E-commerce-Operation-Workbench/actions/runs/35084741641)：Windows 与 Ubuntu 均从干净检出通过完整质量门禁和 6 条 Playwright 场景，Windows 另通过 Pester setup/start 验收。
+自动化 AI 仅使用本机、确定性 fake provider。浏览器门禁拒绝非回环请求，provider 日志只记录任务名和商品 ID；它不读取真实 DeepSeek 密钥，也不会产生真实付费调用。`0.1.0` 发布候选代码的最终双平台基线是 [GitHub Actions 35179433382](https://github.com/Jax-0816/E-commerce-Operation-Workbench/actions/runs/35179433382)：Windows 与 Ubuntu 均从干净检出通过完整质量门禁和 6 条 Playwright 场景，Windows 另通过 Pester setup/start 验收。
 
 当前非目标：淘宝/抖音促销计算、自动抓取平台数据、云端多用户协作、移动端原生应用、Windows 安装包或系统服务、把服务暴露到局域网/公网。内置拼多多规则仍要求人工复核后启用；未确认规则只展示钱流，不输出权威利润。
 

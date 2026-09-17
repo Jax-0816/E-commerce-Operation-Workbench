@@ -194,11 +194,11 @@
 
   Use tests/CI evidence to prove: clean bootstrapped workspace, all migrations over an existing supported workspace, failed restore leaves the old workspace usable, successful backup restore preserves the canonical product without secrets, offline local work remains available, Windows Chinese/space paths work, and no tracked file contains a machine path, case collision, invalid Windows name, CRLF drift or symlink.
 
-- [ ] **Step 3: Mark `0.1.0` as release candidate**
+- [x] **Step 3: Mark `0.1.0` as release candidate**
 
   Document the canonical acceptance flow, exact supported versions, deterministic fake-AI boundary, Windows clone/setup/start steps, remaining non-goals and the final green GitHub run. Mark Task 29 and the master plan complete only after evidence exists.
 
-- [ ] **Step 4: Commit, push and confirm final CI**
+- [x] **Step 4: Commit, push and confirm final CI**
 
   ```bash
   git commit -m "test: verify complete ecommerce workbench golden path"

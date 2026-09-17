@@ -332,11 +332,11 @@ resumeWorkflow(id: WorkflowId, expectedRevision: number): Promise<WorkflowState>
 - [x] 在 Windows 与 Ubuntu 运行完整统一门禁，失败时保存 Playwright trace。
 - [x] 从 GitHub 全新克隆验证安装、迁移、启动和黄金路径；覆盖含空格/中文的 Windows 路径，并确保仓库不含本机绝对路径或仅 POSIX 可用的启动依赖。
 - [x] 验证空白新工作区、已有工作区升级、备份恢复和离线模式。
-- [ ] 提交 `test: verify complete ecommerce workbench golden path`，将版本标记为可发布候选。
+- [x] 提交 `test: verify complete ecommerce workbench golden path`，将版本标记为可发布候选。
 
 ## Completion Criteria
 
-- [ ] Task 12–29 全部为 complete，且每项有 RED/GREEN/门禁记录。
+- [x] Task 12–29 全部为 complete，且每项有 RED/GREEN/门禁记录。
 - [x] 三个平台能力范围真实；拼多多促销完整，淘宝/抖音未支持能力明确不可用。
 - [x] 每个 AI 结论都能回溯到事实、证据、规则、提示词和模型调用日志。
 - [x] 每个财务结果都能用输入与规则快照确定性复算。

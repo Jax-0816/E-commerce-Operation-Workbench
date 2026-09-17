@@ -605,7 +605,7 @@ docs/adr/                     architecture decisions
 - [x] **Step 2: Run `pnpm exec playwright test tests/e2e/golden-path.spec.ts`** and capture the first behavioral gap.
 - [x] **Step 3: Fix only acceptance gaps through their owning modules**, adding focused regressions for each defect.
 - [x] **Step 4: Run `pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm validate:rule-packs && pnpm exec playwright test` on Windows and Ubuntu**; all must pass.
-- [ ] **Step 5: Commit** `test: verify complete ecommerce workbench golden path`.
+- [x] **Step 5: Commit** `test: verify complete ecommerce workbench golden path`.
 
 ## Coverage review
 

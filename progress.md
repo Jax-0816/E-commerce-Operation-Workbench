@@ -1097,3 +1097,15 @@
 - 上一份等价文档提交 `f92097b` 的 GitHub run `35175950373` 中 Ubuntu 全绿，Windows 在 Workspace 根测试阶段暴露 WAL 备份与跨机恢复集成测试仍使用 Vitest 默认 5 秒：实际耗时约 5.7/6.4 秒，超时中断后清理才附带 `ENOTEMPTY`，业务断言没有失败。
 - 为 `backup.integration.test.ts` 与 `restore.integration.test.ts` 的真实磁盘 suite 和 `afterEach` 清理统一设置 60 秒预算，与既有 Server 生产组合策略一致；不添加 retry，不改变快速测试或生产行为。
 - Workspace 聚焦门禁 6 文件、80 项通过；Workspace typecheck、lint 与 `git diff --check` 通过。
+
+### Final release-candidate result
+
+- **Status:** complete
+- 稳定性修复提交 `15876a3` 已推送；GitHub Actions `35179433382` 从干净检出整体成功，Ubuntu 11分54秒、Windows 22分13秒。
+- 两端均通过冻结安装、版本、format、typecheck、lint、165 文件/619 项测试、build、7 个提示词、1 个规则包和 6/6 Playwright；Windows 额外通过 Pester setup/start。成功运行均跳过失败 artifact 上传。
+- Task 29.1–29.5 与 master plan Task 12–29 全部完成，`0.1.0` 标记为 release candidate；自动化真实付费 AI 调用总数保持 0。
+- GitHub Actions 对仍声明 Node 20 runtime 的 v4 actions 给出非阻断弃用提示，runner 已按平台策略强制使用 Node 24；不影响本次通过结果，未来依赖维护时升级 actions major。
+
+### Next action
+
+1. 仅在用户提出新功能、缺陷修复或正式发布要求时创建下一份计划；当前 `0.1.0` 发布候选范围不再有未完成任务。

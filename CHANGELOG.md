@@ -2,10 +2,10 @@
 
 All notable changes are recorded here.
 
-## [Unreleased]
+## [0.1.0] - 2026-09-17 (release candidate)
 
 ### Added
 
-- Phase 0 monorepo baseline, local React shell, Fastify health endpoint, and cross-platform quality baseline.
-
-This is not a completed ecommerce-operation golden path. Product data, persistence, AI workflows, deterministic finance, and executable rule-pack validation are planned for later phases.
+- Windows-first local workbench covering product facts/SKUs, deterministic cost/pricing/promotion, competitor import, fact-guarded AI assets, resumable workflows, immutable operation plans, backup/restore, dashboard, offline UX and accessibility.
+- Canonical browser acceptance from a blank workspace to a locked source-traceable operation plan, plus focused restart, recovery, pricing and transactional restore scenarios.
+- Windows PowerShell setup/start, clean-clone portability, and mandatory Windows/Ubuntu release gates using Node.js 24.19.0 and pnpm 11.22.0.

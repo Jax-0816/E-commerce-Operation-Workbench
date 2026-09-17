@@ -6,7 +6,7 @@
 
 ## Current Phase
 
-Wave 7 — Task 29.5：升级、恢复、可移植性与发布候选收口（in_progress）
+Release candidate complete — Task 12–29 全部完成
 
 ## Phases
 
@@ -68,13 +68,13 @@ Wave 7 — Task 29.5：升级、恢复、可移植性与发布候选收口（in_
   - [x] 28.5：可信离线能力策略与操作守卫
   - [x] 28.6：全局错误恢复、路由焦点与窄屏验收
   - [x] 28.7：Task 28 发布门禁与记录收口
-- [ ] Task 29：完整 Playwright 黄金路径与发布门禁（in_progress）
+- [x] Task 29：完整 Playwright 黄金路径与发布门禁（complete）
   - [x] 29.1：统一黄金路径 RED 与确定性 fixture 契约
   - [x] 29.2：按首个真实缺口逐个完成 owner 修复并跑通单路径
   - [x] 29.3：跨平台 Playwright 隔离、零付费调用与失败 trace
   - [x] 29.4：Windows/Ubuntu 强制浏览器发布门禁
-  - [ ] 29.5：升级、备份恢复、可移植性与发布候选收口（本地审计完成，最终提交 CI 待确认）
-- **Status:** in_progress
+  - [x] 29.5：升级、备份恢复、可移植性与发布候选收口
+- **Status:** complete
 
 ## Key Questions
 
@@ -123,5 +123,4 @@ Wave 7 — Task 29.5：升级、恢复、可移植性与发布候选收口（in_
 
 ### Next action
 
-1. 提交并推送 Task 29.5 本地发布审计与 README 验收说明。
-2. 等待该提交的 Windows/Ubuntu 最终矩阵全绿，再标记 `0.1.0` 发布候选和整个计划 complete。
+1. `0.1.0` 发布候选已完成；后续只在用户提出新范围、缺陷或正式发布要求时开启新计划。
