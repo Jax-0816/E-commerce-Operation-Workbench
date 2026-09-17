@@ -601,10 +601,10 @@ docs/adr/                     architecture decisions
 - Produces: automated acceptance of the canonical product-to-locked-plan path.
 - Consumes: public browser/API behavior; no internal database shortcuts.
 
-- [ ] **Step 1: Write the failing golden-path spec** covering product, fact confirmation, SKU, cost, competitor import, AI strategy/content/creative/detail, pricing, PDD promotion, trace, operation plan, and lock.
-- [ ] **Step 2: Run `pnpm exec playwright test tests/e2e/golden-path.spec.ts`** and capture the first behavioral gap.
-- [ ] **Step 3: Fix only acceptance gaps through their owning modules**, adding focused regressions for each defect.
-- [ ] **Step 4: Run `pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm validate:rule-packs && pnpm exec playwright test` on Windows and Ubuntu**; all must pass.
+- [x] **Step 1: Write the failing golden-path spec** covering product, fact confirmation, SKU, cost, competitor import, AI strategy/content/creative/detail, pricing, PDD promotion, trace, operation plan, and lock.
+- [x] **Step 2: Run `pnpm exec playwright test tests/e2e/golden-path.spec.ts`** and capture the first behavioral gap.
+- [x] **Step 3: Fix only acceptance gaps through their owning modules**, adding focused regressions for each defect.
+- [x] **Step 4: Run `pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm validate:rule-packs && pnpm exec playwright test` on Windows and Ubuntu**; all must pass.
 - [ ] **Step 5: Commit** `test: verify complete ecommerce workbench golden path`.
 
 ## Coverage review

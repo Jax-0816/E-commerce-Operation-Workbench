@@ -1073,3 +1073,21 @@
 
 1. 提交并推送 Task 29.4 双平台证据，确认本地与 GitHub `0 0`。
 2. 执行 Task 29.5 发布候选审计与文档收敛。
+
+## Session: 2026-09-17 — Task 29.5 release-candidate audit
+
+- **Status:** local audit complete; final commit matrix pending
+- 精确工具链 Node.js 24.19.0 / pnpm 11.22.0 下，版本检查、冻结安装、format、typecheck、lint、build、7 个提示词、1 个真实标记为 incomplete 的规则包和 `git diff --check` 全部通过。
+- 根级单元/集成门禁共 165 个测试文件、619 项通过；完整 Playwright 为规范路径 + Phase 2/3/10/11/12 共 6/6 通过，耗时 2.0 分钟。
+- provider JSONL 共 25 次本地 fake 调用：competitor/market/selling-point/title 各 3 次、creative 8 次、detail 5 次；记录字段只有 `task`/`productId`，密钥样式命中 0，真实付费 AI 调用 0。
+- PowerShell 7.6.6 x64 官方包 SHA-256 与 release hashes 一致；Pester 6.2.0 完整 3 文件、12/12 通过，耗时 338.26 秒，覆盖重复 setup、中文/空格路径、回环启动、失败子进程清理和有界健康等待。
+- 从 GitHub `codex/phase-0` 新克隆到临时中文/空格目录，使用完整 pnpm 11.22.0 发行目录对源码外中文/空格工作区连续 setup 两次成功；`start.ps1 -NoBrowser` 报告 `0.1.0` 回环实例和精确 PID。执行环境结束时自动清理子进程，不遗留项目数据。
+- 16 个提交迁移由数据库集成测试证明空库完整应用、现有库重跑保留数据、失败迁移恢复可用旧库；恢复集成测试证明损坏/不兼容/迁移失败不创建 pending marker，database/assets/rule-packs/workspace.json 任一激活失败均完整回滚并保留目标密钥。
+- Phase 12 浏览器恢复验证损坏 ZIP 后旧商品仍可用，成功恢复保留备份商品、删除备份后商品，备份字节不含源密钥或源路径；离线浏览器与 Web 回归证明本地 CRUD、历史、财务、规则、备份和取消能力仍可用，恢复联网不会自动写入或调用 AI。
+- 可移植性审计覆盖 732 个跟踪文件：0 大小写冲突、0 Windows 非法/尾点尾空格路径、0 符号链接、0 mixed/CRLF 文本、0 真实本机绝对路径；726 个文本文件为 LF，6 个二进制由 `.gitattributes` 保持原字节。
+- README 已记录规范验收流、锁定工具版本、Windows 克隆/setup/start、fake-AI 边界、最近双平台绿色运行 `35084741641` 与明确非目标。
+
+### Next action
+
+1. 提交并推送本次发布审计，等待 Windows/Ubuntu 最终矩阵全绿。
+2. 记录该提交的绿色运行，标记 Task 29、master plan 和 `0.1.0` release candidate complete。

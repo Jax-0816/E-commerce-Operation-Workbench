@@ -172,7 +172,7 @@
 - Modify: `findings.md`
 - Modify: `progress.md`
 
-- [ ] **Step 1: Run the complete release gate**
+- [x] **Step 1: Run the complete release gate**
 
   ```bash
   node scripts/check-versions.mjs
@@ -190,7 +190,7 @@
 
   Run the complete Pester suite separately with local loopback permission. Record exact file/test counts, browser scenarios, provider calls and durations.
 
-- [ ] **Step 2: Audit clean install, upgrade, restore and portability**
+- [x] **Step 2: Audit clean install, upgrade, restore and portability**
 
   Use tests/CI evidence to prove: clean bootstrapped workspace, all migrations over an existing supported workspace, failed restore leaves the old workspace usable, successful backup restore preserves the canonical product without secrets, offline local work remains available, Windows Chinese/space paths work, and no tracked file contains a machine path, case collision, invalid Windows name, CRLF drift or symlink.
 
