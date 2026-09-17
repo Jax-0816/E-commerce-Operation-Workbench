@@ -110,6 +110,7 @@ Wave 7 — Task 29.5：升级、恢复、可移植性与发布候选收口（in_
 | 浏览器驱动不支持 `networkidle` 等待条件                   |       1 | 改用 `domcontentloaded` 并通过真实 DOM、接口结果与历史记录完成页面验收                           |
 | Node 24 在 Windows 直接执行 `pnpm.cmd` 返回 `EINVAL`      |       1 | 固定经 `ComSpec /d /s /c` 调用静态版本命令，并由单元测试锁定 Windows 参数                        |
 | Windows 活跃服务日志被重定向写句柄占用                    |       1 | Pester 使用 `FileShare.ReadWrite` 只读流验收脱敏日志；真实 Windows runner 已通过                 |
+| Windows Defender 使 WAL 备份/恢复集成测试超过默认 5 秒    |       1 | 仅将真实磁盘 Workspace 集成套件与清理 hook 统一为 60 秒预算，不加 retry、不改产品行为            |
 
 ## Notes
 

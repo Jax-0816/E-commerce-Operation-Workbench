@@ -16,6 +16,7 @@ import {
 const temporaryDirectories: string[] = [];
 const backupId = '019cdd2a-b800-7000-8000-000000000101';
 const appVersion = '0.1.0';
+const workspaceIntegrationTimeoutMs = 60_000;
 
 afterEach(async () => {
   await Promise.all(
@@ -25,9 +26,9 @@ afterEach(async () => {
         import('node:fs/promises').then(({ rm }) => rm(path, { recursive: true, force: true })),
       ),
   );
-});
+}, workspaceIntegrationTimeoutMs);
 
-describe('consistent portable workspace backup', () => {
+describe('consistent portable workspace backup', { timeout: workspaceIntegrationTimeoutMs }, () => {
   it('backs up an active WAL with allowed files but no secret or source path', async () => {
     const workspacePath = await createTemporaryWorkspace();
     await initializeWorkspace(workspacePath);
